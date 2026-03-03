@@ -1,0 +1,43 @@
+Gyms & Fitness Centres near Kinross 6028, WA (OpenStreetMap)
+=======================================================
+
+1. Crossfit Perth
+   Type    : fitness_centre
+   Sport   : athletics
+   Website : https://crossfitperth.com.au/
+
+2. Pulse Fitness
+   Type    : sports_centre
+
+3. Lake Joondalup Badminton Club
+   Type    : sports_centre
+   Sport   : badminton
+   Hours   : Fr 19:30-22:00
+
+4. Anytime Fitness
+   Type    : fitness_centre
+   Sport   : fitness
+
+5. BodyTec EMS
+   Type    : fitness_centre
+
+6. Anytime Fitness
+   Type    : fitness_centre
+   Hours   : 24/7
+
+7. Goodlife Health
+   Type    : fitness_centre
+
+8. C2 Martial Arts
+   Type    : fitness_centre
+   Address : Unit 4 58 Constellation Drive 6027
+   Phone   : +61 433 118 774
+   Website : https://www.c2ma.com.au
+
+9. Western Oval (Evacuation Area 2)
+   Type    : sports_centre
+
+10. HBF Arena
+   Type    : sports_centre
+   Sport   : soccer;basketball;tennis;swimming;athletics;running;netball;fitness
+   Address : Kennedya Drive Joondalup 6027
