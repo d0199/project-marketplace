@@ -1,13 +1,17 @@
+import { useState } from "react";
 import Link from "next/link";
 import type { GymWithDistance } from "@/lib/utils";
 import AmenityBadge from "./AmenityBadge";
 import ImageCarousel from "./ImageCarousel";
+import ClaimModal from "./ClaimModal";
 
 interface Props {
   gym: GymWithDistance;
+  unclaimed?: boolean;
 }
 
-export default function GymCard({ gym }: Props) {
+export default function GymCard({ gym, unclaimed = false }: Props) {
+  const [showClaim, setShowClaim] = useState(false);
   const MAX_BADGES = 4;
   const shown = gym.amenities.slice(0, MAX_BADGES);
   const extra = gym.amenities.length - MAX_BADGES;
@@ -64,7 +68,20 @@ export default function GymCard({ gym }: Props) {
         >
           View Gym
         </Link>
+
+        {unclaimed && (
+          <button
+            onClick={() => setShowClaim(true)}
+            className="mt-2 w-full text-center text-xs text-gray-400 hover:text-brand-orange transition-colors"
+          >
+            Own this gym? Claim listing
+          </button>
+        )}
       </div>
+
+      {showClaim && (
+        <ClaimModal gym={gym} onClose={() => setShowClaim(false)} />
+      )}
     </div>
   );
 }
