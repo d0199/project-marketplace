@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import type { GetStaticPaths, GetStaticProps } from "next";
+import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import AmenityBadge from "@/components/AmenityBadge";
 import type { Gym, OwnerSession } from "@/types";
-import gymsData from "../../../data/gyms.json";
-
-const ALL_GYMS = gymsData as Gym[];
+import { ownerStore } from "@/lib/ownerStore";
 
 const DAYS = [
   "monday",
@@ -168,7 +166,11 @@ export default function GymProfilePage({ gym }: Props) {
                 {gym.phone && (
                   <li className="flex items-center gap-2">
                     <span>📞</span>
-                    <a href={`tel:${gym.phone}`} onClick={() => track(gym.id, "phoneClicks")} className="hover:underline">
+                    <a
+                      href={`tel:${gym.phone}`}
+                      onClick={() => track(gym.id, "phoneClicks")}
+                      className="hover:underline"
+                    >
                       {gym.phone}
                     </a>
                   </li>
@@ -182,19 +184,6 @@ export default function GymProfilePage({ gym }: Props) {
                       className="hover:underline truncate"
                     >
                       {gym.email}
-                    </a>
-                  </li>
-                )}
-                {gym.website && (
-                  <li className="flex items-center gap-2">
-                    <span>🌐</span>
-                    <a
-                      href={gym.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline truncate"
-                    >
-                      {gym.website.replace(/^https?:\/\//, "")}
                     </a>
                   </li>
                 )}
@@ -218,15 +207,8 @@ export default function GymProfilePage({ gym }: Props) {
   );
 }
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  return {
-    paths: ALL_GYMS.map((g) => ({ params: { id: g.id } })),
-    fallback: false,
-  };
-};
-
-export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
-  const gym = ALL_GYMS.find((g) => g.id === params?.id);
+export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
+  const gym = ownerStore.getById(params?.id as string);
   if (!gym) return { notFound: true };
   return { props: { gym } };
 };
