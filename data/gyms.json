@@ -1,0 +1,176 @@
+[
+  {
+    "id": "gym-001",
+    "ownerId": "owner-1",
+    "name": "CrossFit Perth",
+    "description": "High-intensity functional fitness for all levels. Our expert coaches guide you through varied workouts combining gymnastics, weightlifting, and cardio in a supportive community environment.",
+    "address": {
+      "street": "12 Banksia Terrace",
+      "suburb": "Kinross",
+      "state": "WA",
+      "postcode": "6028"
+    },
+    "phone": "+61 8 9304 1100",
+    "email": "info@crossfitperth.com.au",
+    "website": "https://crossfitperth.com.au/",
+    "lat": -31.7326,
+    "lng": 115.7476,
+    "amenities": ["free weights", "cardio", "group classes", "showers", "lockers", "personal training"],
+    "hours": {
+      "monday": "5:30am – 8:00pm",
+      "tuesday": "5:30am – 8:00pm",
+      "wednesday": "5:30am – 8:00pm",
+      "thursday": "5:30am – 8:00pm",
+      "friday": "5:30am – 7:00pm",
+      "saturday": "7:00am – 12:00pm",
+      "sunday": "8:00am – 11:00am"
+    },
+    "pricePerWeek": 35,
+    "imageUrl": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80"
+  },
+  {
+    "id": "gym-002",
+    "ownerId": "owner-1",
+    "name": "Pulse Fitness",
+    "description": "A modern fitness centre offering state-of-the-art equipment, group classes, and personalised training programs. Your complete health and fitness destination in Kinross.",
+    "address": {
+      "street": "5 Constellation Drive",
+      "suburb": "Kinross",
+      "state": "WA",
+      "postcode": "6028"
+    },
+    "phone": "+61 8 9401 2200",
+    "email": "hello@pulsefitness.com.au",
+    "website": "https://pulsefitness.com.au/",
+    "lat": -31.7350,
+    "lng": 115.7490,
+    "amenities": ["free weights", "cardio", "group classes", "yoga/pilates", "showers", "lockers", "parking", "personal training"],
+    "hours": {
+      "monday": "6:00am – 9:00pm",
+      "tuesday": "6:00am – 9:00pm",
+      "wednesday": "6:00am – 9:00pm",
+      "thursday": "6:00am – 9:00pm",
+      "friday": "6:00am – 8:00pm",
+      "saturday": "7:00am – 5:00pm",
+      "sunday": "8:00am – 4:00pm"
+    },
+    "pricePerWeek": 28,
+    "imageUrl": "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80"
+  },
+  {
+    "id": "gym-003",
+    "ownerId": "owner-2",
+    "name": "Anytime Fitness Kinross",
+    "description": "Open 24/7, 365 days a year. Access our fully equipped gym at any time that suits your lifestyle. With secure key fob access and a welcoming community, fitness is always within reach.",
+    "address": {
+      "street": "8 Selkirk Drive",
+      "suburb": "Kinross",
+      "state": "WA",
+      "postcode": "6028"
+    },
+    "phone": "+61 8 9305 3300",
+    "email": "kinross@anytimefitness.com.au",
+    "website": "https://www.anytimefitness.com.au/",
+    "lat": -31.7340,
+    "lng": 115.7460,
+    "amenities": ["free weights", "cardio", "showers", "lockers", "parking", "24/7 access", "personal training"],
+    "hours": {
+      "monday": "Open 24 hours",
+      "tuesday": "Open 24 hours",
+      "wednesday": "Open 24 hours",
+      "thursday": "Open 24 hours",
+      "friday": "Open 24 hours",
+      "saturday": "Open 24 hours",
+      "sunday": "Open 24 hours"
+    },
+    "pricePerWeek": 24,
+    "imageUrl": "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&q=80"
+  },
+  {
+    "id": "gym-004",
+    "ownerId": "owner-1",
+    "name": "BodyTec EMS",
+    "description": "Revolutionary EMS (Electrical Muscle Stimulation) training that delivers a full-body workout in just 20 minutes. Scientifically proven to burn fat, build muscle, and improve performance.",
+    "address": {
+      "street": "3 Emerald Drive",
+      "suburb": "Kinross",
+      "state": "WA",
+      "postcode": "6028"
+    },
+    "phone": "+61 8 9302 4400",
+    "email": "info@bodytec.com.au",
+    "website": "https://bodytec.com.au/",
+    "lat": -31.7360,
+    "lng": 115.7470,
+    "amenities": ["personal training", "showers", "parking"],
+    "hours": {
+      "monday": "6:00am – 8:00pm",
+      "tuesday": "6:00am – 8:00pm",
+      "wednesday": "6:00am – 8:00pm",
+      "thursday": "6:00am – 8:00pm",
+      "friday": "6:00am – 7:00pm",
+      "saturday": "8:00am – 2:00pm",
+      "sunday": "Closed"
+    },
+    "pricePerWeek": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=800&q=80"
+  },
+  {
+    "id": "gym-005",
+    "ownerId": "owner-2",
+    "name": "Goodlife Health Clubs Joondalup",
+    "description": "Western Australia's premier health club experience. Enjoy an Olympic pool, spa, sauna, group fitness studio, weights area, and personal training in our premium Joondalup facility.",
+    "address": {
+      "street": "420 Joondalup Drive",
+      "suburb": "Joondalup",
+      "state": "WA",
+      "postcode": "6027"
+    },
+    "phone": "+61 8 9301 5500",
+    "email": "joondalup@goodlife.com.au",
+    "website": "https://www.goodlife.com.au/",
+    "lat": -31.7440,
+    "lng": 115.7630,
+    "amenities": ["pool", "spa", "sauna", "free weights", "cardio", "group classes", "yoga/pilates", "showers", "lockers", "parking", "childcare", "café", "personal training"],
+    "hours": {
+      "monday": "5:00am – 10:00pm",
+      "tuesday": "5:00am – 10:00pm",
+      "wednesday": "5:00am – 10:00pm",
+      "thursday": "5:00am – 10:00pm",
+      "friday": "5:00am – 9:00pm",
+      "saturday": "7:00am – 7:00pm",
+      "sunday": "8:00am – 6:00pm"
+    },
+    "pricePerWeek": 42,
+    "imageUrl": "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=800&q=80"
+  },
+  {
+    "id": "gym-006",
+    "ownerId": "owner-2",
+    "name": "HBF Arena",
+    "description": "Joondalup's world-class multi-sport facility. Home to an Olympic-size swimming pool, fitness centre, courts for basketball, netball and tennis, athletics track, and the region's best aquatic facilities.",
+    "address": {
+      "street": "Kennedya Drive",
+      "suburb": "Joondalup",
+      "state": "WA",
+      "postcode": "6027"
+    },
+    "phone": "+61 8 9400 6600",
+    "email": "info@hbfarena.com.au",
+    "website": "https://www.hbfarena.com.au/",
+    "lat": -31.7480,
+    "lng": 115.7670,
+    "amenities": ["pool", "spa", "sauna", "free weights", "cardio", "group classes", "boxing/mma", "yoga/pilates", "showers", "lockers", "parking", "childcare", "café", "personal training"],
+    "hours": {
+      "monday": "5:30am – 9:30pm",
+      "tuesday": "5:30am – 9:30pm",
+      "wednesday": "5:30am – 9:30pm",
+      "thursday": "5:30am – 9:30pm",
+      "friday": "5:30am – 9:00pm",
+      "saturday": "7:00am – 6:00pm",
+      "sunday": "8:00am – 6:00pm"
+    },
+    "pricePerWeek": 38,
+    "imageUrl": "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80"
+  }
+]
