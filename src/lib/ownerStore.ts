@@ -1,24 +1,30 @@
 import type { Gym } from "@/types";
 import seedGyms from "../../data/gyms.json";
 
-// Module-level mutable store — survives hot-reload but not server restarts.
-// No persistence: prototype only.
-let gyms: Gym[] = seedGyms as Gym[];
+// Anchor mutable state on the Node.js global object so it is shared across
+// all module instances (Next.js compiles API routes and pages into separate
+// bundles that each get their own module registry — global bypasses that).
+const g = global as typeof globalThis & { __gymStore?: Gym[] };
+if (!g.__gymStore) {
+  g.__gymStore = seedGyms as Gym[];
+}
 
 export const ownerStore = {
   getAll(): Gym[] {
-    return gyms;
+    return g.__gymStore!;
   },
 
   getById(id: string): Gym | undefined {
-    return gyms.find((g) => g.id === id);
+    return g.__gymStore!.find((gym) => gym.id === id);
   },
 
   getByOwner(ownerId: string): Gym[] {
-    return gyms.filter((g) => g.ownerId === ownerId);
+    return g.__gymStore!.filter((gym) => gym.ownerId === ownerId);
   },
 
   update(updated: Gym): void {
-    gyms = gyms.map((g) => (g.id === updated.id ? { ...updated } : g));
+    g.__gymStore = g.__gymStore!.map((gym) =>
+      gym.id === updated.id ? { ...updated } : gym
+    );
   },
 };
