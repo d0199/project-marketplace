@@ -18,7 +18,7 @@ export default function SearchBar({ initialValue = "", onSearch }: Props) {
       return;
     }
     if (!POSTCODE_COORDS[trimmed]) {
-      setError("Sorry, we don't have coverage for that postcode yet. Try 6028.");
+      setError("Sorry, we don't have coverage for that postcode yet. We currently cover Perth metro, Fremantle, Rockingham, Mandurah, and Bunbury.");
       return;
     }
     setError("");
@@ -36,7 +36,7 @@ export default function SearchBar({ initialValue = "", onSearch }: Props) {
               setValue(e.target.value);
               setError("");
             }}
-            placeholder="Enter postcode (e.g. 6028)"
+            placeholder="Enter postcode (e.g. 6000)"
             maxLength={4}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-900 placeholder-gray-400"
           />
