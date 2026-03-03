@@ -1,10 +1,11 @@
+import { useEffect, useState } from "react";
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import AmenityBadge from "@/components/AmenityBadge";
-import type { Gym } from "@/types";
+import type { Gym, OwnerSession } from "@/types";
 import gymsData from "../../../data/gyms.json";
 
 const ALL_GYMS = gymsData as Gym[];
@@ -24,6 +25,20 @@ interface Props {
 }
 
 export default function GymProfilePage({ gym }: Props) {
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("ownerSession");
+    if (raw) {
+      try {
+        const session = JSON.parse(raw) as OwnerSession;
+        setIsOwner(session.ownerId === gym.ownerId);
+      } catch {
+        // ignore bad session data
+      }
+    }
+  }, [gym.ownerId]);
+
   return (
     <>
       <Head>
@@ -32,12 +47,22 @@ export default function GymProfilePage({ gym }: Props) {
       </Head>
       <Layout>
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-4">
-          <Link href="/" className="hover:text-brand-orange">
-            Home
-          </Link>
-          {" / "}
-          <span className="text-gray-800 font-medium">{gym.name}</span>
+        <nav className="text-sm text-gray-500 mb-4 flex items-center justify-between">
+          <div>
+            <Link href="/" className="hover:text-brand-orange">
+              Home
+            </Link>
+            {" / "}
+            <span className="text-gray-800 font-medium">{gym.name}</span>
+          </div>
+          {isOwner && (
+            <Link
+              href={`/owner/${gym.id}`}
+              className="bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
+            >
+              Edit Gym
+            </Link>
+          )}
         </nav>
 
         {/* Banner */}
