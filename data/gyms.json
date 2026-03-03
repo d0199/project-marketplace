@@ -172,5 +172,295 @@
     },
     "pricePerWeek": 38,
     "imageUrl": "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80"
+  },
+  {
+    "id": "gym-007",
+    "ownerId": "owner-3",
+    "name": "Snap Fitness Wanneroo",
+    "description": "Compact, fully equipped 24/7 gym with everything you need and nothing you don't. Cardio machines, free weights, functional training rig, and a friendly members community — all with no lock-in contracts.",
+    "address": {
+      "street": "18 Dundebar Road",
+      "suburb": "Wanneroo",
+      "state": "WA",
+      "postcode": "6065"
+    },
+    "phone": "+61 8 9405 7700",
+    "email": "wanneroo@snapfitness.com.au",
+    "website": "https://www.snapfitness.com.au/",
+    "lat": -31.8092,
+    "lng": 115.8285,
+    "amenities": ["free weights", "cardio", "showers", "lockers", "parking", "24/7 access", "personal training"],
+    "hours": {
+      "monday": "Open 24 hours",
+      "tuesday": "Open 24 hours",
+      "wednesday": "Open 24 hours",
+      "thursday": "Open 24 hours",
+      "friday": "Open 24 hours",
+      "saturday": "Open 24 hours",
+      "sunday": "Open 24 hours"
+    },
+    "pricePerWeek": 22,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80"
+  },
+  {
+    "id": "gym-008",
+    "ownerId": "owner-3",
+    "name": "Genesis Fitness Wanneroo",
+    "description": "A full-service fitness club with an extensive weights floor, group fitness timetable, aqua classes, yoga studio, and certified personal trainers on hand every day. Families welcome.",
+    "address": {
+      "street": "3 Koondoola Avenue",
+      "suburb": "Wanneroo",
+      "state": "WA",
+      "postcode": "6065"
+    },
+    "phone": "+61 8 9405 8800",
+    "email": "wanneroo@genesisfitness.com.au",
+    "website": "https://www.genesisfitness.com.au/",
+    "lat": -31.8065,
+    "lng": 115.8268,
+    "amenities": ["free weights", "cardio", "group classes", "yoga/pilates", "showers", "lockers", "parking", "childcare", "personal training"],
+    "hours": {
+      "monday": "5:30am – 10:00pm",
+      "tuesday": "5:30am – 10:00pm",
+      "wednesday": "5:30am – 10:00pm",
+      "thursday": "5:30am – 10:00pm",
+      "friday": "5:30am – 9:00pm",
+      "saturday": "7:00am – 6:00pm",
+      "sunday": "8:00am – 5:00pm"
+    },
+    "pricePerWeek": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=800&q=80"
+  },
+  {
+    "id": "gym-009",
+    "ownerId": "owner-3",
+    "name": "F45 Training Osborne Park",
+    "description": "45-minute functional team training sessions combining elements of HIIT, circuit, and functional training. Science-backed programming changes daily so no two workouts are ever the same.",
+    "address": {
+      "street": "72 Hutton Street",
+      "suburb": "Osborne Park",
+      "state": "WA",
+      "postcode": "6017"
+    },
+    "phone": "+61 8 9244 9900",
+    "email": "osbornepark@f45training.com",
+    "website": "https://f45training.com.au/",
+    "lat": -31.8712,
+    "lng": 115.7608,
+    "amenities": ["cardio", "group classes", "showers", "parking", "personal training"],
+    "hours": {
+      "monday": "5:30am – 7:00pm",
+      "tuesday": "5:30am – 7:00pm",
+      "wednesday": "5:30am – 7:00pm",
+      "thursday": "5:30am – 7:00pm",
+      "friday": "5:30am – 6:00pm",
+      "saturday": "7:00am – 11:00am",
+      "sunday": "8:00am – 10:00am"
+    },
+    "pricePerWeek": 55,
+    "imageUrl": "https://images.unsplash.com/photo-1558611439-b5f24d0f04d1?w=800&q=80"
+  },
+  {
+    "id": "gym-010",
+    "ownerId": "owner-3",
+    "name": "World Gym Osborne Park",
+    "description": "Iconic powerhouse gym brand delivering serious iron, extensive cardio, sauna, a dedicated boxing bay, and a pumping atmosphere. Catering to everyone from beginners to competitive bodybuilders.",
+    "address": {
+      "street": "126 Scarborough Beach Road",
+      "suburb": "Osborne Park",
+      "state": "WA",
+      "postcode": "6017"
+    },
+    "phone": "+61 8 9244 1010",
+    "email": "osbornepark@worldgym.com.au",
+    "website": "https://www.worldgym.com.au/",
+    "lat": -31.8684,
+    "lng": 115.7588,
+    "amenities": ["free weights", "cardio", "group classes", "boxing/mma", "sauna", "showers", "lockers", "parking", "personal training"],
+    "hours": {
+      "monday": "5:00am – 10:00pm",
+      "tuesday": "5:00am – 10:00pm",
+      "wednesday": "5:00am – 10:00pm",
+      "thursday": "5:00am – 10:00pm",
+      "friday": "5:00am – 9:00pm",
+      "saturday": "7:00am – 6:00pm",
+      "sunday": "8:00am – 5:00pm"
+    },
+    "pricePerWeek": 32,
+    "imageUrl": "https://images.unsplash.com/photo-1583454572000-cc2a0ced6abb?w=800&q=80"
+  },
+  {
+    "id": "gym-011",
+    "ownerId": "owner-3",
+    "name": "Coastal Fitness Scarborough",
+    "description": "A vibrant beachside gym with ocean views, functional training areas, yoga and pilates studios, and a sunny outdoor workout deck. The perfect way to complement your active Scarborough lifestyle.",
+    "address": {
+      "street": "57 The Esplanade",
+      "suburb": "Scarborough",
+      "state": "WA",
+      "postcode": "6019"
+    },
+    "phone": "+61 8 9245 1111",
+    "email": "hello@coastalfitness.com.au",
+    "website": "https://coastalfitness.com.au/",
+    "lat": -31.8793,
+    "lng": 115.7842,
+    "amenities": ["free weights", "cardio", "group classes", "yoga/pilates", "showers", "lockers", "parking", "personal training"],
+    "hours": {
+      "monday": "5:00am – 9:00pm",
+      "tuesday": "5:00am – 9:00pm",
+      "wednesday": "5:00am – 9:00pm",
+      "thursday": "5:00am – 9:00pm",
+      "friday": "5:00am – 8:00pm",
+      "saturday": "6:00am – 5:00pm",
+      "sunday": "7:00am – 4:00pm"
+    },
+    "pricePerWeek": 33,
+    "imageUrl": "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=800&q=80"
+  },
+  {
+    "id": "gym-012",
+    "ownerId": "owner-3",
+    "name": "Jetts Fitness Scarborough",
+    "description": "No lock-in, low cost, always open. Jetts Scarborough has all the essentials — quality cardio, free weights, and resistance machines — with 24/7 access so you can train when it suits you.",
+    "address": {
+      "street": "204 Scarborough Beach Road",
+      "suburb": "Scarborough",
+      "state": "WA",
+      "postcode": "6019"
+    },
+    "phone": "+61 8 9245 1212",
+    "email": "scarborough@jetts.com.au",
+    "website": "https://www.jetts.com.au/",
+    "lat": -31.8762,
+    "lng": 115.7818,
+    "amenities": ["free weights", "cardio", "showers", "lockers", "24/7 access"],
+    "hours": {
+      "monday": "Open 24 hours",
+      "tuesday": "Open 24 hours",
+      "wednesday": "Open 24 hours",
+      "thursday": "Open 24 hours",
+      "friday": "Open 24 hours",
+      "saturday": "Open 24 hours",
+      "sunday": "Open 24 hours"
+    },
+    "pricePerWeek": 19,
+    "imageUrl": "https://images.unsplash.com/photo-1547592166-ceec631ea2c9?w=800&q=80"
+  },
+  {
+    "id": "gym-013",
+    "ownerId": "owner-3",
+    "name": "Fitness First Morley",
+    "description": "Premium multi-facility club featuring a heated lap pool, extensive group fitness timetable, dedicated cycle and yoga studios, full weights floor, café, and expert personal trainers available daily.",
+    "address": {
+      "street": "Morley Drive East",
+      "suburb": "Morley",
+      "state": "WA",
+      "postcode": "6062"
+    },
+    "phone": "+61 8 9275 1313",
+    "email": "morley@fitnessfirst.com.au",
+    "website": "https://www.fitnessfirst.com.au/",
+    "lat": -31.8604,
+    "lng": 115.8582,
+    "amenities": ["pool", "free weights", "cardio", "group classes", "yoga/pilates", "showers", "lockers", "parking", "café", "personal training"],
+    "hours": {
+      "monday": "5:30am – 10:00pm",
+      "tuesday": "5:30am – 10:00pm",
+      "wednesday": "5:30am – 10:00pm",
+      "thursday": "5:30am – 10:00pm",
+      "friday": "5:30am – 9:00pm",
+      "saturday": "7:00am – 7:00pm",
+      "sunday": "8:00am – 6:00pm"
+    },
+    "pricePerWeek": 38,
+    "imageUrl": "https://images.unsplash.com/photo-1544216717-3bbf52512659?w=800&q=80"
+  },
+  {
+    "id": "gym-014",
+    "ownerId": "owner-3",
+    "name": "HIIT Republic Morley",
+    "description": "High-energy group training studio delivering functional HIIT, boxing fitness, and strength conditioning classes. Small class sizes, expert coaching, and a community that holds you accountable.",
+    "address": {
+      "street": "45 Walter Road East",
+      "suburb": "Morley",
+      "state": "WA",
+      "postcode": "6062"
+    },
+    "phone": "+61 8 9275 1414",
+    "email": "morley@hiitrepublic.com.au",
+    "website": "https://hiitrepublic.com.au/",
+    "lat": -31.8572,
+    "lng": 115.8558,
+    "amenities": ["cardio", "group classes", "boxing/mma", "showers", "parking", "personal training"],
+    "hours": {
+      "monday": "5:30am – 7:30pm",
+      "tuesday": "5:30am – 7:30pm",
+      "wednesday": "5:30am – 7:30pm",
+      "thursday": "5:30am – 7:30pm",
+      "friday": "5:30am – 6:30pm",
+      "saturday": "7:00am – 12:00pm",
+      "sunday": "8:00am – 11:00am"
+    },
+    "pricePerWeek": 40,
+    "imageUrl": "https://images.unsplash.com/photo-1584735935823-15571af5d776?w=800&q=80"
+  },
+  {
+    "id": "gym-015",
+    "ownerId": "owner-3",
+    "name": "Powerhouse Gym Subiaco",
+    "description": "Subiaco's go-to serious training facility. Massive free weights area, power racks, strongman equipment, boxing setup, and a no-nonsense atmosphere where real results happen. Open to all abilities.",
+    "address": {
+      "street": "22 Rokeby Road",
+      "suburb": "Subiaco",
+      "state": "WA",
+      "postcode": "6008"
+    },
+    "phone": "+61 8 9381 1515",
+    "email": "info@powerhousegym.com.au",
+    "website": "https://powerhousegym.com.au/",
+    "lat": -31.9492,
+    "lng": 115.8212,
+    "amenities": ["free weights", "cardio", "boxing/mma", "showers", "lockers", "parking", "personal training"],
+    "hours": {
+      "monday": "5:00am – 10:00pm",
+      "tuesday": "5:00am – 10:00pm",
+      "wednesday": "5:00am – 10:00pm",
+      "thursday": "5:00am – 10:00pm",
+      "friday": "5:00am – 9:00pm",
+      "saturday": "7:00am – 6:00pm",
+      "sunday": "8:00am – 5:00pm"
+    },
+    "pricePerWeek": 35,
+    "imageUrl": "https://images.unsplash.com/photo-1548690312-1abedbo?w=800&q=80"
+  },
+  {
+    "id": "gym-016",
+    "ownerId": "owner-3",
+    "name": "Orangetheory Fitness Subiaco",
+    "description": "Heart-rate based interval training that pushes you to the Orange Zone for maximum results. Each 60-minute class is coach-led, data-driven, and scientifically designed to keep your body burning calories for up to 36 hours post-workout.",
+    "address": {
+      "street": "8 Altona Street",
+      "suburb": "Subiaco",
+      "state": "WA",
+      "postcode": "6008"
+    },
+    "phone": "+61 8 9381 1616",
+    "email": "subiaco@orangetheory.com.au",
+    "website": "https://www.orangetheory.com.au/",
+    "lat": -31.9465,
+    "lng": 115.8190,
+    "amenities": ["cardio", "group classes", "showers", "parking", "personal training"],
+    "hours": {
+      "monday": "5:00am – 8:00pm",
+      "tuesday": "5:00am – 8:00pm",
+      "wednesday": "5:00am – 8:00pm",
+      "thursday": "5:00am – 8:00pm",
+      "friday": "5:00am – 7:00pm",
+      "saturday": "7:00am – 1:00pm",
+      "sunday": "8:00am – 12:00pm"
+    },
+    "pricePerWeek": 48,
+    "imageUrl": "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=800&q=80"
   }
 ]
