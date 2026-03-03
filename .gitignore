@@ -9,6 +9,9 @@ build/
 .next/
 out/
 
+# Amplify generated artifacts
+.amplify/
+
 # Environment variables
 .env
 .env.local
