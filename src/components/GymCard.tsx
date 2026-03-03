@@ -34,8 +34,8 @@ export default function GymCard({ gym }: Props) {
           <h2 className="font-semibold text-gray-900 text-lg leading-tight">
             {gym.name}
           </h2>
-          <span className="text-brand-orange font-bold text-sm whitespace-nowrap">
-            ${gym.pricePerWeek}/wk
+          <span className="text-xs text-gray-400 italic whitespace-nowrap">
+            Check website for pricing
           </span>
         </div>
 

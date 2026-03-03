@@ -22,15 +22,26 @@ export default function HomePage({ gyms }: Props) {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
+  const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc">("distance-asc");
 
   const results: GymWithDistance[] = useMemo(() => {
     if (!hasSearched) return [];
-    return filterGyms(gyms, {
+    const filtered = filterGyms(gyms, {
       postcode: postcode || undefined,
       amenities: selectedAmenities,
       radiusKm,
     });
-  }, [gyms, postcode, selectedAmenities, hasSearched, radiusKm]);
+    if (sortBy === "distance-desc") {
+      return [...filtered].sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
+    }
+    if (sortBy === "price-asc") {
+      return [...filtered].sort((a, b) => a.pricePerWeek - b.pricePerWeek);
+    }
+    if (sortBy === "price-desc") {
+      return [...filtered].sort((a, b) => b.pricePerWeek - a.pricePerWeek);
+    }
+    return filtered; // distance-asc is default from filterGyms
+  }, [gyms, postcode, selectedAmenities, hasSearched, radiusKm, sortBy]);
 
   function handleSearch(pc: string) {
     setPostcode(pc);
@@ -90,7 +101,7 @@ export default function HomePage({ gyms }: Props) {
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">🏋️</p>
                 <p className="text-lg font-medium text-gray-500">Enter a postcode above to find gyms near you</p>
-                <p className="text-sm mt-2">Try <strong>6028</strong> to explore Kinross / Joondalup</p>
+                <p className="text-sm mt-2">Try <strong>6000</strong> for Perth CBD or <strong>6160</strong> for Fremantle</p>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">
@@ -102,9 +113,21 @@ export default function HomePage({ gyms }: Props) {
               </div>
             ) : (
               <>
-                <p className="text-sm text-gray-500 mb-4">
-                  {results.length} gym{results.length !== 1 ? "s" : ""} within {radiusKm} km of {postcode}
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-gray-500">
+                    {results.length} gym{results.length !== 1 ? "s" : ""} within {radiusKm} km of {postcode}
+                  </p>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  >
+                    <option value="distance-asc">Distance: Nearest first</option>
+                    <option value="distance-desc">Distance: Farthest first</option>
+                    <option value="price-asc">Price: Low to high</option>
+                    <option value="price-desc">Price: High to low</option>
+                  </select>
+                </div>
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {results.map((gym) => (
                     <GymCard key={gym.id} gym={gym} />
@@ -120,5 +143,5 @@ export default function HomePage({ gyms }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  return { props: { gyms: ownerStore.getAll() } };
+  return { props: { gyms: await ownerStore.getAll() } };
 };

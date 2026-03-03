@@ -144,10 +144,9 @@ export default function GymProfilePage({ gym }: Props) {
           <aside className="space-y-4">
             {/* Pricing */}
             <div className="bg-brand-orange rounded-xl p-5 text-white">
-              <p className="text-orange-100 text-sm mb-1">Membership from</p>
-              <p className="text-4xl font-bold">
-                ${gym.pricePerWeek}
-                <span className="text-lg font-normal text-orange-200">/wk</span>
+              <p className="text-orange-100 text-sm mb-1">Pricing</p>
+              <p className="text-base font-semibold text-orange-50">
+                Check out website for pricing
               </p>
               <a
                 href={gym.website || "#"}
