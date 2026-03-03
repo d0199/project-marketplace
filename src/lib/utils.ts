@@ -132,6 +132,7 @@ export function filterGyms(
       distanceKm: haversineKm(lat, lng, g.lat, g.lng),
     }));
     results.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+    results = results.filter((g) => (g.distanceKm ?? Infinity) <= 10);
   }
 
   // Filter by selected amenities (must have ALL selected)
