@@ -1,17 +1,10 @@
 import {
   a,
-  defineAuth,
   defineBackend,
   defineData,
   type ClientSchema,
 } from "@aws-amplify/backend";
-
-// ---------------------------------------------------------------------------
-// Auth — email + password sign-in. Owner accounts are admin-created only.
-// ---------------------------------------------------------------------------
-const auth = defineAuth({
-  loginWith: { email: true },
-});
+import { auth } from "./auth/resource";
 
 // ---------------------------------------------------------------------------
 // Data schema — flattened address/hours so DynamoDB stores native scalars.
