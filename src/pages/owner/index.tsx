@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Layout from "@/components/Layout";
 import type { OwnerSession, Gym } from "@/types";
+import type { GymStats } from "@/lib/statsStore";
 
 // Hardcoded credentials for prototype
 const CREDENTIALS: Record<
@@ -27,6 +28,7 @@ export default function OwnerPortalPage() {
   const router = useRouter();
   const [session, setSession] = useState<OwnerSession | null>(null);
   const [gyms, setGyms] = useState<Gym[]>([]);
+  const [stats, setStats] = useState<Record<string, GymStats>>({});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -48,7 +50,15 @@ export default function OwnerPortalPage() {
     if (!session) return;
     fetch(`/api/owner/gyms?ownerId=${session.ownerId}`)
       .then((r) => r.json())
-      .then((data: Gym[]) => setGyms(data));
+      .then((data: Gym[]) => {
+        setGyms(data);
+        return Promise.all(
+          data.map((g) =>
+            fetch(`/api/stats/${g.id}`).then((r) => r.json() as Promise<GymStats>).then((s) => [g.id, s] as const)
+          )
+        );
+      })
+      .then((entries) => setStats(Object.fromEntries(entries)));
   }, [session]);
 
   function handleLogin(e: React.FormEvent) {
@@ -198,6 +208,24 @@ export default function OwnerPortalPage() {
                   <p className="text-sm text-gray-500 mb-3">
                     {gym.address.suburb}, {gym.address.postcode}
                   </p>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {[
+                      { label: "Page views", icon: "👁", key: "pageViews" },
+                      { label: "Website clicks", icon: "🌐", key: "websiteClicks" },
+                      { label: "Phone clicks", icon: "📞", key: "phoneClicks" },
+                      { label: "Email clicks", icon: "✉️", key: "emailClicks" },
+                    ].map(({ label, icon, key }) => (
+                      <div key={key} className="bg-gray-50 rounded-lg px-3 py-2">
+                        <p className="text-xs text-gray-500">{icon} {label}</p>
+                        <p className="text-lg font-bold text-gray-900">
+                          {stats[gym.id]?.[key as keyof GymStats] ?? 0}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="mt-auto flex gap-2">
                     <Link
                       href={`/gym/${gym.id}`}

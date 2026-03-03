@@ -24,6 +24,14 @@ interface Props {
   gym: Gym;
 }
 
+function track(gymId: string, event: string) {
+  fetch(`/api/stats/${gymId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event }),
+  }).catch(() => {});
+}
+
 export default function GymProfilePage({ gym }: Props) {
   const [isOwner, setIsOwner] = useState(false);
 
@@ -37,7 +45,8 @@ export default function GymProfilePage({ gym }: Props) {
         // ignore bad session data
       }
     }
-  }, [gym.ownerId]);
+    track(gym.id, "pageViews");
+  }, [gym.id, gym.ownerId]);
 
   return (
     <>
@@ -145,6 +154,7 @@ export default function GymProfilePage({ gym }: Props) {
                 href={gym.website || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track(gym.id, "websiteClicks")}
                 className="block mt-4 bg-white text-brand-orange text-center font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors"
               >
                 Visit Website
@@ -158,7 +168,7 @@ export default function GymProfilePage({ gym }: Props) {
                 {gym.phone && (
                   <li className="flex items-center gap-2">
                     <span>📞</span>
-                    <a href={`tel:${gym.phone}`} className="hover:underline">
+                    <a href={`tel:${gym.phone}`} onClick={() => track(gym.id, "phoneClicks")} className="hover:underline">
                       {gym.phone}
                     </a>
                   </li>
@@ -168,6 +178,7 @@ export default function GymProfilePage({ gym }: Props) {
                     <span>✉️</span>
                     <a
                       href={`mailto:${gym.email}`}
+                      onClick={() => track(gym.id, "emailClicks")}
                       className="hover:underline truncate"
                     >
                       {gym.email}
