@@ -9,19 +9,24 @@ import type { Gym } from "@/types";
 import gymsData from "../../data/gyms.json";
 
 const ALL_GYMS = gymsData as Gym[];
+const DEFAULT_RADIUS = 10;
+const MIN_RADIUS = 1;
+const MAX_RADIUS = 50;
 
 export default function HomePage() {
   const [postcode, setPostcode] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
 
   const results: GymWithDistance[] = useMemo(() => {
     if (!hasSearched) return [];
     return filterGyms(ALL_GYMS, {
       postcode: postcode || undefined,
       amenities: selectedAmenities,
+      radiusKm,
     });
-  }, [postcode, selectedAmenities, hasSearched]);
+  }, [postcode, selectedAmenities, hasSearched, radiusKm]);
 
   function handleSearch(pc: string) {
     setPostcode(pc);
@@ -51,6 +56,25 @@ export default function HomePage() {
             Search hundreds of gyms across Australia by postcode and amenities.
           </p>
           <SearchBar onSearch={handleSearch} initialValue={postcode} />
+
+          {/* Radius slider */}
+          <div className="mt-4 flex items-center gap-4">
+            <span className="text-orange-100 text-sm whitespace-nowrap">
+              Within
+            </span>
+            <input
+              type="range"
+              min={MIN_RADIUS}
+              max={MAX_RADIUS}
+              step={1}
+              value={radiusKm}
+              onChange={(e) => setRadiusKm(Number(e.target.value))}
+              className="flex-1 accent-white h-1.5 rounded-full cursor-pointer"
+            />
+            <span className="text-white font-semibold text-sm w-16 text-right">
+              {radiusKm} km
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-6">
@@ -64,7 +88,7 @@ export default function HomePage() {
 
           {/* Results */}
           <div className="flex-1 min-w-0">
-            {/* Mobile filter toggle (shown inline on small screens) */}
+            {/* Mobile filter */}
             <div className="sm:hidden mb-4">
               <AmenityFilter
                 selected={selectedAmenities}
@@ -72,7 +96,7 @@ export default function HomePage() {
               />
             </div>
 
-            {!hasSearched && selectedAmenities.length === 0 ? (
+            {!hasSearched ? (
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">🏋️</p>
                 <p className="text-lg font-medium text-gray-500">
@@ -86,15 +110,17 @@ export default function HomePage() {
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">😕</p>
                 <p className="text-lg font-medium text-gray-500">
-                  No gyms match your filters
+                  No gyms found within {radiusKm} km of {postcode}
                 </p>
-                <p className="text-sm mt-2">Try removing some amenity filters</p>
+                <p className="text-sm mt-2">
+                  Try increasing the radius or removing amenity filters
+                </p>
               </div>
             ) : (
               <>
                 <p className="text-sm text-gray-500 mb-4">
-                  {results.length} gym{results.length !== 1 ? "s" : ""} found
-                  {postcode ? ` near ${postcode}` : ""}
+                  {results.length} gym{results.length !== 1 ? "s" : ""} within{" "}
+                  {radiusKm} km of {postcode}
                 </p>
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {results.map((gym) => (
