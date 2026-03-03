@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Gym[]>
 ) {
@@ -10,5 +10,5 @@ export default function handler(
   if (!ownerId || typeof ownerId !== "string") {
     return res.status(400).json([]);
   }
-  return res.status(200).json(ownerStore.getByOwner(ownerId));
+  return res.status(200).json(await ownerStore.getByOwner(ownerId));
 }

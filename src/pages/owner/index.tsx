@@ -2,27 +2,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
+import {
+  signIn,
+  signOut,
+  getCurrentUser,
+  fetchUserAttributes,
+} from "aws-amplify/auth";
 import ImageCarousel from "@/components/ImageCarousel";
 import Layout from "@/components/Layout";
 import type { OwnerSession, Gym } from "@/types";
 import type { GymStats } from "@/lib/statsStore";
-
-// Hardcoded credentials for prototype
-const CREDENTIALS: Record<
-  string,
-  { password: string; ownerId: string; name: string }
-> = {
-  "owner@mynextgym.com.au": {
-    password: "demo123",
-    ownerId: "owner-1",
-    name: "Alex Thompson",
-  },
-  "owner2@mynextgym.com.au": {
-    password: "demo456",
-    ownerId: "owner-2",
-    name: "Jordan Lee",
-  },
-};
 
 export default function OwnerPortalPage() {
   const router = useRouter();
@@ -35,15 +24,19 @@ export default function OwnerPortalPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("ownerSession");
-    if (raw) {
-      try {
-        setSession(JSON.parse(raw) as OwnerSession);
-      } catch {
-        sessionStorage.removeItem("ownerSession");
-      }
-    }
-    setLoading(false);
+    getCurrentUser()
+      .then(async (user) => {
+        const attributes = await fetchUserAttributes();
+        setSession({
+          ownerId: attributes["custom:ownerId"] ?? "",
+          email: user.signInDetails?.loginId ?? "",
+          name: attributes.name ?? attributes.email ?? "",
+        });
+      })
+      .catch(() => {
+        // Not signed in — show login form
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -54,28 +47,30 @@ export default function OwnerPortalPage() {
         setGyms(data);
         return Promise.all(
           data.map((g) =>
-            fetch(`/api/stats/${g.id}`).then((r) => r.json() as Promise<GymStats>).then((s) => [g.id, s] as const)
+            fetch(`/api/stats/${g.id}`)
+              .then((r) => r.json() as Promise<GymStats>)
+              .then((s) => [g.id, s] as const)
           )
         );
       })
       .then((entries) => setStats(Object.fromEntries(entries)));
   }, [session]);
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const cred = CREDENTIALS[email.toLowerCase()];
-    if (!cred || cred.password !== password) {
-      setError("Invalid email or password.");
-      return;
-    }
-    const s: OwnerSession = {
-      ownerId: cred.ownerId,
-      email: email.toLowerCase(),
-      name: cred.name,
-    };
-    sessionStorage.setItem("ownerSession", JSON.stringify(s));
-    setSession(s);
     setError("");
+    try {
+      await signIn({ username: email, password });
+      const user = await getCurrentUser();
+      const attributes = await fetchUserAttributes();
+      setSession({
+        ownerId: attributes["custom:ownerId"] ?? "",
+        email: user.signInDetails?.loginId ?? "",
+        name: attributes.name ?? attributes.email ?? "",
+      });
+    } catch {
+      setError("Invalid email or password.");
+    }
   }
 
   if (loading) {
@@ -133,9 +128,7 @@ export default function OwnerPortalPage() {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
-                {error && (
-                  <p className="text-sm text-red-500">{error}</p>
-                )}
+                {error && <p className="text-sm text-red-500">{error}</p>}
                 <button
                   type="submit"
                   className="w-full py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors"
@@ -143,10 +136,6 @@ export default function OwnerPortalPage() {
                   Sign In
                 </button>
               </form>
-
-              <p className="text-xs text-gray-400 mt-4 text-center">
-                Demo: owner@mynextgym.com.au / demo123
-              </p>
             </div>
           </div>
         </Layout>
@@ -169,8 +158,8 @@ export default function OwnerPortalPage() {
             </p>
           </div>
           <button
-            onClick={() => {
-              sessionStorage.removeItem("ownerSession");
+            onClick={async () => {
+              await signOut();
               router.reload();
             }}
             className="text-sm text-gray-500 hover:text-gray-700 underline"

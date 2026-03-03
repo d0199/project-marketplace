@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
+import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import OwnerGymForm from "@/components/OwnerGymForm";
 import type { OwnerSession, Gym } from "@/types";
@@ -16,16 +17,18 @@ export default function EditGymPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("ownerSession");
-    if (!raw) {
-      router.replace("/owner");
-      return;
-    }
-    try {
-      setSession(JSON.parse(raw) as OwnerSession);
-    } catch {
-      router.replace("/owner");
-    }
+    getCurrentUser()
+      .then(async (user) => {
+        const attributes = await fetchUserAttributes();
+        setSession({
+          ownerId: attributes["custom:ownerId"] ?? "",
+          email: user.signInDetails?.loginId ?? "",
+          name: attributes.name ?? attributes.email ?? "",
+        });
+      })
+      .catch(() => {
+        router.replace("/owner");
+      });
   }, [router]);
 
   useEffect(() => {

@@ -8,14 +8,14 @@ const VALID_EVENTS: StatEvent[] = [
   "emailClicks",
 ];
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<GymStats | { error: string }>
 ) {
   const gymId = req.query.gymId as string;
 
   if (req.method === "GET") {
-    return res.status(200).json(statsStore.get(gymId));
+    return res.status(200).json(await statsStore.get(gymId));
   }
 
   if (req.method === "POST") {
@@ -23,8 +23,8 @@ export default function handler(
     if (!VALID_EVENTS.includes(event)) {
       return res.status(400).json({ error: "Invalid event" });
     }
-    statsStore.record(gymId, event);
-    return res.status(200).json(statsStore.get(gymId));
+    await statsStore.record(gymId, event);
+    return res.status(200).json(await statsStore.get(gymId));
   }
 
   return res.status(405).json({ error: "Method not allowed" });

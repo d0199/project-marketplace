@@ -1,0 +1,34 @@
+{
+  "__comment": "PLACEHOLDER — regenerate by running: npx ampx sandbox (requires AWS account + Phase 1 setup)",
+  "version": "1.3",
+  "auth": {
+    "aws_region": "ap-southeast-2",
+    "user_pool_id": "PLACEHOLDER_RUN_npx_ampx_sandbox",
+    "user_pool_client_id": "PLACEHOLDER_RUN_npx_ampx_sandbox",
+    "identity_pool_id": "ap-southeast-2:PLACEHOLDER_RUN_npx_ampx_sandbox",
+    "mfa_methods": [],
+    "standard_required_attributes": ["email"],
+    "username_attributes": ["email"],
+    "user_verification_types": ["email"],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_uppercase": true,
+      "require_symbols": false
+    },
+    "unauthenticated_identities_enabled": true
+  },
+  "data": {
+    "aws_region": "ap-southeast-2",
+    "url": "https://PLACEHOLDER.appsync-api.ap-southeast-2.amazonaws.com/graphql",
+    "default_authorization_type": "API_KEY",
+    "authorization_types": ["AMAZON_COGNITO_USER_POOLS"],
+    "api_key": "PLACEHOLDER_RUN_npx_ampx_sandbox",
+    "model_introspection": {
+      "version": 1,
+      "models": {}
+    }
+  }
+}

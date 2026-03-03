@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import AmenityBadge from "@/components/AmenityBadge";
 import ImageCarousel from "@/components/ImageCarousel";
-import type { Gym, OwnerSession } from "@/types";
+import type { Gym } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
 
 const DAYS = [
@@ -34,15 +35,14 @@ export default function GymProfilePage({ gym }: Props) {
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("ownerSession");
-    if (raw) {
-      try {
-        const session = JSON.parse(raw) as OwnerSession;
-        setIsOwner(session.ownerId === gym.ownerId);
-      } catch {
-        // ignore bad session data
-      }
-    }
+    getCurrentUser()
+      .then(async () => {
+        const attributes = await fetchUserAttributes();
+        setIsOwner(attributes["custom:ownerId"] === gym.ownerId);
+      })
+      .catch(() => {
+        // Not signed in — isOwner stays false
+      });
     track(gym.id, "pageViews");
   }, [gym.id, gym.ownerId]);
 
@@ -208,8 +208,10 @@ export default function GymProfilePage({ gym }: Props) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
-  const gym = ownerStore.getById(params?.id as string);
+export const getServerSideProps: GetServerSideProps<Props> = async ({
+  params,
+}) => {
+  const gym = await ownerStore.getById(params?.id as string);
   if (!gym) return { notFound: true };
   return { props: { gym } };
 };

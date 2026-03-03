@@ -1,3 +1,5 @@
+import { dataClient } from "./amplifyServerConfig";
+
 export interface GymStats {
   pageViews: number;
   websiteClicks: number;
@@ -7,26 +9,42 @@ export interface GymStats {
 
 export type StatEvent = keyof GymStats;
 
-const store: Record<string, GymStats> = {};
-
-function ensure(gymId: string): GymStats {
-  if (!store[gymId]) {
-    store[gymId] = {
-      pageViews: 0,
-      websiteClicks: 0,
-      phoneClicks: 0,
-      emailClicks: 0,
-    };
-  }
-  return store[gymId];
-}
-
+// GymStat records use gymId as the DynamoDB item id so that get({ id: gymId })
+// works without a secondary index.
+//
+// NOTE: the update path (get → increment → put) is NOT atomic. For production,
+// replace with a DynamoDB UpdateItem ADD expression via @aws-sdk/lib-dynamodb
+// so concurrent increments don't race. The AppSync-generated client does not
+// expose native atomic counters.
 export const statsStore = {
-  record(gymId: string, event: StatEvent): void {
-    ensure(gymId)[event] += 1;
+  async record(gymId: string, event: StatEvent): Promise<void> {
+    const { data: existing } = await dataClient.models.GymStat.get({
+      id: gymId,
+    });
+    if (existing) {
+      await dataClient.models.GymStat.update({
+        id: gymId,
+        [event]: (existing[event] ?? 0) + 1,
+      });
+    } else {
+      await dataClient.models.GymStat.create({
+        id: gymId,
+        gymId,
+        pageViews: event === "pageViews" ? 1 : 0,
+        websiteClicks: event === "websiteClicks" ? 1 : 0,
+        phoneClicks: event === "phoneClicks" ? 1 : 0,
+        emailClicks: event === "emailClicks" ? 1 : 0,
+      });
+    }
   },
 
-  get(gymId: string): GymStats {
-    return { ...ensure(gymId) };
+  async get(gymId: string): Promise<GymStats> {
+    const { data } = await dataClient.models.GymStat.get({ id: gymId });
+    return {
+      pageViews: data?.pageViews ?? 0,
+      websiteClicks: data?.websiteClicks ?? 0,
+      phoneClicks: data?.phoneClicks ?? 0,
+      emailClicks: data?.emailClicks ?? 0,
+    };
   },
 };
