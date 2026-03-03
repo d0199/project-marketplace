@@ -42,7 +42,7 @@ export default function GymProfilePage({ gym }: Props) {
   return (
     <>
       <Head>
-        <title>{gym.name} — GymMarket</title>
+        <title>{gym.name} — mynextgym.com.au</title>
         <meta name="description" content={gym.description} />
       </Head>
       <Layout>

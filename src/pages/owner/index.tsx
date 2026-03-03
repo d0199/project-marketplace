@@ -11,12 +11,12 @@ const CREDENTIALS: Record<
   string,
   { password: string; ownerId: string; name: string }
 > = {
-  "owner@gymmarketplace.com.au": {
+  "owner@mynextgym.com.au": {
     password: "demo123",
     ownerId: "owner-1",
     name: "Alex Thompson",
   },
-  "owner2@gymmarketplace.com.au": {
+  "owner2@mynextgym.com.au": {
     password: "demo456",
     ownerId: "owner-2",
     name: "Jordan Lee",
@@ -82,7 +82,7 @@ export default function OwnerPortalPage() {
     return (
       <>
         <Head>
-          <title>Owner Portal — GymMarket</title>
+          <title>Owner Portal — mynextgym.com.au</title>
         </Head>
         <Layout>
           <div className="max-w-md mx-auto mt-12">
@@ -106,7 +106,7 @@ export default function OwnerPortalPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="owner@gymmarketplace.com.au"
+                    placeholder="owner@mynextgym.com.au"
                     required
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
@@ -135,7 +135,7 @@ export default function OwnerPortalPage() {
               </form>
 
               <p className="text-xs text-gray-400 mt-4 text-center">
-                Demo: owner@gymmarketplace.com.au / demo123
+                Demo: owner@mynextgym.com.au / demo123
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function OwnerPortalPage() {
   return (
     <>
       <Head>
-        <title>Dashboard — GymMarket Owner Portal</title>
+        <title>Dashboard — mynextgym.com.au Owner Portal</title>
       </Head>
       <Layout>
         <div className="flex items-center justify-between mb-6">

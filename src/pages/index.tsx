@@ -36,7 +36,7 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>GymMarket — Find Gyms in Australia</title>
+        <title>mynextgym.com.au — Find Gyms in Australia</title>
         <meta
           name="description"
           content="Discover and compare gyms near you across Australia."

@@ -86,7 +86,7 @@ export default function EditGymPage() {
   return (
     <>
       <Head>
-        <title>Edit {gym.name} — GymMarket</title>
+        <title>Edit {gym.name} — mynextgym.com.au</title>
       </Head>
       <Layout>
         <nav className="text-sm text-gray-500 mb-6">

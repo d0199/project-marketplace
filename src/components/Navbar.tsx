@@ -18,7 +18,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
           <span className="text-brand-orange">🏋️</span>
           <span>
-            Gym<span className="text-brand-orange">Market</span>
+            mynextgym<span className="text-brand-orange">.com.au</span>
           </span>
         </Link>
 
