@@ -16,7 +16,7 @@ export default function HomePage() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const results: GymWithDistance[] = useMemo(() => {
-    if (!hasSearched && selectedAmenities.length === 0) return [];
+    if (!hasSearched) return [];
     return filterGyms(ALL_GYMS, {
       postcode: postcode || undefined,
       amenities: selectedAmenities,
@@ -30,7 +30,6 @@ export default function HomePage() {
 
   function handleAmenityChange(amenities: string[]) {
     setSelectedAmenities(amenities);
-    if (!hasSearched && amenities.length > 0) setHasSearched(true);
   }
 
   return (
