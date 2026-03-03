@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const DAYS: (keyof OpeningHours)[] = [
 export default function OwnerGymForm({ gym, onSave }: Props) {
   const [form, setForm] = useState<Gym>({ ...gym });
   const [toast, setToast] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   function setField<K extends keyof Gym>(key: K, value: Gym[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -199,6 +201,61 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
             </label>
           ))}
         </div>
+      </section>
+
+      {/* Images */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+          Images
+        </h2>
+        <p className="text-xs text-gray-500 mb-3">
+          First image is the primary photo shown on cards. Drag to reorder — add up to 6 images.
+        </p>
+        <div className="space-y-3 mb-4">
+          {form.images.map((url, idx) => (
+            <div key={idx} className="flex items-center gap-3">
+              <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                <Image src={url} alt={`Image ${idx + 1}`} fill className="object-cover" unoptimized sizes="64px" />
+              </div>
+              <span className="flex-1 text-xs text-gray-600 truncate">{url}</span>
+              {idx === 0 && (
+                <span className="text-xs bg-brand-orange text-white px-2 py-0.5 rounded-full shrink-0">Primary</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))}
+                className="text-red-400 hover:text-red-600 text-lg leading-none shrink-0"
+                aria-label="Remove image"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        {form.images.length < 6 && (
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              placeholder="https://… paste image URL"
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const url = newImageUrl.trim();
+                if (url) {
+                  setForm((f) => ({ ...f, images: [...f.images, url] }));
+                  setNewImageUrl("");
+                }
+              }}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Hours */}

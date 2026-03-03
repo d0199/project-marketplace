@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
-import Image from "next/image";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import AmenityBadge from "@/components/AmenityBadge";
+import ImageCarousel from "@/components/ImageCarousel";
 import type { Gym, OwnerSession } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
 
@@ -73,16 +73,17 @@ export default function GymProfilePage({ gym }: Props) {
         </nav>
 
         {/* Banner */}
-        <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 mb-6 bg-gradient-to-r from-brand-orange to-brand-orange-dark">
-          <Image
-            src={gym.imageUrl}
-            alt={gym.name}
-            fill
-            className="object-cover opacity-60"
-            sizes="100vw"
-            unoptimized
-          />
-          <div className="absolute inset-0 flex flex-col justify-end p-6">
+        <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 mb-6 bg-brand-black">
+          <div className="absolute inset-0 opacity-60">
+            <ImageCarousel
+              images={gym.images}
+              alt={gym.name}
+              sizes="100vw"
+              showDots={false}
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none">
             <h1 className="text-3xl font-bold text-white drop-shadow-md">
               {gym.name}
             </h1>

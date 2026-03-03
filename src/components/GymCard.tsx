@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { GymWithDistance } from "@/lib/utils";
 import AmenityBadge from "./AmenityBadge";
+import ImageCarousel from "./ImageCarousel";
 
 interface Props {
   gym: GymWithDistance;
@@ -15,13 +15,10 @@ export default function GymCard({ gym }: Props) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
       <div className="relative h-44 w-full bg-gray-100">
-        <Image
-          src={gym.imageUrl}
+        <ImageCarousel
+          images={gym.images}
           alt={gym.name}
-          fill
-          className="object-cover"
           sizes="(max-width: 768px) 100vw, 33vw"
-          unoptimized
         />
         {gym.distanceKm !== undefined && (
           <span className="absolute top-2 right-2 bg-brand-black/80 text-white text-xs font-semibold px-2 py-1 rounded-full">

@@ -29,7 +29,7 @@ export interface Gym {
   amenities: string[];
   hours: OpeningHours;
   pricePerWeek: number;
-  imageUrl: string;
+  images: string[];
 }
 
 export interface OwnerSession {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
-import Image from "next/image";
+import ImageCarousel from "@/components/ImageCarousel";
 import Layout from "@/components/Layout";
 import type { OwnerSession, Gym } from "@/types";
 import type { GymStats } from "@/lib/statsStore";
@@ -192,14 +192,7 @@ export default function OwnerPortalPage() {
                 className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
               >
                 <div className="relative h-36 w-full bg-gray-100">
-                  <Image
-                    src={gym.imageUrl}
-                    alt={gym.name}
-                    fill
-                    className="object-cover"
-                    sizes="33vw"
-                    unoptimized
-                  />
+                  <ImageCarousel images={gym.images} alt={gym.name} sizes="33vw" />
                 </div>
                 <div className="p-4 flex flex-col flex-1">
                   <h2 className="font-semibold text-gray-900 text-base mb-1">
