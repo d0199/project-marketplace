@@ -1,7 +1,12 @@
-import { dataClient } from "./amplifyServerConfig";
+import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/data/resource";
 import type { Gym } from "@/types";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const seedGyms: Gym[] = require("../../data/gyms.json");
 
+// ---------------------------------------------------------------------------
+// Shape converters between the flat DynamoDB record and the nested Gym type
+// ---------------------------------------------------------------------------
 type GymRecord = Schema["Gym"]["type"];
 
 function toGym(r: GymRecord): Gym {
@@ -64,18 +69,25 @@ function fromGym(gym: Gym) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Store — falls back to gyms.json until the Amplify backend is deployed
+// ---------------------------------------------------------------------------
 export const ownerStore = {
   async getAll(): Promise<Gym[]> {
+    if (!isAmplifyConfigured()) return seedGyms;
     const { data } = await dataClient.models.Gym.list();
     return (data ?? []).map(toGym);
   },
 
   async getById(id: string): Promise<Gym | undefined> {
+    if (!isAmplifyConfigured()) return seedGyms.find((g) => g.id === id);
     const { data } = await dataClient.models.Gym.get({ id });
     return data ? toGym(data) : undefined;
   },
 
   async getByOwner(ownerId: string): Promise<Gym[]> {
+    if (!isAmplifyConfigured())
+      return seedGyms.filter((g) => g.ownerId === ownerId);
     const { data } = await dataClient.models.Gym.list({
       filter: { ownerId: { eq: ownerId } },
     });
@@ -83,6 +95,7 @@ export const ownerStore = {
   },
 
   async update(gym: Gym): Promise<void> {
+    if (!isAmplifyConfigured()) return; // no-op until backend is live
     await dataClient.models.Gym.update(fromGym(gym));
   },
 };

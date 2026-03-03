@@ -1,4 +1,4 @@
-import { dataClient } from "./amplifyServerConfig";
+import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 
 export interface GymStats {
   pageViews: number;
@@ -9,6 +9,13 @@ export interface GymStats {
 
 export type StatEvent = keyof GymStats;
 
+const ZERO: GymStats = {
+  pageViews: 0,
+  websiteClicks: 0,
+  phoneClicks: 0,
+  emailClicks: 0,
+};
+
 // GymStat records use gymId as the DynamoDB item id so that get({ id: gymId })
 // works without a secondary index.
 //
@@ -18,6 +25,7 @@ export type StatEvent = keyof GymStats;
 // expose native atomic counters.
 export const statsStore = {
   async record(gymId: string, event: StatEvent): Promise<void> {
+    if (!isAmplifyConfigured()) return;
     const { data: existing } = await dataClient.models.GymStat.get({
       id: gymId,
     });
@@ -39,6 +47,7 @@ export const statsStore = {
   },
 
   async get(gymId: string): Promise<GymStats> {
+    if (!isAmplifyConfigured()) return { ...ZERO };
     const { data } = await dataClient.models.GymStat.get({ id: gymId });
     return {
       pageViews: data?.pageViews ?? 0,
