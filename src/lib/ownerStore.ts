@@ -1,5 +1,5 @@
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
-import type { Schema } from "../../amplify/data/resource";
+import type { Schema } from "../../amplify/backend";
 import type { Gym } from "@/types";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const seedGyms: Gym[] = require("../../data/gyms.json");

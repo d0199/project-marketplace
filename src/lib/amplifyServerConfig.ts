@@ -3,7 +3,7 @@
 // authMode 'apiKey' is used so no user session is needed server-side.
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
-import type { Schema } from "../../amplify/data/resource";
+import type { Schema } from "../../amplify/backend";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const outputs = require("../../amplify_outputs.json");
 
