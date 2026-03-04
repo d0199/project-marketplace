@@ -24,6 +24,11 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           alt={gym.name}
           sizes="(max-width: 768px) 100vw, 33vw"
         />
+        {gym.isFeatured && (
+          <span className="absolute top-2 left-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded-full">
+            ★ Featured
+          </span>
+        )}
         {gym.distanceKm !== undefined && (
           <span className="absolute top-2 right-2 bg-brand-black/80 text-white text-xs font-semibold px-2 py-1 rounded-full">
             {gym.distanceKm < 1

@@ -19,6 +19,7 @@ export interface Gym {
   id: string;
   ownerId: string;
   isTest?: boolean;
+  isFeatured?: boolean;
   priceVerified?: boolean;
   name: string;
   description: string;

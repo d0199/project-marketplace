@@ -9,6 +9,7 @@ const schema = a.schema({
       ownerId: a.string().required(),
       name: a.string().required(),
       isTest: a.boolean(),
+      isFeatured: a.boolean(),
       priceVerified: a.boolean(),
       description: a.string(),
       images: a.string().array(),

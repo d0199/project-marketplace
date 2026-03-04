@@ -398,9 +398,10 @@ function GymsTab() {
     priceVerified: "" | "true" | "false";
     ownerId: string;
     isTest: "" | "true" | "false";
+    isFeatured: "" | "true" | "false";
     addAmenities: Set<string>;
     removeAmenities: Set<string>;
-  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", addAmenities: new Set(), removeAmenities: new Set() });
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", addAmenities: new Set(), removeAmenities: new Set() });
   const [bulkBusy, setBulkBusy] = useState(false);
 
   function showToast(msg: string) {
@@ -436,7 +437,7 @@ function GymsTab() {
   }
 
   function resetBulk() {
-    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", addAmenities: new Set(), removeAmenities: new Set() });
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", addAmenities: new Set(), removeAmenities: new Set() });
   }
 
   async function applyBulk() {
@@ -450,6 +451,7 @@ function GymsTab() {
         if (bulk.priceVerified !== "") updated.priceVerified = bulk.priceVerified === "true";
         if (bulk.ownerId !== "") updated.ownerId = bulk.ownerId;
         if (bulk.isTest !== "") updated.isTest = bulk.isTest === "true";
+        if (bulk.isFeatured !== "") updated.isFeatured = bulk.isFeatured === "true";
         if (bulk.addAmenities.size > 0 || bulk.removeAmenities.size > 0) {
           const amenitySet = new Set(g.amenities);
           bulk.addAmenities.forEach((a) => amenitySet.add(a));
@@ -491,7 +493,7 @@ function GymsTab() {
       // OwnerGymForm initialises its internal state from props once, so the
       // ownerId typed in the separate input above doesn't reach the form's
       // onSave payload — override it from panel state here.
-      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false };
+      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false };
       const r = await fetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -508,7 +510,7 @@ function GymsTab() {
       const r = await fetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false }),
+        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false }),
       });
       if (r.ok) {
         showToast("Gym updated.");
@@ -638,6 +640,18 @@ function GymsTab() {
                     <option value="false">Mark as live</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Featured listing</label>
+                  <select
+                    value={bulk.isFeatured}
+                    onChange={(e) => setBulk((b) => ({ ...b, isFeatured: e.target.value as "" | "true" | "false" }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">No change</option>
+                    <option value="true">Set featured ★</option>
+                    <option value="false">Remove featured</option>
+                  </select>
+                </div>
               </div>
 
               {/* Amenities */}
@@ -724,9 +738,14 @@ function GymsTab() {
                   <td className="px-4 py-3 text-gray-600">{g.ownerId}</td>
                   <td className="px-4 py-3 text-gray-600">{g.address.suburb}</td>
                   <td className="px-4 py-3">
-                    {g.isTest && (
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Test</span>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {g.isFeatured && (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">★ Featured</span>
+                      )}
+                      {g.isTest && (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Test</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <a
@@ -815,6 +834,21 @@ function GymsTab() {
                   />
                   <span className="text-sm font-medium text-gray-700">
                     Test listing <span className="text-gray-400 font-normal">(hidden from public — visible only to @mynextgym.com.au users)</span>
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={panel.gym.isFeatured ?? false}
+                    onChange={(e) =>
+                      setPanel((p) =>
+                        p ? { ...p, gym: { ...p.gym, isFeatured: e.target.checked } } : p
+                      )
+                    }
+                    className="w-4 h-4 accent-brand-orange"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Featured listing <span className="text-gray-400 font-normal">(pinned to top of results — max 3, rotates evenly)</span>
                   </span>
                 </label>
               </div>

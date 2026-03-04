@@ -235,3 +235,41 @@ export function filterGyms(
 
   return results;
 }
+
+// Quality tier for non-featured gyms (higher = appears first)
+function gymTier(gym: Gym): number {
+  const isOwned = gym.ownerId !== "owner-3" && gym.ownerId !== "unclaimed" && gym.ownerId !== "";
+  const hasPricing = (gym.priceVerified ?? false) && (gym.pricePerWeek ?? 0) > 0;
+  if (isOwned && hasPricing) return 3;
+  if (isOwned) return 2;
+  if (hasPricing) return 1;
+  return 0;
+}
+
+/**
+ * Apply ranking on top of an already-sorted results array.
+ * Featured gyms float to the top (rotated by rotationSeed so all get equal exposure).
+ * Non-featured gyms are then sorted by quality tier; existing order is preserved
+ * within each tier (stable sort).
+ *
+ * rotationSeed: use Math.floor(Date.now() / (8 * 60 * 60 * 1000)) for 8-hour rotation.
+ */
+export function rankGyms(
+  gyms: GymWithDistance[],
+  rotationSeed: number
+): GymWithDistance[] {
+  const featured = gyms.filter((g) => g.isFeatured);
+  const rest = gyms.filter((g) => !g.isFeatured);
+
+  // Rotate featured array so a different gym leads each rotation window
+  const offset = featured.length > 0 ? rotationSeed % featured.length : 0;
+  const rotatedFeatured = [...featured.slice(offset), ...featured.slice(0, offset)];
+
+  // Stable sort rest by tier (preserves within-tier order from user's sort)
+  const sortedRest = rest
+    .map((g, i) => ({ g, i, tier: gymTier(g) }))
+    .sort((a, b) => b.tier - a.tier || a.i - b.i)
+    .map(({ g }) => g);
+
+  return [...rotatedFeatured, ...sortedRest];
+}

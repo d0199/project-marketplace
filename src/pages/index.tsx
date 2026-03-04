@@ -7,7 +7,7 @@ import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
 import GymCard from "@/components/GymCard";
-import { filterGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
+import { filterGyms, rankGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
 
@@ -26,6 +26,8 @@ export default function HomePage({ gyms }: Props) {
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
   const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc">("distance-asc");
   const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
+  // Rotation seed changes every 8 hours — stable for the session
+  const rotationSeed = useMemo(() => Math.floor(Date.now() / (8 * 60 * 60 * 1000)), []);
 
   useEffect(() => {
     getCurrentUser()
@@ -49,17 +51,16 @@ export default function HomePage({ gyms }: Props) {
       amenities: selectedAmenities,
       radiusKm,
     });
+    let sorted = filtered;
     if (sortBy === "distance-desc") {
-      return [...filtered].sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
+      sorted = [...filtered].sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
+    } else if (sortBy === "price-asc") {
+      sorted = [...filtered].sort((a, b) => a.pricePerWeek - b.pricePerWeek);
+    } else if (sortBy === "price-desc") {
+      sorted = [...filtered].sort((a, b) => b.pricePerWeek - a.pricePerWeek);
     }
-    if (sortBy === "price-asc") {
-      return [...filtered].sort((a, b) => a.pricePerWeek - b.pricePerWeek);
-    }
-    if (sortBy === "price-desc") {
-      return [...filtered].sort((a, b) => b.pricePerWeek - a.pricePerWeek);
-    }
-    return filtered; // distance-asc is default from filterGyms
-  }, [visibleGyms, postcode, selectedAmenities, hasSearched, radiusKm, sortBy]);
+    return rankGyms(sorted, rotationSeed);
+  }, [visibleGyms, postcode, selectedAmenities, hasSearched, radiusKm, sortBy, rotationSeed]);
 
   function handleSearch(pc: string) {
     setPostcode(pc);
