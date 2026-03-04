@@ -2,29 +2,31 @@
  * Server-side only — never imported by client-side code.
  * Sends admin alert emails via AWS SES using the Amplify compute role credentials.
  *
- * Required env vars (set in Amplify Console → Environment variables):
+ * Required env vars (Amplify Console → Environment variables):
  *   ADMIN_ALERT_EMAIL  — recipient address (never exposed to the client)
  *
- * Required IAM permission on amplify-ssr-compute-role:
- *   ses:SendEmail  on arn:aws:ses:<region>:<account>:identity/mynextgym.com.au
+ * Required IAM on amplify-ssr-compute-role:
+ *   ses:SendEmail on arn:aws:ses:ap-southeast-2:603366204689:identity/mynextgym.com.au
  *
- * The sender (noreply@mynextgym.com.au) must be verified in AWS SES.
+ * noreply@mynextgym.com.au must be verified in SES (domain identity covers it).
  */
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const SENDER = "noreply@mynextgym.com.au";
+const REGION = "ap-southeast-2";
 
 export async function sendAdminAlert(subject: string, body: string): Promise<void> {
   const recipient = process.env.ADMIN_ALERT_EMAIL;
-  if (!recipient) return; // env var not set — silently skip
 
-  // Read region at call time so we always get the live value, not a build-time snapshot
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const outputs = require("../../amplify_outputs.json");
-  const region: string = outputs.auth?.aws_region ?? "ap-southeast-2";
+  console.log("[emailNotify] called — recipient env var set:", !!recipient);
+
+  if (!recipient) {
+    console.warn("[emailNotify] ADMIN_ALERT_EMAIL not set — skipping");
+    return;
+  }
 
   try {
-    const client = new SESClient({ region });
+    const client = new SESClient({ region: REGION });
     await client.send(
       new SendEmailCommand({
         Source: SENDER,
@@ -35,8 +37,8 @@ export async function sendAdminAlert(subject: string, body: string): Promise<voi
         },
       })
     );
+    console.log("[emailNotify] sent ok — subject:", subject);
   } catch (err) {
-    // Log but never fail the parent request because of a notification error
-    console.error("[emailNotify] failed to send alert:", err);
+    console.error("[emailNotify] SES error:", err);
   }
 }
