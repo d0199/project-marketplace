@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { Gym, OpeningHours } from "@/types";
-import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
+import { ALL_AMENITIES, AMENITY_ICONS, POSTCODE_COORDS } from "@/lib/utils";
 
 interface Props {
   gym: Gym;
@@ -28,7 +28,16 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
   }
 
   function setAddressField(key: keyof Gym["address"], value: string) {
-    setForm((f) => ({ ...f, address: { ...f.address, [key]: value } }));
+    setForm((f) => {
+      const updated = { ...f, address: { ...f.address, [key]: value } };
+      // Auto-fill lat/lng when a known postcode is entered
+      if (key === "postcode" && value.length === 4 && POSTCODE_COORDS[value]) {
+        const [lat, lng] = POSTCODE_COORDS[value];
+        updated.lat = lat;
+        updated.lng = lng;
+      }
+      return updated;
+    });
   }
 
   function setHoursField(day: keyof OpeningHours, value: string) {
