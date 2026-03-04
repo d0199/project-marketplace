@@ -29,9 +29,9 @@ export default function HomePage({ gyms }: Props) {
 
   useEffect(() => {
     getCurrentUser()
-      .then(() => fetchUserAttributes())
-      .then((attrs) => {
-        const email = attrs.email ?? "";
+      .then(async (user) => {
+        const attrs = await fetchUserAttributes();
+        const email = user.signInDetails?.loginId ?? attrs.email ?? "";
         setCanSeeTestGyms(email.endsWith("@mynextgym.com.au"));
       })
       .catch(() => {});
