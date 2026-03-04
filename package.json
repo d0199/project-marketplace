@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1001.0",
     "autoprefixer": "^10.4.27",
     "aws-amplify": "^6.16.2",
     "next": "15.1.6",

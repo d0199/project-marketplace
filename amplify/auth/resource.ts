@@ -9,5 +9,9 @@ export const auth = defineAuth({
       dataType: "String",
       mutable: true,
     },
+    "custom:isAdmin": {
+      dataType: "String",
+      mutable: true,
+    },
   },
 });

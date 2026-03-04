@@ -118,4 +118,39 @@ export const ownerStore = {
     if (!isAmplifyConfigured()) return; // no-op until backend is live
     await dataClient.models.Gym.update(fromGym(gym));
   },
+
+  async create(gym: Omit<Gym, "id">): Promise<Gym> {
+    if (!isAmplifyConfigured()) throw new Error("Backend not configured");
+    const { data } = await dataClient.models.Gym.create({
+      ownerId: gym.ownerId,
+      name: gym.name,
+      description: gym.description,
+      addressStreet: gym.address.street,
+      addressSuburb: gym.address.suburb,
+      addressState: gym.address.state,
+      addressPostcode: gym.address.postcode,
+      phone: gym.phone,
+      email: gym.email,
+      website: gym.website,
+      lat: gym.lat,
+      lng: gym.lng,
+      amenities: gym.amenities,
+      hoursMonday: gym.hours.monday,
+      hoursTuesday: gym.hours.tuesday,
+      hoursWednesday: gym.hours.wednesday,
+      hoursThursday: gym.hours.thursday,
+      hoursFriday: gym.hours.friday,
+      hoursSaturday: gym.hours.saturday,
+      hoursSunday: gym.hours.sunday,
+      pricePerWeek: gym.pricePerWeek,
+      images: gym.images,
+    });
+    if (!data) throw new Error("Failed to create gym");
+    return toGym(data);
+  },
+
+  async delete(id: string): Promise<void> {
+    if (!isAmplifyConfigured()) return;
+    await dataClient.models.Gym.delete({ id });
+  },
 };

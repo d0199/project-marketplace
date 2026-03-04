@@ -45,6 +45,20 @@ const schema = a.schema({
       emailClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
+
+  Claim: a
+    .model({
+      gymId: a.string().required(),
+      gymName: a.string(),
+      gymAddress: a.string(),
+      gymWebsite: a.string(),
+      claimantName: a.string().required(),
+      claimantEmail: a.string().required(),
+      claimantPhone: a.string(),
+      message: a.string(),
+      status: a.string(), // "pending" | "approved" | "rejected"
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
