@@ -81,6 +81,20 @@ export default function AdminPage() {
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users">("claims");
+  const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
+
+  // Pre-fetch pending counts so badges show immediately on all tabs
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/admin/claims").then((r) => r.json()).catch(() => []),
+      fetch("/api/admin/moderation").then((r) => r.json()).catch(() => []),
+    ]).then(([claims, edits]) => {
+      setPendingCounts({
+        claims: (claims as Claim[]).filter((c) => c.status === "pending").length,
+        moderation: (edits as GymEdit[]).filter((e) => e.status === "pending").length,
+      });
+    });
+  }, []);
 
   // Auth check
   useEffect(() => {
@@ -148,13 +162,16 @@ export default function AdminPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`py-4 text-sm font-medium border-b-2 transition-colors capitalize ${
+              className={`py-4 text-sm font-medium border-b-2 transition-colors capitalize flex items-center gap-1.5 ${
                 tab === t
                   ? "border-brand-orange text-brand-orange"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
               {t === "moderation" ? "Moderation Review" : t}
+              {(pendingCounts[t] ?? 0) > 0 && (
+                <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
+              )}
             </button>
           ))}
         </nav>
@@ -162,8 +179,8 @@ export default function AdminPage() {
 
       {/* Content */}
       <div className="p-6 max-w-7xl mx-auto">
-        {tab === "claims" && <ClaimsTab />}
-        {tab === "moderation" && <ModerationTab />}
+        {tab === "claims" && <ClaimsTab onPendingCount={(n) => setPendingCounts((p) => ({ ...p, claims: n }))} />}
+        {tab === "moderation" && <ModerationTab onPendingCount={(n) => setPendingCounts((p) => ({ ...p, moderation: n }))} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} />}
         {tab === "users" && <UsersTab />}
       </div>
@@ -182,7 +199,7 @@ function fmtDate(iso?: string) {
   });
 }
 
-function ClaimsTab() {
+function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -195,9 +212,11 @@ function ClaimsTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const r = await fetch("/api/admin/claims");
-    setClaims(await r.json());
+    const data = await r.json();
+    setClaims(data);
+    onPendingCount?.(data.filter((c: Claim) => c.status === "pending").length);
     setLoading(false);
-  }, []);
+  }, [onPendingCount]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -432,7 +451,7 @@ function computeDiff(current: Gym, proposed: Gym) {
   });
 }
 
-function ModerationTab() {
+function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) {
   const [edits, setEdits] = useState<GymEdit[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -444,9 +463,13 @@ function ModerationTab() {
   const load = useCallback(async () => {
     setLoading(true);
     const r = await fetch("/api/admin/moderation");
-    if (r.ok) setEdits(await r.json());
+    if (r.ok) {
+      const data = await r.json();
+      setEdits(data);
+      onPendingCount?.(data.filter((e: GymEdit) => e.status === "pending").length);
+    }
     setLoading(false);
-  }, []);
+  }, [onPendingCount]);
 
   useEffect(() => { load(); }, [load]);
 

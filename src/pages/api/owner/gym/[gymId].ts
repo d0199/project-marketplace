@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
+import { sendAdminAlert } from "@/lib/emailNotify";
 import type { Gym } from "@/types";
 
 export default async function handler(
@@ -44,6 +45,11 @@ export default async function handler(
       proposedChanges: JSON.stringify(updated),
       status: "pending",
     });
+
+    void sendAdminAlert(
+      "Gym profile edit pending review",
+      `A gym owner has submitted profile changes that require moderation.\n\nGym: ${currentGym.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: https://www.mynextgym.com.au/admin`
+    );
 
     return res.status(200).json({ queued: true });
   }
