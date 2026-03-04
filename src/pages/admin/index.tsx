@@ -729,6 +729,14 @@ function GymsTab() {
                     )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
+                    <a
+                      href={`/gym/${g.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-500 hover:underline text-xs font-medium mr-3"
+                    >
+                      View
+                    </a>
                     <button
                       onClick={() => setPanel({ gym: g, isNew: false })}
                       className="text-brand-orange hover:underline text-xs font-medium mr-3"
