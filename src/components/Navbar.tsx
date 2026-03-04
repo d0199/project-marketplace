@@ -31,7 +31,7 @@ export default function Navbar() {
               href="/list-gym"
               className="text-brand-orange hover:text-orange-400 font-medium transition-colors whitespace-nowrap"
             >
-              List your gym — it&apos;s free
+              List your gym, it&apos;s free
             </Link>
           )}
           {isOwnerRoute ? (

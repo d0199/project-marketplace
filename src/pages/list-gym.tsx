@@ -94,7 +94,7 @@ export default function ListGymPage() {
         <div className="max-w-xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              List your gym — it&apos;s free
+              List your gym, it&apos;s free
             </h1>
             <p className="text-gray-500">
               Fill in the details below and our team will create your listing and set up your owner account. You&apos;ll be able to manage your profile once approved.
