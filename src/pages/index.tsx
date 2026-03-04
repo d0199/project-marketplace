@@ -102,27 +102,10 @@ export default function HomePage({ gyms }: Props) {
             </div>
 
             {!hasSearched ? (
-              <div>
-                <div className="text-center py-10 text-gray-400">
-                  <p className="text-5xl mb-4">🏋️</p>
-                  <p className="text-lg font-medium text-gray-500">Enter a postcode above to find gyms near you</p>
-                </div>
-                <div className="border-t pt-6">
-                  <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-                    Browse gyms by suburb
-                  </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
-                    {Object.entries(POSTCODE_META).map(([, meta]) => (
-                      <Link
-                        key={meta.slug}
-                        href={`/gyms/${meta.slug}`}
-                        className="text-sm text-brand-orange hover:underline py-0.5"
-                      >
-                        Gyms in {meta.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+              <div className="text-center py-20 text-gray-400">
+                <p className="text-5xl mb-4">🏋️</p>
+                <p className="text-lg font-medium text-gray-500">Enter a postcode above to find gyms near you</p>
+                <p className="text-sm mt-2">Try <strong className="text-gray-600">6000</strong> for Perth CBD or <strong className="text-gray-600">6160</strong> for Fremantle</p>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">
@@ -158,6 +141,26 @@ export default function HomePage({ gyms }: Props) {
             )}
           </div>
         </div>
+
+        {/* Browse by suburb — full width, below results, hidden once user has searched */}
+        {!hasSearched && (
+          <div className="mt-12 border-t pt-8">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              Browse gyms by suburb
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2">
+              {Object.entries(POSTCODE_META).map(([, meta]) => (
+                <Link
+                  key={meta.slug}
+                  href={`/gyms/${meta.slug}`}
+                  className="text-sm text-brand-orange hover:underline py-0.5"
+                >
+                  Gyms in {meta.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </Layout>
     </>
   );
