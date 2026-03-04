@@ -6,6 +6,7 @@ import {
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { WA_POSTCODE_COORDS } from "@/data/waPostcodes";
 
 async function listAllClaims() {
   const results: Record<string, unknown>[] = [];
@@ -57,13 +58,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const { data: claim } = await dataClient.models.Claim.get({ id });
         if (!claim) return res.status(404).json({ error: "Claim not found" });
 
-        const gym = await ownerStore.getById(claim.gymId ?? "");
-        if (!gym) return res.status(404).json({ error: `Gym not found: ${claim.gymId}` });
-
         const email = claim.claimantEmail ?? "";
         const cognitoClient = getCognitoAdmin();
 
-        // Check if a Cognito user already exists for this email
+        // Create or find Cognito user
         const { Users = [] } = await cognitoClient.send(
           new ListUsersCommand({
             UserPoolId: USER_POOL_ID,
@@ -76,14 +74,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         let isNewUser: boolean;
 
         if (Users.length > 0) {
-          // Existing user — use their current ownerId
           const attrs = Object.fromEntries(
             (Users[0].Attributes ?? []).map((a) => [a.Name, a.Value])
           );
           ownerId = attrs["custom:ownerId"] ?? `owner-${id.slice(0, 8)}`;
           isNewUser = false;
         } else {
-          // New user — create Cognito account and send welcome email
           ownerId = `owner-${id.slice(0, 8)}`;
           const tempPassword = `Welcome${id.slice(0, 4).toUpperCase()}1!`;
           await cognitoClient.send(
@@ -101,17 +97,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           isNewUser = true;
         }
 
-        // Assign ownerId to gym and mark claim approved
-        await ownerStore.update({ ...gym, ownerId });
-        await dataClient.models.Claim.update({
-          id,
-          status: "approved",
-          notes: notes ?? (isNewUser
-            ? `Approved — new Cognito user created, ownerId: ${ownerId}`
-            : `Approved — gym added to existing user account, ownerId: ${ownerId}`),
-        });
+        if (claim.isNewListing) {
+          // New listing — create a gym record from submitted details
+          const postcode = claim.gymPostcode ?? "";
+          const coords = WA_POSTCODE_COORDS[postcode];
+          const [lat, lng] = coords ?? [-31.9505, 115.8605]; // Perth default
 
-        return res.status(200).json({ ok: true, ownerId, isNewUser });
+          const newGym = await ownerStore.create({
+            ownerId,
+            name: claim.gymName ?? "",
+            description: claim.message ?? "",
+            address: {
+              street: "",
+              suburb: claim.gymSuburb ?? "",
+              state: "WA",
+              postcode,
+            },
+            lat,
+            lng,
+            phone: claim.gymPhone || claim.claimantPhone || "",
+            email: claim.gymEmail || email,
+            website: claim.gymWebsite ?? "",
+            amenities: [],
+            images: [],
+            hours: {},
+            pricePerWeek: 0,
+            isActive: false, // admin activates once profile is complete
+          });
+
+          await dataClient.models.Claim.update({
+            id,
+            status: "approved",
+            gymId: newGym.id,
+            notes: notes ?? (isNewUser
+              ? `Approved — gym created (${newGym.id}), new Cognito user created, ownerId: ${ownerId}`
+              : `Approved — gym created (${newGym.id}), added to existing user account, ownerId: ${ownerId}`),
+          });
+
+          return res.status(200).json({ ok: true, ownerId, isNewUser, gymId: newGym.id });
+        } else {
+          // Existing gym claim — assign ownership
+          const gym = await ownerStore.getById(claim.gymId ?? "");
+          if (!gym) return res.status(404).json({ error: `Gym not found: ${claim.gymId}` });
+
+          await ownerStore.update({ ...gym, ownerId });
+          await dataClient.models.Claim.update({
+            id,
+            status: "approved",
+            notes: notes ?? (isNewUser
+              ? `Approved — new Cognito user created, ownerId: ${ownerId}`
+              : `Approved — gym added to existing user account, ownerId: ${ownerId}`),
+          });
+
+          return res.status(200).json({ ok: true, ownerId, isNewUser });
+        }
       } catch (err) {
         console.error("[admin/claims approve]", err);
         return res.status(500).json({ error: String(err) });

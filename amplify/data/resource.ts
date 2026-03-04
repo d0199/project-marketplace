@@ -62,6 +62,12 @@ const schema = a.schema({
       message: a.string(),
       status: a.string(), // "pending" | "approved" | "rejected"
       notes: a.string(),  // internal admin notes
+      // New listing fields (isNewListing = true)
+      isNewListing: a.boolean(),
+      gymPhone: a.string(),
+      gymEmail: a.string(),
+      gymSuburb: a.string(),
+      gymPostcode: a.string(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

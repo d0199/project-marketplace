@@ -22,6 +22,11 @@ interface Claim {
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
+  isNewListing?: boolean;
+  gymPhone?: string;
+  gymEmail?: string;
+  gymSuburb?: string;
+  gymPostcode?: string;
 }
 
 interface CognitoUser {
@@ -336,8 +341,13 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
               {/* Header row */}
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
-                  <p className="font-semibold text-gray-900">{c.gymName || c.gymId}</p>
-                  <p className="text-xs text-gray-400">{c.gymAddress}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-gray-900">{c.gymName || c.gymId}</p>
+                    {c.isNewListing && (
+                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-orange text-white">New Listing</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400">{c.isNewListing ? `${c.gymSuburb ?? ""} ${c.gymPostcode ?? ""}`.trim() : c.gymAddress}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge status={c.status} />

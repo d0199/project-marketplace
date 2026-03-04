@@ -26,6 +26,14 @@ export default function Navbar() {
           >
             Find a Gym
           </Link>
+          {!isOwnerRoute && (
+            <Link
+              href="/list-gym"
+              className="text-brand-orange hover:text-orange-400 font-medium transition-colors whitespace-nowrap"
+            >
+              List your gym — it&apos;s free
+            </Link>
+          )}
           {isOwnerRoute ? (
             <button
               onClick={handleLogout}

@@ -8,8 +8,10 @@ export default async function handler(
 ) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { gymId, gymName, gymAddress, gymWebsite, name, email, phone, message } =
-    req.body as Record<string, string>;
+  const {
+    gymId, gymName, gymAddress, gymWebsite, name, email, phone, message,
+    isNewListing, gymPhone, gymEmail, gymSuburb, gymPostcode,
+  } = req.body as Record<string, string> & { isNewListing?: boolean };
 
   if (!gymId || !name || !email) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -17,7 +19,7 @@ export default async function handler(
 
   if (!isAmplifyConfigured()) {
     console.log("[claim-request] backend not configured — logging only", {
-      gymId, gymName, name, email,
+      gymId, gymName, name, email, isNewListing,
     });
     return res.status(200).json({ ok: true });
   }
@@ -32,12 +34,19 @@ export default async function handler(
     claimantPhone: phone ?? "",
     message: message ?? "",
     status: "pending",
+    isNewListing: isNewListing === true || (isNewListing as unknown) === "true" || false,
+    gymPhone: gymPhone ?? "",
+    gymEmail: gymEmail ?? "",
+    gymSuburb: gymSuburb ?? "",
+    gymPostcode: gymPostcode ?? "",
   });
 
-  void sendAdminAlert(
-    "New gym claim submitted",
-    `A new claim has been submitted and is awaiting review.\n\nGym: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`
-  );
+  const alertSubject = isNewListing ? "New gym listing request" : "New gym claim submitted";
+  const alertBody = isNewListing
+    ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`
+    : `A new claim has been submitted and is awaiting review.\n\nGym: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`;
+
+  void sendAdminAlert(alertSubject, alertBody);
 
   return res.status(200).json({ ok: true });
 }
