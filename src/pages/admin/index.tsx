@@ -18,7 +18,9 @@ interface Claim {
   claimantPhone?: string;
   message?: string;
   status: string;
+  notes?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 interface CognitoUser {
@@ -166,11 +168,21 @@ export default function AdminPage() {
 // ---------------------------------------------------------------------------
 // Claims tab
 // ---------------------------------------------------------------------------
+function fmtDate(iso?: string) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-AU", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
 function ClaimsTab() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<{ msg: string; ok: boolean }>({ msg: "", ok: true });
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [approved, setApproved] = useState<{ ownerId: string; tempPassword: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -181,86 +193,151 @@ function ClaimsTab() {
 
   useEffect(() => { load(); }, [load]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+  function showToast(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast({ msg: "", ok: true }), 5000);
   }
 
   async function action(id: string, act: "approve" | "reject") {
     setBusy(id + act);
     const r = await fetch(`/api/admin/claims?action=${act}&id=${id}`, {
       method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: notes[id] ?? "" }),
     });
+    const body = await r.json().catch(() => ({}));
     if (r.ok) {
+      if (act === "approve" && body.tempPassword) {
+        setApproved({ ownerId: body.ownerId, tempPassword: body.tempPassword });
+      }
       showToast(act === "approve" ? "Claim approved — Cognito user created." : "Claim rejected.");
       await load();
     } else {
-      const body = await r.json().catch(() => ({}));
-      showToast(`Error: ${body.error ?? r.statusText}`);
+      showToast(`Error: ${body.error ?? r.statusText}`, false);
     }
     setBusy(null);
   }
 
   return (
     <div>
-      {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
-          {toast}
+      {toast.msg && (
+        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.ok ? "bg-green-600" : "bg-red-600"}`}>
+          {toast.msg}
         </div>
       )}
+
+      {/* Approved credentials modal */}
+      {approved && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Claim Approved</h3>
+            <p className="text-sm text-gray-500 mb-3">Share these credentials with the gym owner:</p>
+            <div className="bg-gray-50 rounded-lg p-3 text-sm font-mono space-y-1 mb-4">
+              <p><span className="text-gray-500">Owner ID:</span> {approved.ownerId}</p>
+              <p><span className="text-gray-500">Password:</span> {approved.tempPassword}</p>
+            </div>
+            <button
+              onClick={() => setApproved(null)}
+              className="w-full py-2 bg-brand-orange text-white text-sm font-semibold rounded-lg"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-base font-semibold text-gray-900 mb-4">Listing Claims</h2>
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : claims.length === 0 ? (
         <p className="text-gray-500 text-sm">No claims yet.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
-              <tr>
-                {["Gym", "Claimant", "Email", "Phone", "Message", "Status", "Actions"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {claims.map((c) => (
-                <tr key={c.id} className={c.status !== "pending" ? "opacity-50" : ""}>
-                  <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                    {c.gymName || c.gymId}
-                    <div className="text-xs text-gray-400">{c.gymAddress}</div>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">{c.claimantName}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{c.claimantEmail}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{c.claimantPhone}</td>
-                  <td className="px-4 py-3 max-w-xs truncate text-gray-600">{c.message}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <Badge status={c.status} />
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {c.status === "pending" && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => action(c.id, "approve")}
-                          disabled={busy !== null}
-                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded font-medium disabled:opacity-50"
-                        >
-                          {busy === c.id + "approve" ? "…" : "Approve"}
-                        </button>
-                        <button
-                          onClick={() => action(c.id, "reject")}
-                          disabled={busy !== null}
-                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded font-medium disabled:opacity-50"
-                        >
-                          {busy === c.id + "reject" ? "…" : "Reject"}
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {claims.map((c) => (
+            <div
+              key={c.id}
+              className={`bg-white rounded-lg border p-4 ${c.status !== "pending" ? "opacity-60" : ""}`}
+            >
+              {/* Header row */}
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <p className="font-semibold text-gray-900">{c.gymName || c.gymId}</p>
+                  <p className="text-xs text-gray-400">{c.gymAddress}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge status={c.status} />
+                </div>
+              </div>
+
+              {/* Claimant details grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-3">
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Name</p>
+                  <p className="text-gray-800">{c.claimantName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Email</p>
+                  <p className="text-gray-800 break-all">{c.claimantEmail}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Phone</p>
+                  <p className="text-gray-800">{c.claimantPhone || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Submitted</p>
+                  <p className="text-gray-800">{fmtDate(c.createdAt)}</p>
+                </div>
+              </div>
+
+              {/* Message */}
+              {c.message && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Message</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 rounded p-2">{c.message}</p>
+                </div>
+              )}
+
+              {/* Notes */}
+              {c.status === "pending" ? (
+                <div className="mb-3">
+                  <label className="text-xs text-gray-400 mb-0.5 block">Internal notes (optional)</label>
+                  <textarea
+                    rows={2}
+                    value={notes[c.id] ?? ""}
+                    onChange={(e) => setNotes((n) => ({ ...n, [c.id]: e.target.value }))}
+                    placeholder="Add rationale for approval or rejection…"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+                  />
+                </div>
+              ) : c.notes ? (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Notes</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 rounded p-2">{c.notes}</p>
+                  <p className="text-xs text-gray-400 mt-1">{c.status === "approved" ? "Approved" : "Rejected"}: {fmtDate(c.updatedAt)}</p>
+                </div>
+              ) : null}
+
+              {/* Actions */}
+              {c.status === "pending" && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => action(c.id, "approve")}
+                    disabled={busy !== null}
+                    className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+                  >
+                    {busy === c.id + "approve" ? "Approving…" : "Approve"}
+                  </button>
+                  <button
+                    onClick={() => action(c.id, "reject")}
+                    disabled={busy !== null}
+                    className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+                  >
+                    {busy === c.id + "reject" ? "Rejecting…" : "Reject"}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

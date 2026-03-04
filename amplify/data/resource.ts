@@ -57,6 +57,7 @@ const schema = a.schema({
       claimantPhone: a.string(),
       message: a.string(),
       status: a.string(), // "pending" | "approved" | "rejected"
+      notes: a.string(),  // internal admin notes
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
