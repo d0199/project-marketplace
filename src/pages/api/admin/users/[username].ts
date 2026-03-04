@@ -1,20 +1,39 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
   AdminDeleteUserCommand,
+  AdminGetUserCommand,
   AdminSetUserPasswordCommand,
   AdminUpdateUserAttributesCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { ownerStore } from "@/lib/ownerStore";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const username = String(req.query.username);
 
   if (req.method === "DELETE") {
     try {
-      await getCognitoAdmin().send(
+      const cognito = getCognitoAdmin();
+
+      // Look up the user's ownerId before deleting so we can release their gyms
+      const { UserAttributes = [] } = await cognito.send(
+        new AdminGetUserCommand({ UserPoolId: USER_POOL_ID, Username: username })
+      );
+      const attrs = Object.fromEntries(UserAttributes.map((a) => [a.Name, a.Value]));
+      const ownerId = attrs["custom:ownerId"];
+
+      // Release any gyms owned by this user back to unclaimed
+      let gymsReleased = 0;
+      if (ownerId) {
+        const gyms = await ownerStore.getByOwner(ownerId);
+        gymsReleased = gyms.length;
+        await Promise.all(gyms.map((gym) => ownerStore.update({ ...gym, ownerId: "unclaimed" })));
+      }
+
+      await cognito.send(
         new AdminDeleteUserCommand({ UserPoolId: USER_POOL_ID, Username: username })
       );
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, gymsReleased });
     } catch (err) {
       console.error("[admin/users DELETE]", err);
       return res.status(500).json({ error: String(err) });
