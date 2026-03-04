@@ -40,6 +40,7 @@ interface CognitoUser {
 const EMPTY_GYM: Gym = {
   id: "",
   ownerId: "",
+  isActive: true,
   name: "",
   description: "",
   address: { street: "", suburb: "", state: "WA", postcode: "" },
@@ -414,10 +415,21 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
     ownerId: string;
     isTest: "" | "true" | "false";
     isFeatured: "" | "true" | "false";
+    isActive: "" | "true" | "false";
     addAmenities: Set<string>;
     removeAmenities: Set<string>;
-  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", addAmenities: new Set(), removeAmenities: new Set() });
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", addAmenities: new Set(), removeAmenities: new Set() });
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
+
+  const filteredGyms = gyms.filter((g) => {
+    if (activeFilter === "active" && g.isActive === false) return false;
+    if (activeFilter === "inactive" && g.isActive !== false) return false;
+    if (ownerFilter === "owned" && (g.ownerId === "unclaimed" || g.ownerId === "owner-3")) return false;
+    if (ownerFilter === "unclaimed" && g.ownerId !== "unclaimed" && g.ownerId !== "owner-3") return false;
+    return true;
+  });
 
   function showToast(msg: string) {
     setToast(msg);
@@ -433,7 +445,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
   }
 
   function toggleSelectAll() {
-    setSelected(selected.size === gyms.length ? new Set() : new Set(gyms.map((g) => g.id)));
+    setSelected(selected.size === filteredGyms.length ? new Set() : new Set(filteredGyms.map((g) => g.id)));
   }
 
   function toggleBulkAmenity(amenity: string, mode: "add" | "remove") {
@@ -452,7 +464,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
   }
 
   function resetBulk() {
-    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", addAmenities: new Set(), removeAmenities: new Set() });
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", addAmenities: new Set(), removeAmenities: new Set() });
   }
 
   async function applyBulk() {
@@ -467,6 +479,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
         if (bulk.ownerId !== "") updated.ownerId = bulk.ownerId;
         if (bulk.isTest !== "") updated.isTest = bulk.isTest === "true";
         if (bulk.isFeatured !== "") updated.isFeatured = bulk.isFeatured === "true";
+        if (bulk.isActive !== "") updated.isActive = bulk.isActive === "true";
         if (bulk.addAmenities.size > 0 || bulk.removeAmenities.size > 0) {
           const amenitySet = new Set(g.amenities);
           bulk.addAmenities.forEach((a) => amenitySet.add(a));
@@ -517,7 +530,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
       // OwnerGymForm initialises its internal state from props once, so the
       // ownerId typed in the separate input above doesn't reach the form's
       // onSave payload — override it from panel state here.
-      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false };
+      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false, isActive: panel.gym.isActive !== false };
       const r = await fetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -534,7 +547,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
       const r = await fetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false }),
+        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false }),
       });
       if (r.ok) {
         showToast("Gym updated.");
@@ -554,6 +567,20 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
       search(q);
     } else {
       showToast("Error deleting gym.");
+    }
+  }
+
+  async function toggleActive(g: Gym) {
+    const updated = { ...g, isActive: g.isActive === false ? true : false };
+    const r = await fetch(`/api/admin/gym/${g.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+    if (r.ok) {
+      setGyms((prev) => prev.map((gym) => gym.id === g.id ? updated : gym));
+    } else {
+      showToast("Error updating gym.");
     }
   }
 
@@ -586,6 +613,29 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
         >
           + New Gym
         </button>
+      </div>
+
+      {/* Filter controls */}
+      <div className="flex items-center gap-3 mb-4">
+        <select
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active only</option>
+          <option value="inactive">Inactive only</option>
+        </select>
+        <select
+          value={ownerFilter}
+          onChange={(e) => setOwnerFilter(e.target.value as typeof ownerFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All owners</option>
+          <option value="owned">Owned</option>
+          <option value="unclaimed">Unclaimed</option>
+        </select>
+        <span className="text-sm text-gray-400">{filteredGyms.length} gym{filteredGyms.length !== 1 ? "s" : ""}</span>
       </div>
 
       {/* Selection bar */}
@@ -676,6 +726,18 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                     <option value="false">Remove featured</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Active status</label>
+                  <select
+                    value={bulk.isActive}
+                    onChange={(e) => setBulk((b) => ({ ...b, isActive: e.target.value as "" | "true" | "false" }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">No change</option>
+                    <option value="true">Set active</option>
+                    <option value="false">Set inactive</option>
+                  </select>
+                </div>
               </div>
 
               {/* Amenities */}
@@ -741,13 +803,13 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                     className="w-4 h-4 accent-brand-orange"
                   />
                 </th>
-                {["ID", "Name", "Owner", "Suburb", "Test", "Actions"].map((h) => (
+                {["ID", "Name", "Owner", "Suburb", "Active", "Flags", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {gyms.map((g) => (
+              {filteredGyms.map((g) => (
                 <tr key={g.id} className={selected.has(g.id) ? "bg-blue-50" : ""}>
                   <td className="px-4 py-3">
                     <input
@@ -761,6 +823,14 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                   <td className="px-4 py-3 font-medium text-gray-900">{g.name}</td>
                   <td className="px-4 py-3 text-gray-600">{g.ownerId}</td>
                   <td className="px-4 py-3 text-gray-600">{g.address.suburb}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => toggleActive(g)}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${g.isActive !== false ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                    >
+                      {g.isActive !== false ? "Active" : "Inactive"}
+                    </button>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       {g.isFeatured && (
@@ -795,9 +865,9 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                   </td>
                 </tr>
               ))}
-              {gyms.length === 0 && (
+              {filteredGyms.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No gyms found.
                   </td>
                 </tr>
@@ -873,6 +943,21 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                   />
                   <span className="text-sm font-medium text-gray-700">
                     Featured listing <span className="text-gray-400 font-normal">(pinned to top of results — max 3, rotates evenly)</span>
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={panel.gym.isActive !== false}
+                    onChange={(e) =>
+                      setPanel((p) =>
+                        p ? { ...p, gym: { ...p.gym, isActive: e.target.checked } } : p
+                      )
+                    }
+                    className="w-4 h-4 accent-brand-orange"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Active <span className="text-gray-400 font-normal">(uncheck to hide from public search results)</span>
                   </span>
                 </label>
               </div>
