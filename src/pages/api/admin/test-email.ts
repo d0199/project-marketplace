@@ -9,7 +9,7 @@ import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const recipient = process.env.ADMIN_ALERT_EMAIL;
+  const recipient = process.env.ADMIN_ALERT_EMAIL ?? "davidlewis1909@gmail.com";
   const region = "ap-southeast-2";
   const sender = "noreply@mynextgym.com.au";
 
