@@ -8,10 +8,11 @@
 
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
-import type { Schema } from "../amplify/data/resource";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+import { createRequire } from "module";
+import type { Schema } from "../amplify/data/resource.js";
+
+const require = createRequire(import.meta.url);
 const outputs = require("../amplify_outputs.json");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const gymsJson = require("../data/gyms.json");
 
 Amplify.configure(outputs);
