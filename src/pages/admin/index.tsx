@@ -188,6 +188,7 @@ function ClaimsTab() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [approved, setApproved] = useState<{ ownerId: string; isNewUser: boolean } | null>(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -269,14 +270,24 @@ function ClaimsTab() {
         </div>
       )}
 
-      <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-base font-semibold text-gray-900">Listing Claims</h2>
+      <div className="flex items-center gap-3 mb-4">
+        <h2 className="text-base font-semibold text-gray-900 shrink-0">Listing Claims</h2>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filter by name, email, or gym…"
           className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
         />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
@@ -285,6 +296,7 @@ function ClaimsTab() {
       ) : (
         <div className="space-y-4">
           {claims.filter((c) => {
+            if (statusFilter !== "all" && c.status !== statusFilter) return false;
             if (!search.trim()) return true;
             const q = search.toLowerCase();
             return (
@@ -910,6 +922,7 @@ function UsersTab() {
   const [newForm, setNewForm] = useState({ email: "", password: "", ownerId: "", isAdmin: false });
   const [resetFor, setResetFor] = useState<string | null>(null);
   const [resetPw, setResetPw] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
   function showToast(msg: string) {
@@ -949,6 +962,18 @@ function UsersTab() {
       showToast("User created.");
       setShowNew(false);
       setNewForm({ email: "", password: "", ownerId: "", isAdmin: false });
+      search(q);
+    } else {
+      const body = await r.json().catch(() => ({}));
+      showToast(`Error: ${body.error ?? r.statusText}`);
+    }
+  }
+
+  async function deleteUser(username: string) {
+    const r = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, { method: "DELETE" });
+    if (r.ok) {
+      showToast("User deleted.");
+      setConfirmDelete(null);
       search(q);
     } else {
       const body = await r.json().catch(() => ({}));
@@ -1054,12 +1079,38 @@ function UsersTab() {
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setResetFor(u.username)}
-                        className="text-brand-orange hover:underline text-xs font-medium"
-                      >
-                        Reset Password
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setResetFor(u.username)}
+                          className="text-brand-orange hover:underline text-xs font-medium"
+                        >
+                          Reset Password
+                        </button>
+                        {confirmDelete === u.username ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-red-600">Delete?</span>
+                            <button
+                              onClick={() => deleteUser(u.username)}
+                              className="px-2 py-0.5 bg-red-600 text-white text-xs rounded font-medium"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete(null)}
+                              className="text-xs text-gray-400 hover:text-gray-600"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDelete(u.username)}
+                            className="text-red-400 hover:text-red-600 text-xs font-medium"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     )}
                   </td>
                 </tr>
