@@ -38,9 +38,15 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           <h2 className="font-semibold text-gray-900 text-lg leading-tight">
             {gym.name}
           </h2>
-          <span className="text-xs text-gray-400 italic whitespace-nowrap">
-            Check website for pricing
-          </span>
+          {gym.priceVerified && gym.pricePerWeek > 0 ? (
+            <span className="text-sm font-semibold text-brand-orange whitespace-nowrap">
+              ${gym.pricePerWeek}/wk
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400 italic whitespace-nowrap">
+              Check website for pricing
+            </span>
+          )}
         </div>
 
         <p className="text-sm text-gray-500 mb-1">

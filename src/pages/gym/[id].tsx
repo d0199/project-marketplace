@@ -145,9 +145,15 @@ export default function GymProfilePage({ gym }: Props) {
             {/* Pricing */}
             <div className="bg-brand-orange rounded-xl p-5 text-white">
               <p className="text-orange-100 text-sm mb-1">Pricing</p>
-              <p className="text-base font-semibold text-orange-50">
-                Check out website for pricing
-              </p>
+              {gym.priceVerified && gym.pricePerWeek > 0 ? (
+                <p className="text-2xl font-bold text-white">
+                  ${gym.pricePerWeek}<span className="text-base font-normal text-orange-100">/week</span>
+                </p>
+              ) : (
+                <p className="text-base font-semibold text-orange-50">
+                  Check out website for pricing
+                </p>
+              )}
               <a
                 href={gym.website || "#"}
                 target="_blank"

@@ -16,6 +16,7 @@ function toGym(r: GymRecord): Gym {
     id: r.id,
     ownerId: r.ownerId ?? "",
     isTest: r.isTest ?? false,
+    priceVerified: r.priceVerified ?? false,
     name: r.name ?? "",
     description: r.description ?? "",
     address: {
@@ -49,6 +50,7 @@ function fromGym(gym: Gym) {
     id: gym.id,
     ownerId: gym.ownerId,
     isTest: gym.isTest ?? false,
+    priceVerified: gym.priceVerified ?? false,
     name: gym.name,
     description: gym.description,
     addressStreet: gym.address.street,
@@ -126,6 +128,7 @@ export const ownerStore = {
     const { data } = await dataClient.models.Gym.create({
       ownerId: gym.ownerId,
       isTest: gym.isTest ?? false,
+      priceVerified: gym.priceVerified ?? false,
       name: gym.name,
       description: gym.description,
       addressStreet: gym.address.street,

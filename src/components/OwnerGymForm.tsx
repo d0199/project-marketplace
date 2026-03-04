@@ -134,6 +134,15 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
               }
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
             />
+            <label className="flex items-center gap-2 mt-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.priceVerified ?? false}
+                onChange={(e) => setField("priceVerified", e.target.checked)}
+                className="w-4 h-4 accent-brand-orange"
+              />
+              <span className="text-sm text-gray-600">Show this price on the listing</span>
+            </label>
           </div>
         </div>
       </section>
