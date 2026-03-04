@@ -376,10 +376,14 @@ function GymsTab() {
 
   async function handleSave(updated: Gym) {
     if (panel?.isNew) {
+      // OwnerGymForm initialises its internal state from props once, so the
+      // ownerId typed in the separate input above doesn't reach the form's
+      // onSave payload — override it from panel state here.
+      const body = { ...updated, ownerId: panel.gym.ownerId };
       const r = await fetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
+        body: JSON.stringify(body),
       });
       if (r.ok) {
         showToast("Gym created.");

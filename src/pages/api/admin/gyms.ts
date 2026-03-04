@@ -23,8 +23,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!gym.name || !gym.ownerId) {
       return res.status(400).json({ error: "Missing name or ownerId" });
     }
-    const created = await ownerStore.create(gym);
-    return res.status(201).json(created);
+    try {
+      const created = await ownerStore.create(gym);
+      return res.status(201).json(created);
+    } catch (err) {
+      console.error("[admin/gyms POST]", err);
+      return res.status(500).json({ error: String(err) });
+    }
   }
 
   return res.status(405).end();
