@@ -54,6 +54,27 @@
               "isRequired": true,
               "attributes": []
             },
+            "isTest": {
+              "name": "isTest",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "isFeatured": {
+              "name": "isFeatured",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "priceVerified": {
+              "name": "priceVerified",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
             "name": {
               "name": "name",
               "isArray": false,
