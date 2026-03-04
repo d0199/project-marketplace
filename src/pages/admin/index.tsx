@@ -182,7 +182,8 @@ function ClaimsTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean }>({ msg: "", ok: true });
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [approved, setApproved] = useState<{ ownerId: string; tempPassword: string } | null>(null);
+  const [approved, setApproved] = useState<{ ownerId: string; isNewUser: boolean } | null>(null);
+  const [search, setSearch] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -207,10 +208,14 @@ function ClaimsTab() {
     });
     const body = await r.json().catch(() => ({}));
     if (r.ok) {
-      if (act === "approve" && body.tempPassword) {
-        setApproved({ ownerId: body.ownerId, tempPassword: body.tempPassword });
+      if (act === "approve") {
+        setApproved({ ownerId: body.ownerId, isNewUser: body.isNewUser });
       }
-      showToast(act === "approve" ? "Claim approved — Cognito user created." : "Claim rejected.");
+      showToast(act === "approve"
+        ? body.isNewUser
+          ? "Claim approved — new user created and welcome email sent."
+          : "Claim approved — gym added to existing user account."
+        : "Claim rejected.");
       await load();
     } else {
       showToast(`Error: ${body.error ?? r.statusText}`, false);
@@ -231,11 +236,25 @@ function ClaimsTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
             <h3 className="text-base font-semibold text-gray-900 mb-3">Claim Approved</h3>
-            <p className="text-sm text-gray-500 mb-3">Share these credentials with the gym owner:</p>
-            <div className="bg-gray-50 rounded-lg p-3 text-sm font-mono space-y-1 mb-4">
-              <p><span className="text-gray-500">Owner ID:</span> {approved.ownerId}</p>
-              <p><span className="text-gray-500">Password:</span> {approved.tempPassword}</p>
-            </div>
+            {approved.isNewUser ? (
+              <>
+                <p className="text-sm text-gray-700 mb-3">
+                  A new account has been created and a welcome email with login instructions has been sent to the gym owner.
+                </p>
+                <div className="bg-gray-50 rounded-lg p-3 text-sm font-mono mb-4">
+                  <p><span className="text-gray-500">Owner ID:</span> {approved.ownerId}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-700 mb-3">
+                  The gym has been added to the existing owner&apos;s account.
+                </p>
+                <div className="bg-gray-50 rounded-lg p-3 text-sm font-mono mb-4">
+                  <p><span className="text-gray-500">Owner ID:</span> {approved.ownerId}</p>
+                </div>
+              </>
+            )}
             <button
               onClick={() => setApproved(null)}
               className="w-full py-2 bg-brand-orange text-white text-sm font-semibold rounded-lg"
@@ -246,14 +265,31 @@ function ClaimsTab() {
         </div>
       )}
 
-      <h2 className="text-base font-semibold text-gray-900 mb-4">Listing Claims</h2>
+      <div className="flex items-center gap-4 mb-4">
+        <h2 className="text-base font-semibold text-gray-900">Listing Claims</h2>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter by name, email, or gym…"
+          className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        />
+      </div>
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : claims.length === 0 ? (
         <p className="text-gray-500 text-sm">No claims yet.</p>
       ) : (
         <div className="space-y-4">
-          {claims.map((c) => (
+          {claims.filter((c) => {
+            if (!search.trim()) return true;
+            const q = search.toLowerCase();
+            return (
+              c.claimantName.toLowerCase().includes(q) ||
+              c.claimantEmail.toLowerCase().includes(q) ||
+              (c.gymName ?? "").toLowerCase().includes(q) ||
+              (c.gymAddress ?? "").toLowerCase().includes(q)
+            );
+          }).map((c) => (
             <div
               key={c.id}
               className={`bg-white rounded-lg border p-4 ${c.status !== "pending" ? "opacity-60" : ""}`}
@@ -432,7 +468,7 @@ function GymsTab() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name, ID, owner, or suburb…"
+            placeholder="Search by name, ID, owner, suburb, or postcode…"
             className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
           />
           <button

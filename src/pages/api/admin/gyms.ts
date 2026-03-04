@@ -12,7 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             g.name.toLowerCase().includes(q) ||
             g.id.toLowerCase().includes(q) ||
             g.ownerId.toLowerCase().includes(q) ||
-            g.address.suburb.toLowerCase().includes(q)
+            g.address.suburb.toLowerCase().includes(q) ||
+            g.address.postcode.toLowerCase().includes(q)
         )
       : gyms;
     return res.status(200).json(filtered);

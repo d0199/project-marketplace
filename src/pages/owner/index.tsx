@@ -27,6 +27,10 @@ export default function OwnerPortalPage() {
     getCurrentUser()
       .then(async (user) => {
         const attributes = await fetchUserAttributes();
+        if (attributes["custom:isAdmin"] === "true") {
+          router.replace("/admin");
+          return;
+        }
         setSession({
           ownerId: attributes["custom:ownerId"] ?? "",
           email: user.signInDetails?.loginId ?? "",
@@ -37,7 +41,7 @@ export default function OwnerPortalPage() {
         // Not signed in — show login form
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!session) return;
@@ -63,6 +67,10 @@ export default function OwnerPortalPage() {
       await signIn({ username: email, password });
       const user = await getCurrentUser();
       const attributes = await fetchUserAttributes();
+      if (attributes["custom:isAdmin"] === "true") {
+        router.replace("/admin");
+        return;
+      }
       setSession({
         ownerId: attributes["custom:ownerId"] ?? "",
         email: user.signInDetails?.loginId ?? "",

@@ -3,7 +3,6 @@ import {
   CognitoIdentityProviderClient,
   ListUsersCommand,
   AdminCreateUserCommand,
-  AdminSetUserPasswordCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const outputs = require("../../../../amplify_outputs.json");
@@ -65,17 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         UserPoolId: USER_POOL_ID,
         Username: email,
         TemporaryPassword: password,
-        MessageAction: "SUPPRESS",
         UserAttributes: userAttributes,
-      })
-    );
-
-    await cognitoClient.send(
-      new AdminSetUserPasswordCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: email,
-        Password: password,
-        Permanent: true,
       })
     );
 
