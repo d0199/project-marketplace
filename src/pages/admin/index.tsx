@@ -390,16 +390,57 @@ function GymsTab() {
   const [panel, setPanel] = useState<{ gym: Gym; isNew: boolean } | null>(null);
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulk, setBulk] = useState<{ price: string; priceVerified: "" | "true" | "false"; ownerId: string }>({ price: "", priceVerified: "", ownerId: "" });
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
   }
 
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected(selected.size === gyms.length ? new Set() : new Set(gyms.map((g) => g.id)));
+  }
+
+  async function applyBulk() {
+    setBulkBusy(true);
+    const updates: Partial<Gym> = {};
+    const price = parseInt(bulk.price);
+    if (bulk.price !== "" && price > 0) updates.pricePerWeek = price;
+    if (bulk.priceVerified !== "") updates.priceVerified = bulk.priceVerified === "true";
+    if (bulk.ownerId !== "") updates.ownerId = bulk.ownerId;
+
+    const targets = gyms.filter((g) => selected.has(g.id));
+    await Promise.all(
+      targets.map((g) =>
+        fetch(`/api/admin/gym/${g.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...g, ...updates }),
+        })
+      )
+    );
+    setBulkBusy(false);
+    setSelected(new Set());
+    setBulk({ price: "", priceVerified: "", ownerId: "" });
+    showToast(`Updated ${targets.length} gym${targets.length !== 1 ? "s" : ""}.`);
+    search(q);
+  }
+
   const search = useCallback(async (query: string) => {
     setLoading(true);
     const r = await fetch(`/api/admin/gyms?q=${encodeURIComponent(query)}`);
     setGyms(await r.json());
+    setSelected(new Set());
     setLoading(false);
   }, []);
 
@@ -486,6 +527,51 @@ function GymsTab() {
         </button>
       </div>
 
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+          <span className="text-sm font-medium text-blue-800">{selected.size} selected</span>
+          <div className="flex flex-wrap gap-2 flex-1 items-center">
+            <input
+              type="number"
+              min={1}
+              value={bulk.price}
+              onChange={(e) => setBulk((b) => ({ ...b, price: e.target.value }))}
+              placeholder="Price/wk (blank = no change)"
+              className="px-3 py-1.5 border rounded-lg text-sm w-52 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <select
+              value={bulk.priceVerified}
+              onChange={(e) => setBulk((b) => ({ ...b, priceVerified: e.target.value as "" | "true" | "false" }))}
+              className="px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">Price verified — no change</option>
+              <option value="true">Set verified ✓</option>
+              <option value="false">Set unverified</option>
+            </select>
+            <input
+              value={bulk.ownerId}
+              onChange={(e) => setBulk((b) => ({ ...b, ownerId: e.target.value }))}
+              placeholder="Owner ID (blank = no change)"
+              className="px-3 py-1.5 border rounded-lg text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <button
+              onClick={applyBulk}
+              disabled={bulkBusy || (bulk.price === "" && bulk.priceVerified === "" && bulk.ownerId === "")}
+              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-40"
+            >
+              {bulkBusy ? "Applying…" : "Apply"}
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : (
@@ -493,6 +579,14 @@ function GymsTab() {
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
               <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={gyms.length > 0 && selected.size === gyms.length}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 accent-brand-orange"
+                  />
+                </th>
                 {["ID", "Name", "Owner", "Suburb", "Test", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                 ))}
@@ -500,7 +594,15 @@ function GymsTab() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {gyms.map((g) => (
-                <tr key={g.id}>
+                <tr key={g.id} className={selected.has(g.id) ? "bg-blue-50" : ""}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(g.id)}
+                      onChange={() => toggleSelect(g.id)}
+                      className="w-4 h-4 accent-brand-orange"
+                    />
+                  </td>
                   <td className="px-4 py-3 text-gray-400 font-mono text-xs">{g.id}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{g.name}</td>
                   <td className="px-4 py-3 text-gray-600">{g.ownerId}</td>
@@ -528,7 +630,7 @@ function GymsTab() {
               ))}
               {gyms.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No gyms found.
                   </td>
                 </tr>
