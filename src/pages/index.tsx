@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
 import GymCard from "@/components/GymCard";
-import { filterGyms, type GymWithDistance } from "@/lib/utils";
+import { filterGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
 
@@ -51,8 +52,11 @@ export default function HomePage({ gyms }: Props) {
   return (
     <>
       <Head>
-        <title>mynextgym.com.au — Find Gyms in Australia</title>
-        <meta name="description" content="Discover and compare gyms near you across Australia." />
+        <title>Find Gyms in Perth, WA | mynextgym.com.au</title>
+        <meta name="description" content="Search 300+ gyms across Perth and WA. Find gyms near you by suburb and postcode. Compare prices, amenities and opening hours." />
+        <meta property="og:title" content="Find Gyms in Perth, WA | mynextgym.com.au" />
+        <meta property="og:description" content="Search 300+ gyms across Perth and WA. Find gyms near you by suburb and postcode." />
+        <meta property="og:type" content="website" />
       </Head>
       <Layout>
         {/* Hero */}
@@ -98,10 +102,27 @@ export default function HomePage({ gyms }: Props) {
             </div>
 
             {!hasSearched ? (
-              <div className="text-center py-20 text-gray-400">
-                <p className="text-5xl mb-4">🏋️</p>
-                <p className="text-lg font-medium text-gray-500">Enter a postcode above to find gyms near you</p>
-                <p className="text-sm mt-2">Try <strong>6000</strong> for Perth CBD or <strong>6160</strong> for Fremantle</p>
+              <div>
+                <div className="text-center py-10 text-gray-400">
+                  <p className="text-5xl mb-4">🏋️</p>
+                  <p className="text-lg font-medium text-gray-500">Enter a postcode above to find gyms near you</p>
+                </div>
+                <div className="border-t pt-6">
+                  <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                    Browse gyms by suburb
+                  </h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                    {Object.entries(POSTCODE_META).map(([, meta]) => (
+                      <Link
+                        key={meta.slug}
+                        href={`/gyms/${meta.slug}`}
+                        className="text-sm text-brand-orange hover:underline py-0.5"
+                      >
+                        Gyms in {meta.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">
