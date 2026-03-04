@@ -46,7 +46,7 @@ export default async function handler(
       status: "pending",
     });
 
-    void sendAdminAlert(
+    await sendAdminAlert(
       "Gym profile edit pending review",
       `A gym owner has submitted profile changes that require moderation.\n\nGym: ${currentGym.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: https://www.mynextgym.com.au/admin`
     );

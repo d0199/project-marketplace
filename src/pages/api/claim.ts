@@ -46,7 +46,7 @@ export default async function handler(
     ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`
     : `A new claim has been submitted and is awaiting review.\n\nGym: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`;
 
-  void sendAdminAlert(alertSubject, alertBody);
+  await sendAdminAlert(alertSubject, alertBody);
 
   return res.status(200).json({ ok: true });
 }

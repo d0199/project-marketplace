@@ -11,18 +11,20 @@
  * The sender (noreply@mynextgym.com.au) must be verified in AWS SES.
  */
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const outputs = require("../../amplify_outputs.json");
 
 const SENDER = "noreply@mynextgym.com.au";
-const REGION: string = outputs.auth?.aws_region ?? "ap-southeast-2";
 
 export async function sendAdminAlert(subject: string, body: string): Promise<void> {
   const recipient = process.env.ADMIN_ALERT_EMAIL;
   if (!recipient) return; // env var not set — silently skip
 
+  // Read region at call time so we always get the live value, not a build-time snapshot
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const outputs = require("../../amplify_outputs.json");
+  const region: string = outputs.auth?.aws_region ?? "ap-southeast-2";
+
   try {
-    const client = new SESClient({ region: REGION });
+    const client = new SESClient({ region });
     await client.send(
       new SendEmailCommand({
         Source: SENDER,
