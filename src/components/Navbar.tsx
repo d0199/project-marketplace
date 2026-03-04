@@ -15,11 +15,8 @@ export default function Navbar() {
   return (
     <nav className="bg-brand-black text-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="text-brand-orange">🏋️</span>
-          <span>
-            mynextgym<span className="text-brand-orange">.com.au</span>
-          </span>
+        <Link href="/" className="font-bold text-lg">
+          mynextgym<span className="text-brand-orange">.com.au</span>
         </Link>
 
         <div className="flex items-center gap-4 text-sm">
