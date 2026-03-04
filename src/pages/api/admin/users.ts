@@ -3,12 +3,13 @@ import {
   ListUsersCommand,
   AdminCreateUserCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
-import { cognitoAdmin as cognitoClient, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
     const q = String(req.query.q ?? "").trim();
     try {
+      const cognitoClient = getCognitoAdmin();
       const cmd = new ListUsersCommand({
         UserPoolId: USER_POOL_ID,
         Limit: 60,
@@ -51,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
+      const cognitoClient = getCognitoAdmin();
       const userAttributes = [
         { Name: "email", Value: email },
         { Name: "email_verified", Value: "true" },

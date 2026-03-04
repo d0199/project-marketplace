@@ -5,7 +5,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
-import { cognitoAdmin as cognitoClient, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 
 async function listAllClaims() {
   const results: Record<string, unknown>[] = [];
@@ -61,6 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!gym) return res.status(404).json({ error: `Gym not found: ${claim.gymId}` });
 
         const email = claim.claimantEmail ?? "";
+        const cognitoClient = getCognitoAdmin();
 
         // Check if a Cognito user already exists for this email
         const { Users = [] } = await cognitoClient.send(
