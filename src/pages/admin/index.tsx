@@ -919,10 +919,23 @@ function UsersTab() {
 
   const search = useCallback(async (query: string) => {
     setLoading(true);
-    const r = await fetch(`/api/admin/users?q=${encodeURIComponent(query)}`);
-    setUsers(await r.json());
+    try {
+      const r = await fetch(`/api/admin/users?q=${encodeURIComponent(query)}`);
+      const data = await r.json();
+      if (r.ok && Array.isArray(data)) {
+        setUsers(data);
+      } else {
+        setUsers([]);
+        setToast(`Failed to load users: ${data?.error ?? r.statusText}`);
+        setTimeout(() => setToast(""), 8000);
+      }
+    } catch (err) {
+      setUsers([]);
+      setToast(`Network error: ${String(err)}`);
+      setTimeout(() => setToast(""), 8000);
+    }
     setLoading(false);
-  }, []);
+  }, [setToast]);
 
   useEffect(() => { search(""); }, [search]);
 
