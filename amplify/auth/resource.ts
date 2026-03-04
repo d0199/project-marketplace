@@ -4,4 +4,10 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
+  userAttributes: {
+    "custom:ownerId": {
+      dataType: "String",
+      mutable: true,
+    },
+  },
 });
