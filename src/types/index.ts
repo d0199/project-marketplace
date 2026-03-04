@@ -18,6 +18,7 @@ export interface OpeningHours {
 export interface Gym {
   id: string;
   ownerId: string;
+  isTest?: boolean;
   name: string;
   description: string;
   address: Address;

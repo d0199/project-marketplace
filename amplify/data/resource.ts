@@ -8,6 +8,7 @@ const schema = a.schema({
     .model({
       ownerId: a.string().required(),
       name: a.string().required(),
+      isTest: a.boolean(),
       description: a.string(),
       images: a.string().array(),
       amenities: a.string().array(),

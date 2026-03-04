@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
@@ -24,10 +25,26 @@ export default function HomePage({ gyms }: Props) {
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
   const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc">("distance-asc");
+  const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
+
+  useEffect(() => {
+    getCurrentUser()
+      .then(() => fetchUserAttributes())
+      .then((attrs) => {
+        const email = attrs.email ?? "";
+        setCanSeeTestGyms(email.endsWith("@mynextgym.com.au"));
+      })
+      .catch(() => {});
+  }, []);
+
+  const visibleGyms = useMemo(
+    () => canSeeTestGyms ? gyms : gyms.filter((g) => !g.isTest),
+    [gyms, canSeeTestGyms]
+  );
 
   const results: GymWithDistance[] = useMemo(() => {
     if (!hasSearched) return [];
-    const filtered = filterGyms(gyms, {
+    const filtered = filterGyms(visibleGyms, {
       postcode: postcode || undefined,
       amenities: selectedAmenities,
       radiusKm,
@@ -42,7 +59,7 @@ export default function HomePage({ gyms }: Props) {
       return [...filtered].sort((a, b) => b.pricePerWeek - a.pricePerWeek);
     }
     return filtered; // distance-asc is default from filterGyms
-  }, [gyms, postcode, selectedAmenities, hasSearched, radiusKm, sortBy]);
+  }, [visibleGyms, postcode, selectedAmenities, hasSearched, radiusKm, sortBy]);
 
   function handleSearch(pc: string) {
     setPostcode(pc);

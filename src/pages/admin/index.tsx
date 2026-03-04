@@ -415,7 +415,7 @@ function GymsTab() {
       // OwnerGymForm initialises its internal state from props once, so the
       // ownerId typed in the separate input above doesn't reach the form's
       // onSave payload — override it from panel state here.
-      const body = { ...updated, ownerId: panel.gym.ownerId };
+      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false };
       const r = await fetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -432,7 +432,7 @@ function GymsTab() {
       const r = await fetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
+        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false }),
       });
       if (r.ok) {
         showToast("Gym updated.");
@@ -493,7 +493,7 @@ function GymsTab() {
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
               <tr>
-                {["ID", "Name", "Owner", "Suburb", "Actions"].map((h) => (
+                {["ID", "Name", "Owner", "Suburb", "Test", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                 ))}
               </tr>
@@ -505,6 +505,11 @@ function GymsTab() {
                   <td className="px-4 py-3 font-medium text-gray-900">{g.name}</td>
                   <td className="px-4 py-3 text-gray-600">{g.ownerId}</td>
                   <td className="px-4 py-3 text-gray-600">{g.address.suburb}</td>
+                  <td className="px-4 py-3">
+                    {g.isTest && (
+                      <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Test</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <button
                       onClick={() => setPanel({ gym: g, isNew: false })}
@@ -523,7 +528,7 @@ function GymsTab() {
               ))}
               {gyms.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No gyms found.
                   </td>
                 </tr>
@@ -570,6 +575,23 @@ function GymsTab() {
                   />
                 </div>
               )}
+              <div className="mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={panel.gym.isTest ?? false}
+                    onChange={(e) =>
+                      setPanel((p) =>
+                        p ? { ...p, gym: { ...p.gym, isTest: e.target.checked } } : p
+                      )
+                    }
+                    className="w-4 h-4 accent-brand-orange"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Test listing <span className="text-gray-400 font-normal">(hidden from public — visible only to @mynextgym.com.au users)</span>
+                  </span>
+                </label>
+              </div>
               <OwnerGymForm gym={panel.gym} onSave={handleSave} />
             </div>
           </div>

@@ -15,6 +15,7 @@ function toGym(r: GymRecord): Gym {
   return {
     id: r.id,
     ownerId: r.ownerId ?? "",
+    isTest: r.isTest ?? false,
     name: r.name ?? "",
     description: r.description ?? "",
     address: {
@@ -47,6 +48,7 @@ function fromGym(gym: Gym) {
   return {
     id: gym.id,
     ownerId: gym.ownerId,
+    isTest: gym.isTest ?? false,
     name: gym.name,
     description: gym.description,
     addressStreet: gym.address.street,
@@ -123,6 +125,7 @@ export const ownerStore = {
     if (!isAmplifyConfigured()) throw new Error("Backend not configured");
     const { data } = await dataClient.models.Gym.create({
       ownerId: gym.ownerId,
+      isTest: gym.isTest ?? false,
       name: gym.name,
       description: gym.description,
       addressStreet: gym.address.street,
