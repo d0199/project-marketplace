@@ -556,7 +556,7 @@ function GymsTab() {
               {panel.isNew && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Owner ID
+                    Owner ID <span className="text-gray-400 font-normal">(leave blank to create as unclaimed listing)</span>
                   </label>
                   <input
                     value={panel.gym.ownerId}
@@ -565,7 +565,7 @@ function GymsTab() {
                         p ? { ...p, gym: { ...p.gym, ownerId: e.target.value } } : p
                       )
                     }
-                    placeholder="owner-1"
+                    placeholder="Leave blank for unclaimed listing"
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>

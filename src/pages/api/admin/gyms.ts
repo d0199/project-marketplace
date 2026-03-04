@@ -21,9 +21,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "POST") {
     const gym = req.body as Omit<Gym, "id">;
-    if (!gym.name || !gym.ownerId) {
-      return res.status(400).json({ error: "Missing name or ownerId" });
+    if (!gym.name) {
+      return res.status(400).json({ error: "Missing name" });
     }
+    if (!gym.ownerId) gym.ownerId = "unclaimed";
     try {
       const created = await ownerStore.create(gym);
       return res.status(201).json(created);

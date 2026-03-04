@@ -134,7 +134,7 @@ export default function HomePage({ gyms }: Props) {
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {results.map((gym) => (
-                    <GymCard key={gym.id} gym={gym} unclaimed={gym.ownerId === "owner-3"} />
+                    <GymCard key={gym.id} gym={gym} unclaimed={gym.ownerId === "owner-3" || gym.ownerId === "unclaimed"} />
                   ))}
                 </div>
               </>
