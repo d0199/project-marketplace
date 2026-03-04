@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import type { Gym } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
+import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -391,7 +392,15 @@ function GymsTab() {
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulk, setBulk] = useState<{ price: string; priceVerified: "" | "true" | "false"; ownerId: string }>({ price: "", priceVerified: "", ownerId: "" });
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulk, setBulk] = useState<{
+    price: string;
+    priceVerified: "" | "true" | "false";
+    ownerId: string;
+    isTest: "" | "true" | "false";
+    addAmenities: Set<string>;
+    removeAmenities: Set<string>;
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", addAmenities: new Set(), removeAmenities: new Set() });
   const [bulkBusy, setBulkBusy] = useState(false);
 
   function showToast(msg: string) {
@@ -411,27 +420,53 @@ function GymsTab() {
     setSelected(selected.size === gyms.length ? new Set() : new Set(gyms.map((g) => g.id)));
   }
 
+  function toggleBulkAmenity(amenity: string, mode: "add" | "remove") {
+    setBulk((b) => {
+      const addAmenities = new Set(b.addAmenities);
+      const removeAmenities = new Set(b.removeAmenities);
+      if (mode === "add") {
+        if (addAmenities.has(amenity)) { addAmenities.delete(amenity); }
+        else { addAmenities.add(amenity); removeAmenities.delete(amenity); }
+      } else {
+        if (removeAmenities.has(amenity)) { removeAmenities.delete(amenity); }
+        else { removeAmenities.add(amenity); addAmenities.delete(amenity); }
+      }
+      return { ...b, addAmenities, removeAmenities };
+    });
+  }
+
+  function resetBulk() {
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", addAmenities: new Set(), removeAmenities: new Set() });
+  }
+
   async function applyBulk() {
     setBulkBusy(true);
-    const updates: Partial<Gym> = {};
-    const price = parseInt(bulk.price);
-    if (bulk.price !== "" && price > 0) updates.pricePerWeek = price;
-    if (bulk.priceVerified !== "") updates.priceVerified = bulk.priceVerified === "true";
-    if (bulk.ownerId !== "") updates.ownerId = bulk.ownerId;
-
     const targets = gyms.filter((g) => selected.has(g.id));
     await Promise.all(
-      targets.map((g) =>
-        fetch(`/api/admin/gym/${g.id}`, {
+      targets.map((g) => {
+        const updated = { ...g };
+        const price = parseInt(bulk.price);
+        if (bulk.price !== "" && price > 0) updated.pricePerWeek = price;
+        if (bulk.priceVerified !== "") updated.priceVerified = bulk.priceVerified === "true";
+        if (bulk.ownerId !== "") updated.ownerId = bulk.ownerId;
+        if (bulk.isTest !== "") updated.isTest = bulk.isTest === "true";
+        if (bulk.addAmenities.size > 0 || bulk.removeAmenities.size > 0) {
+          const amenitySet = new Set(g.amenities);
+          bulk.addAmenities.forEach((a) => amenitySet.add(a));
+          bulk.removeAmenities.forEach((a) => amenitySet.delete(a));
+          updated.amenities = Array.from(amenitySet);
+        }
+        return fetch(`/api/admin/gym/${g.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...g, ...updates }),
-        })
-      )
+          body: JSON.stringify(updated),
+        });
+      })
     );
     setBulkBusy(false);
+    setBulkOpen(false);
     setSelected(new Set());
-    setBulk({ price: "", priceVerified: "", ownerId: "" });
+    resetBulk();
     showToast(`Updated ${targets.length} gym${targets.length !== 1 ? "s" : ""}.`);
     search(q);
   }
@@ -527,47 +562,128 @@ function GymsTab() {
         </button>
       </div>
 
-      {/* Bulk action bar */}
+      {/* Selection bar */}
       {selected.size > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-          <span className="text-sm font-medium text-blue-800">{selected.size} selected</span>
-          <div className="flex flex-wrap gap-2 flex-1 items-center">
-            <input
-              type="number"
-              min={1}
-              value={bulk.price}
-              onChange={(e) => setBulk((b) => ({ ...b, price: e.target.value }))}
-              placeholder="Price/wk (blank = no change)"
-              className="px-3 py-1.5 border rounded-lg text-sm w-52 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <select
-              value={bulk.priceVerified}
-              onChange={(e) => setBulk((b) => ({ ...b, priceVerified: e.target.value as "" | "true" | "false" }))}
-              className="px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">Price verified — no change</option>
-              <option value="true">Set verified ✓</option>
-              <option value="false">Set unverified</option>
-            </select>
-            <input
-              value={bulk.ownerId}
-              onChange={(e) => setBulk((b) => ({ ...b, ownerId: e.target.value }))}
-              placeholder="Owner ID (blank = no change)"
-              className="px-3 py-1.5 border rounded-lg text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <button
-              onClick={applyBulk}
-              disabled={bulkBusy || (bulk.price === "" && bulk.priceVerified === "" && bulk.ownerId === "")}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-40"
-            >
-              {bulkBusy ? "Applying…" : "Apply"}
-            </button>
-            <button
-              onClick={() => setSelected(new Set())}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Clear
-            </button>
+        <div className="mb-3 flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
+          <span className="text-sm font-medium text-blue-800">{selected.size} gym{selected.size !== 1 ? "s" : ""} selected</span>
+          <button
+            onClick={() => setBulkOpen(true)}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg"
+          >
+            Bulk Edit
+          </button>
+          <button onClick={() => setSelected(new Set())} className="text-sm text-blue-600 hover:underline">
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* Bulk edit modal */}
+      {bulkOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">
+              Bulk Edit — {selected.size} gym{selected.size !== 1 ? "s" : ""}
+            </h3>
+            <p className="text-xs text-gray-400 mb-5">Only filled fields will be applied. Blank = no change.</p>
+
+            <div className="space-y-4">
+              {/* Price */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Price per week ($)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={bulk.price}
+                    onChange={(e) => setBulk((b) => ({ ...b, price: e.target.value }))}
+                    placeholder="Leave blank = no change"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Price verified</label>
+                  <select
+                    value={bulk.priceVerified}
+                    onChange={(e) => setBulk((b) => ({ ...b, priceVerified: e.target.value as "" | "true" | "false" }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">No change</option>
+                    <option value="true">Set verified ✓</option>
+                    <option value="false">Set unverified</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Owner / Test */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Owner ID</label>
+                  <input
+                    value={bulk.ownerId}
+                    onChange={(e) => setBulk((b) => ({ ...b, ownerId: e.target.value }))}
+                    placeholder="Leave blank = no change"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Test listing</label>
+                  <select
+                    value={bulk.isTest}
+                    onChange={(e) => setBulk((b) => ({ ...b, isTest: e.target.value as "" | "true" | "false" }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">No change</option>
+                    <option value="true">Mark as test</option>
+                    <option value="false">Mark as live</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-2">Amenities</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  {ALL_AMENITIES.map((a) => {
+                    const adding = bulk.addAmenities.has(a);
+                    const removing = bulk.removeAmenities.has(a);
+                    return (
+                      <div key={a} className="flex items-center gap-2 text-sm">
+                        <span className="w-28 text-gray-700 truncate">{AMENITY_ICONS[a]} {a}</span>
+                        <button
+                          onClick={() => toggleBulkAmenity(a, "add")}
+                          className={`px-2 py-0.5 rounded text-xs font-medium border ${adding ? "bg-green-100 border-green-400 text-green-800" : "border-gray-200 text-gray-400 hover:border-green-300"}`}
+                        >
+                          + Add
+                        </button>
+                        <button
+                          onClick={() => toggleBulkAmenity(a, "remove")}
+                          className={`px-2 py-0.5 rounded text-xs font-medium border ${removing ? "bg-red-100 border-red-400 text-red-700" : "border-gray-200 text-gray-400 hover:border-red-300"}`}
+                        >
+                          − Remove
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={() => { setBulkOpen(false); resetBulk(); }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={applyBulk}
+                disabled={bulkBusy}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50"
+              >
+                {bulkBusy ? "Applying…" : `Apply to ${selected.size} gym${selected.size !== 1 ? "s" : ""}`}
+              </button>
+            </div>
           </div>
         </div>
       )}
