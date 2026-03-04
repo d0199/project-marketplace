@@ -8,6 +8,7 @@ const schema = a.schema({
     .model({
       ownerId: a.string().required(),
       name: a.string().required(),
+      isActive: a.boolean(),
       isTest: a.boolean(),
       isFeatured: a.boolean(),
       priceVerified: a.boolean(),
@@ -61,6 +62,18 @@ const schema = a.schema({
       message: a.string(),
       status: a.string(), // "pending" | "approved" | "rejected"
       notes: a.string(),  // internal admin notes
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  GymEdit: a
+    .model({
+      gymId: a.string().required(),
+      gymName: a.string(),        // denormalized for display
+      ownerEmail: a.string(),     // submitter's email
+      currentSnapshot: a.string(), // JSON of gym at time of submission
+      proposedChanges: a.string(), // JSON of proposed full gym
+      status: a.string(),          // "pending" | "approved" | "rejected"
+      notes: a.string(),           // internal admin notes
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });

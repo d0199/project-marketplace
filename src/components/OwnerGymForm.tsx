@@ -5,7 +5,7 @@ import { ALL_AMENITIES, AMENITY_ICONS, POSTCODE_COORDS } from "@/lib/utils";
 
 interface Props {
   gym: Gym;
-  onSave: (updated: Gym) => void;
+  onSave: (updated: Gym) => Promise<string | undefined | void> | string | undefined | void;
 }
 
 const DAYS: (keyof OpeningHours)[] = [
@@ -56,11 +56,11 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
     });
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSave(form);
-    setToast("Changes saved successfully!");
-    setTimeout(() => setToast(""), 3000);
+    const msg = await onSave(form);
+    setToast(typeof msg === "string" ? msg : "Changes saved successfully!");
+    setTimeout(() => setToast(""), 5000);
   }
 
   return (

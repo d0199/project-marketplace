@@ -40,7 +40,9 @@ export default function HomePage({ gyms }: Props) {
   }, []);
 
   const visibleGyms = useMemo(
-    () => canSeeTestGyms ? gyms : gyms.filter((g) => !g.isTest),
+    () => gyms
+      .filter((g) => g.isActive !== false)
+      .filter((g) => canSeeTestGyms || !g.isTest),
     [gyms, canSeeTestGyms]
   );
 

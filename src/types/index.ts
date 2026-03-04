@@ -18,6 +18,7 @@ export interface OpeningHours {
 export interface Gym {
   id: string;
   ownerId: string;
+  isActive?: boolean;
   isTest?: boolean;
   isFeatured?: boolean;
   priceVerified?: boolean;
@@ -39,4 +40,17 @@ export interface OwnerSession {
   ownerId: string;
   email: string;
   name: string;
+}
+
+export interface GymEdit {
+  id: string;
+  gymId: string;
+  gymName?: string;
+  ownerEmail?: string;
+  currentSnapshot?: string; // JSON string of Gym
+  proposedChanges?: string; // JSON string of Gym
+  status: string; // "pending" | "approved" | "rejected"
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

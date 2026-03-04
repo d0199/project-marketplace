@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
-import type { Gym } from "@/types";
+import type { Gym, GymEdit } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
 import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
 
@@ -80,7 +80,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const [tab, setTab] = useState<"claims" | "gyms" | "users">("claims");
+  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users">("claims");
 
   // Auth check
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b bg-white px-6">
         <nav className="flex gap-6">
-          {(["claims", "gyms", "users"] as const).map((t) => (
+          {(["claims", "moderation", "gyms", "users"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -154,7 +154,7 @@ export default function AdminPage() {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t}
+              {t === "moderation" ? "Moderation Review" : t}
             </button>
           ))}
         </nav>
@@ -163,6 +163,7 @@ export default function AdminPage() {
       {/* Content */}
       <div className="p-6 max-w-7xl mx-auto">
         {tab === "claims" && <ClaimsTab />}
+        {tab === "moderation" && <ModerationTab />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} />}
         {tab === "users" && <UsersTab />}
       </div>
@@ -391,6 +392,234 @@ function ClaimsTab() {
               )}
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Moderation Review tab
+// ---------------------------------------------------------------------------
+
+const DIFF_LABELS: Record<string, string> = {
+  name: "Name", description: "Description", phone: "Phone",
+  email: "Email", website: "Website", pricePerWeek: "Price/week",
+  "address.street": "Address", "address.suburb": "Suburb", "address.postcode": "Postcode",
+  "hours.monday": "Mon", "hours.tuesday": "Tue", "hours.wednesday": "Wed",
+  "hours.thursday": "Thu", "hours.friday": "Fri", "hours.saturday": "Sat", "hours.sunday": "Sun",
+  amenities: "Amenities", images: "Images",
+};
+
+function getFieldValue(gym: Gym, field: string): string {
+  if (field.startsWith("address.")) {
+    const k = field.split(".")[1] as keyof Gym["address"];
+    return String(gym.address?.[k] ?? "");
+  }
+  if (field.startsWith("hours.")) {
+    const k = field.split(".")[1] as keyof Gym["hours"];
+    return String(gym.hours?.[k] ?? "");
+  }
+  if (field === "amenities") return (gym.amenities ?? []).sort().join(", ") || "—";
+  if (field === "images") return `${(gym.images ?? []).length} image(s)`;
+  if (field === "pricePerWeek") return gym.pricePerWeek ? `$${gym.pricePerWeek}/wk` : "—";
+  return String((gym as unknown as Record<string, unknown>)[field] ?? "");
+}
+
+function computeDiff(current: Gym, proposed: Gym) {
+  return Object.keys(DIFF_LABELS).filter((field) => {
+    return getFieldValue(current, field) !== getFieldValue(proposed, field);
+  });
+}
+
+function ModerationTab() {
+  const [edits, setEdits] = useState<GymEdit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean }>({ msg: "", ok: true });
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const r = await fetch("/api/admin/moderation");
+    if (r.ok) setEdits(await r.json());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  function showToast(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast({ msg: "", ok: true }), 5000);
+  }
+
+  async function action(id: string, act: "approve" | "reject") {
+    setBusy(id + act);
+    const r = await fetch(`/api/admin/moderation?action=${act}&id=${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: notes[id] ?? "" }),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (r.ok) {
+      showToast(act === "approve" ? "Changes approved and applied." : "Changes rejected.");
+      await load();
+    } else {
+      showToast(`Error: ${body.error ?? r.statusText}`, false);
+    }
+    setBusy(null);
+  }
+
+  const filtered = edits.filter((e) => {
+    if (statusFilter !== "all" && e.status !== statusFilter) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      (e.gymName ?? "").toLowerCase().includes(q) ||
+      (e.gymId ?? "").toLowerCase().includes(q) ||
+      (e.ownerEmail ?? "").toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <div>
+      {toast.msg && (
+        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.ok ? "bg-green-600" : "bg-red-600"}`}>
+          {toast.msg}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mb-4">
+        <h2 className="text-base font-semibold text-gray-900 shrink-0">Moderation Review</h2>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter by gym name, ID, or owner email…"
+          className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <p className="text-gray-500 text-sm">Loading…</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-gray-500 text-sm">{edits.length === 0 ? "No moderation reviews yet." : "No results match your filter."}</p>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((e) => {
+            const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) as Gym : null;
+            const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) as Gym : null;
+            const changedFields = current && proposed ? computeDiff(current, proposed) : [];
+
+            return (
+              <div
+                key={e.id}
+                className={`bg-white rounded-lg border p-4 ${e.status !== "pending" ? "opacity-60" : ""}`}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">{e.gymName || e.gymId}</p>
+                    <p className="text-xs text-gray-400">ID: {e.gymId}</p>
+                  </div>
+                  <Badge status={e.status} />
+                </div>
+
+                {/* Meta */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-3">
+                  <div>
+                    <p className="text-xs text-gray-400 mb-0.5">Owner Email</p>
+                    <p className="text-gray-800 break-all">{e.ownerEmail || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-0.5">Submitted</p>
+                    <p className="text-gray-800">{fmtDate(e.createdAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-0.5">Changes</p>
+                    <p className="text-gray-800">{changedFields.length} field{changedFields.length !== 1 ? "s" : ""}</p>
+                  </div>
+                </div>
+
+                {/* Diff table */}
+                {changedFields.length > 0 && current && proposed && (
+                  <div className="mb-3 overflow-x-auto">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="text-left text-gray-400">
+                          <th className="pb-1 pr-4 font-medium w-24">Field</th>
+                          <th className="pb-1 pr-4 font-medium">Current</th>
+                          <th className="pb-1 font-medium">Proposed</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {changedFields.map((field) => (
+                          <tr key={field} className="border-t border-gray-100">
+                            <td className="py-1.5 pr-4 text-gray-500 font-medium align-top">{DIFF_LABELS[field]}</td>
+                            <td className="py-1.5 pr-4 text-gray-500 align-top line-through max-w-xs truncate">{getFieldValue(current, field) || "—"}</td>
+                            <td className="py-1.5 text-green-700 align-top font-medium max-w-xs truncate">{getFieldValue(proposed, field) || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {e.status === "pending" ? (
+                  <div className="mb-3">
+                    <label className="text-xs text-gray-400 mb-0.5 block">Internal notes (optional)</label>
+                    <textarea
+                      rows={2}
+                      value={notes[e.id] ?? ""}
+                      onChange={(ev) => setNotes((n) => ({ ...n, [e.id]: ev.target.value }))}
+                      placeholder="Add rationale for approval or rejection…"
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+                    />
+                  </div>
+                ) : e.notes ? (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-400 mb-0.5">Notes</p>
+                    <p className="text-sm text-gray-700 bg-gray-50 rounded p-2">{e.notes}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {e.status === "approved" ? "Approved" : "Rejected"}: {fmtDate(e.updatedAt)}
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Actions */}
+                {e.status === "pending" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => action(e.id, "approve")}
+                      disabled={busy !== null}
+                      className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+                    >
+                      {busy === e.id + "approve" ? "Approving…" : "Approve"}
+                    </button>
+                    <button
+                      onClick={() => action(e.id, "reject")}
+                      disabled={busy !== null}
+                      className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+                    >
+                      {busy === e.id + "reject" ? "Rejecting…" : "Reject"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -52,12 +52,16 @@ export default function EditGymPage() {
       });
   }, [gymId, session]);
 
-  async function handleSave(updated: Gym) {
-    await fetch(`/api/owner/gym/${gymId}`, {
+  async function handleSave(updated: Gym): Promise<string | undefined> {
+    const r = await fetch(`/api/owner/gym/${gymId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
+      body: JSON.stringify({ ...updated, ownerEmail: session?.email }),
     });
+    const body = await r.json().catch(() => ({}));
+    if (body?.queued) {
+      return "Changes submitted for review — a team member will approve shortly.";
+    }
     setGym(updated);
   }
 
