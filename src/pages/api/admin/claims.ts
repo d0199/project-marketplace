@@ -1,18 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
-  CognitoIdentityProviderClient,
   AdminCreateUserCommand,
   ListUsersCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const outputs = require("../../../../amplify_outputs.json");
-
-const cognitoClient = new CognitoIdentityProviderClient({
-  region: outputs.auth.aws_region,
-});
-const USER_POOL_ID: string = outputs.auth.user_pool_id;
+import { cognitoAdmin as cognitoClient, USER_POOL_ID } from "@/lib/cognitoAdmin";
 
 async function listAllClaims() {
   const results: Record<string, unknown>[] = [];
