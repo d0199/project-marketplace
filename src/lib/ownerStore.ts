@@ -1,7 +1,9 @@
+import { createRequire } from "module";
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { Gym } from "@/types";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+const require = createRequire(import.meta.url);
 const seedGyms: Gym[] = require("../../data/gyms.json");
 
 // ---------------------------------------------------------------------------
@@ -28,13 +30,13 @@ function toGym(r: GymRecord): Gym {
     lng: r.lng ?? 0,
     amenities: (r.amenities?.filter(Boolean) ?? []) as string[],
     hours: {
-      monday: r.hoursMonday ?? undefined,
-      tuesday: r.hoursTuesday ?? undefined,
-      wednesday: r.hoursWednesday ?? undefined,
-      thursday: r.hoursThursday ?? undefined,
-      friday: r.hoursFriday ?? undefined,
-      saturday: r.hoursSaturday ?? undefined,
-      sunday: r.hoursSunday ?? undefined,
+      monday: r.hoursMonday ?? null,
+      tuesday: r.hoursTuesday ?? null,
+      wednesday: r.hoursWednesday ?? null,
+      thursday: r.hoursThursday ?? null,
+      friday: r.hoursFriday ?? null,
+      saturday: r.hoursSaturday ?? null,
+      sunday: r.hoursSunday ?? null,
     },
     pricePerWeek: r.pricePerWeek ?? 0,
     images: (r.images?.filter(Boolean) ?? []) as string[],
