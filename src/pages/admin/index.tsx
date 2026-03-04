@@ -90,6 +90,7 @@ export default function AdminPage() {
         if (attrs["custom:isAdmin"] !== "true") {
           setAccessDenied(true);
         } else {
+          if (router.query.gym) setTab("gyms");
           setReady(true);
         }
       } catch {
@@ -121,6 +122,8 @@ export default function AdminPage() {
       </div>
     );
   }
+
+  const initialGymId = typeof router.query.gym === "string" ? router.query.gym : undefined;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,7 +162,7 @@ export default function AdminPage() {
       {/* Content */}
       <div className="p-6 max-w-7xl mx-auto">
         {tab === "claims" && <ClaimsTab />}
-        {tab === "gyms" && <GymsTab />}
+        {tab === "gyms" && <GymsTab initialGymId={initialGymId} />}
         {tab === "users" && <UsersTab />}
       </div>
     </div>
@@ -384,7 +387,7 @@ function ClaimsTab() {
 // ---------------------------------------------------------------------------
 // Gyms tab
 // ---------------------------------------------------------------------------
-function GymsTab() {
+function GymsTab({ initialGymId }: { initialGymId?: string }) {
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -482,6 +485,15 @@ function GymsTab() {
   }, []);
 
   useEffect(() => { search(""); }, [search]);
+
+  useEffect(() => {
+    if (!initialGymId) return;
+    fetch(`/api/admin/gym/${initialGymId}`)
+      .then((r) => r.json())
+      .then((gym: Gym) => { if (gym?.id) setPanel({ gym, isNew: false }); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();

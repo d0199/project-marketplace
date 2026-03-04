@@ -33,15 +33,17 @@ function track(gymId: string, event: string) {
 
 export default function GymProfilePage({ gym }: Props) {
   const [isOwner, setIsOwner] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
       .then(async () => {
         const attributes = await fetchUserAttributes();
         setIsOwner(attributes["custom:ownerId"] === gym.ownerId);
+        setIsAdmin(attributes["custom:isAdmin"] === "true");
       })
       .catch(() => {
-        // Not signed in — isOwner stays false
+        // Not signed in — isOwner/isAdmin stay false
       });
     track(gym.id, "pageViews");
   }, [gym.id, gym.ownerId]);
@@ -62,14 +64,24 @@ export default function GymProfilePage({ gym }: Props) {
             {" / "}
             <span className="text-gray-800 font-medium">{gym.name}</span>
           </div>
-          {isOwner && (
-            <Link
-              href={`/owner/${gym.id}`}
-              className="bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
-            >
-              Edit Gym
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            {isOwner && (
+              <Link
+                href={`/owner/${gym.id}`}
+                className="bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
+              >
+                Edit Gym
+              </Link>
+            )}
+            {isAdmin && (
+              <Link
+                href={`/admin?gym=${gym.id}`}
+                className="bg-brand-black hover:bg-gray-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
+              >
+                Admin Edit
+              </Link>
+            )}
+          </div>
         </nav>
 
         {/* Banner */}
