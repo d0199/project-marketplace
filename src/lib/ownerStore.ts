@@ -72,13 +72,32 @@ function fromGym(gym: Gym) {
 }
 
 // ---------------------------------------------------------------------------
+// Pagination helper — exhausts all pages from a list() call
+// ---------------------------------------------------------------------------
+async function listAllGyms(
+  filter?: Parameters<typeof dataClient.models.Gym.list>[0]
+): Promise<GymRecord[]> {
+  const results: GymRecord[] = [];
+  let nextToken: string | null | undefined;
+  do {
+    const res = await dataClient.models.Gym.list({
+      ...filter,
+      limit: 1000,
+      nextToken,
+    });
+    results.push(...(res.data ?? []));
+    nextToken = res.nextToken;
+  } while (nextToken);
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Store — falls back to gyms.json until the Amplify backend is deployed
 // ---------------------------------------------------------------------------
 export const ownerStore = {
   async getAll(): Promise<Gym[]> {
     if (!isAmplifyConfigured()) return seedGyms;
-    const { data } = await dataClient.models.Gym.list();
-    return (data ?? []).map(toGym);
+    return (await listAllGyms()).map(toGym);
   },
 
   async getById(id: string): Promise<Gym | undefined> {
@@ -90,10 +109,9 @@ export const ownerStore = {
   async getByOwner(ownerId: string): Promise<Gym[]> {
     if (!isAmplifyConfigured())
       return seedGyms.filter((g) => g.ownerId === ownerId);
-    const { data } = await dataClient.models.Gym.list({
-      filter: { ownerId: { eq: ownerId } },
-    });
-    return (data ?? []).map(toGym);
+    return (
+      await listAllGyms({ filter: { ownerId: { eq: ownerId } } })
+    ).map(toGym);
   },
 
   async update(gym: Gym): Promise<void> {
