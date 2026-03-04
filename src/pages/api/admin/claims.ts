@@ -85,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
           // New user — create Cognito account and send welcome email
           ownerId = `owner-${id.slice(0, 8)}`;
-          const tempPassword = `Claim${claim.gymId}1!`;
+          const tempPassword = `Welcome${id.slice(0, 4).toUpperCase()}1!`;
           await cognitoClient.send(
             new AdminCreateUserCommand({
               UserPoolId: USER_POOL_ID,
