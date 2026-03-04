@@ -16,13 +16,13 @@ export default function Navbar() {
     <nav className="bg-brand-black text-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link href="/" className="font-bold text-lg">
-          mynextgym<span className="text-brand-orange">.com.au</span>
+          mynextgym<span className="text-brand-orange hidden sm:inline">.com.au</span>
         </Link>
 
         <div className="flex items-center gap-4 text-sm">
           <Link
             href="/"
-            className="text-gray-300 hover:text-white transition-colors"
+            className="hidden sm:block text-gray-300 hover:text-white transition-colors"
           >
             Find a Gym
           </Link>
@@ -31,7 +31,8 @@ export default function Navbar() {
               href="/list-gym"
               className="text-brand-orange hover:text-orange-400 font-medium transition-colors whitespace-nowrap"
             >
-              List your gym, it&apos;s free
+              <span className="sm:hidden">List for free</span>
+              <span className="hidden sm:inline">List your gym, it&apos;s free</span>
             </Link>
           )}
           {isOwnerRoute ? (

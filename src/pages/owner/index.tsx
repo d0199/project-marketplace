@@ -24,6 +24,7 @@ export default function OwnerPortalPage() {
   const router = useRouter();
   const [session, setSession] = useState<OwnerSession | null>(null);
   const [gyms, setGyms] = useState<Gym[]>([]);
+  const [gymsLoaded, setGymsLoaded] = useState(false);
   const [stats, setStats] = useState<Record<string, GymStats>>({});
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +72,7 @@ export default function OwnerPortalPage() {
       .then((r) => r.json())
       .then((data: Gym[]) => {
         setGyms(data);
+        setGymsLoaded(true);
         return Promise.all(
           data.map((g) =>
             fetch(`/api/stats/${g.id}`)
@@ -474,9 +476,33 @@ export default function OwnerPortalPage() {
           </button>
         </div>
 
-        {gyms.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-gray-500">Loading your gyms…</p>
+        {!gymsLoaded ? (
+          <div className="text-center py-20 text-gray-400">Loading your gyms…</div>
+        ) : gyms.length === 0 ? (
+          <div className="max-w-md mx-auto text-center py-16">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">No gyms yet</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Create your first listing or claim your gym to manage them here.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/list-gym"
+                className="px-5 py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors text-sm"
+              >
+                Create a listing
+              </Link>
+              <Link
+                href="/claim-gym"
+                className="px-5 py-2.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors text-sm"
+              >
+                Claim your gym
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
