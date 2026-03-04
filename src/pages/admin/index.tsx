@@ -82,6 +82,8 @@ export default function AdminPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users">("claims");
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
+  const setClaimsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, claims: n })), []);
+  const setModerationPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, moderation: n })), []);
 
   // Pre-fetch pending counts so badges show immediately on all tabs
   useEffect(() => {
@@ -179,8 +181,8 @@ export default function AdminPage() {
 
       {/* Content */}
       <div className="p-6 max-w-7xl mx-auto">
-        {tab === "claims" && <ClaimsTab onPendingCount={(n) => setPendingCounts((p) => ({ ...p, claims: n }))} />}
-        {tab === "moderation" && <ModerationTab onPendingCount={(n) => setPendingCounts((p) => ({ ...p, moderation: n }))} />}
+        {tab === "claims" && <ClaimsTab onPendingCount={setClaimsPending} />}
+        {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} />}
         {tab === "users" && <UsersTab />}
       </div>
