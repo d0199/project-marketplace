@@ -185,7 +185,7 @@ export default function HomePage({ gyms }: Props) {
                             href={`/gyms/${meta.slug}`}
                             className="text-sm text-brand-orange hover:underline"
                           >
-                            {meta.name}
+                            Gyms in {meta.name}
                           </Link>
                         </li>
                       ))}
