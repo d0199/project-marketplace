@@ -44,6 +44,7 @@ const schema = a.schema({
       memberOffers: a.string().array(),
       memberOffersNotes: a.string(),
       memberOffersScroll: a.boolean(),
+      memberScrollText: a.string(),
       memberOffersTnC: a.string(),
     })
     // API key allows public reads and owner writes from server-side API routes.

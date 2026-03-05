@@ -175,7 +175,14 @@ export default function GymProfilePage({ gym }: Props) {
                   </div>
                 )}
                 {gym.memberOffersNotes && (
-                  <p className="text-gray-700 text-sm mb-2">{gym.memberOffersNotes}</p>
+                  <ul className="space-y-1 mb-2">
+                    {gym.memberOffersNotes.split(/[,;]+/).map((item) => item.trim()).filter(Boolean).map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm font-semibold text-gray-800">
+                        <span className="text-brand-orange mt-0.5">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 {gym.memberOffersTnC && (
                   <p className="text-xs text-gray-400 mt-2">{gym.memberOffersTnC}</p>
