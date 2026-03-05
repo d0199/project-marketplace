@@ -115,12 +115,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   const slug = params?.suburb as string;
 
   // Extract postcode from slug — last 4 digits
-  const match = slug?.match(/(\d{4})$/);
-  const postcode = match?.[1];
+  const match = slug?.match(/^(.*?)-?(\d{4})$/);
+  const postcode = match?.[2];
+  const suburbFromSlug = match?.[1]
+    ?.split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ") ?? "";
 
-  if (!postcode || !POSTCODE_COORDS[postcode] || !POSTCODE_META[postcode]) {
+  if (!postcode || !POSTCODE_COORDS[postcode]) {
     return { notFound: true };
   }
+
+  // Use curated name if available, otherwise derive from slug
+  const suburbName = POSTCODE_META[postcode]?.name ?? suburbFromSlug;
 
   const allGyms = await ownerStore.getAll();
   const gyms = filterGyms(allGyms, { postcode, amenities: [], radiusKm: 10 });
@@ -128,7 +135,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   return {
     props: {
       postcode,
-      suburbName: POSTCODE_META[postcode].name,
+      suburbName,
       slug,
       gyms,
     },
