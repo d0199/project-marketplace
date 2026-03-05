@@ -85,7 +85,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users">("claims");
+  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users" | "leads">("claims");
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const setClaimsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, claims: n })), []);
   const setModerationPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, moderation: n })), []);
@@ -165,7 +165,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b bg-white px-6">
         <nav className="flex gap-6">
-          {(["claims", "moderation", "gyms", "users"] as const).map((t) => (
+          {(["claims", "moderation", "gyms", "users", "leads"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -175,7 +175,7 @@ export default function AdminPage() {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t === "moderation" ? "Moderation Review" : t}
+              {t === "moderation" ? "Moderation Review" : t === "leads" ? "Leads" : t}
               {(pendingCounts[t] ?? 0) > 0 && (
                 <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
               )}
@@ -190,6 +190,7 @@ export default function AdminPage() {
         {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} />}
         {tab === "users" && <UsersTab />}
+        {tab === "leads" && <LeadsTab />}
       </div>
     </div>
   );
@@ -680,9 +681,10 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
     isTest: "" | "true" | "false";
     isFeatured: "" | "true" | "false";
     isActive: "" | "true" | "false";
+    isPaid: "" | "true" | "false";
     addAmenities: Set<string>;
     removeAmenities: Set<string>;
-  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", addAmenities: new Set(), removeAmenities: new Set() });
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set() });
   const [bulkBusy, setBulkBusy] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
@@ -728,7 +730,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
   }
 
   function resetBulk() {
-    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", addAmenities: new Set(), removeAmenities: new Set() });
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set() });
   }
 
   async function applyBulk() {
@@ -744,6 +746,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
         if (bulk.isTest !== "") updated.isTest = bulk.isTest === "true";
         if (bulk.isFeatured !== "") updated.isFeatured = bulk.isFeatured === "true";
         if (bulk.isActive !== "") updated.isActive = bulk.isActive === "true";
+        if (bulk.isPaid !== "") updated.isPaid = bulk.isPaid === "true";
         if (bulk.addAmenities.size > 0 || bulk.removeAmenities.size > 0) {
           const amenitySet = new Set(g.amenities);
           bulk.addAmenities.forEach((a) => amenitySet.add(a));
@@ -794,7 +797,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
       // OwnerGymForm initialises its internal state from props once, so the
       // ownerId typed in the separate input above doesn't reach the form's
       // onSave payload — override it from panel state here.
-      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false, isActive: panel.gym.isActive !== false };
+      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false, isActive: panel.gym.isActive !== false, isPaid: panel.gym.isPaid ?? false };
       const r = await fetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -811,7 +814,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
       const r = await fetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false }),
+        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false }),
       });
       if (r.ok) {
         showToast("Gym updated.");
@@ -1000,6 +1003,18 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                     <option value="">No change</option>
                     <option value="true">Set active</option>
                     <option value="false">Set inactive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Paid listing</label>
+                  <select
+                    value={bulk.isPaid}
+                    onChange={(e) => setBulk((b) => ({ ...b, isPaid: e.target.value as "" | "true" | "false" }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">No change</option>
+                    <option value="true">Set paid ★</option>
+                    <option value="false">Set free</option>
                   </select>
                 </div>
               </div>
@@ -1222,6 +1237,21 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                   />
                   <span className="text-sm font-medium text-gray-700">
                     Active <span className="text-gray-400 font-normal">(uncheck to hide from public search results)</span>
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={panel.gym.isPaid ?? false}
+                    onChange={(e) =>
+                      setPanel((p) =>
+                        p ? { ...p, gym: { ...p.gym, isPaid: e.target.checked } } : p
+                      )
+                    }
+                    className="w-4 h-4 accent-brand-orange"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Paid listing <span className="text-gray-400 font-normal">(unlocks contact form, email, social links, member offers, hours note)</span>
                   </span>
                 </label>
               </div>
@@ -1536,6 +1566,76 @@ function UsersTab() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Leads tab
+// ---------------------------------------------------------------------------
+interface LeadRecord {
+  id: string;
+  gymId: string;
+  gymName?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  createdAt?: string;
+  status?: string;
+}
+
+function LeadsTab() {
+  const [leads, setLeads] = useState<LeadRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const r = await fetch("/api/admin/leads");
+        if (r.ok) setLeads(await r.json());
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  return (
+    <div>
+      <h2 className="text-base font-semibold text-gray-900 mb-4">Leads</h2>
+      {loading ? (
+        <p className="text-gray-500 text-sm">Loading…</p>
+      ) : leads.length === 0 ? (
+        <p className="text-gray-500 text-sm">No leads yet.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border bg-white">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                {["Date", "Gym", "Name", "Email", "Phone"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {leads.map((l) => (
+                <tr key={l.id}>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDate(l.createdAt)}</td>
+                  <td className="px-4 py-3 text-gray-700">
+                    <a href={`/gym/${l.gymId}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-brand-orange">
+                      {l.gymName || l.gymId}
+                    </a>
+                  </td>
+                  <td className="px-4 py-3 text-gray-900 font-medium">{l.name}</td>
+                  <td className="px-4 py-3 text-gray-700 break-all">{l.email}</td>
+                  <td className="px-4 py-3 text-gray-700">{l.phone || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

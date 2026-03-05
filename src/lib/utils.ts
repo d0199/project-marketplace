@@ -130,9 +130,30 @@ export const AMENITY_ICONS: Record<string, string> = {
   "personal training": "💪",
 };
 
+export const ALL_MEMBER_OFFERS = [
+  "no contract",
+  "contract",
+  "new member trial",
+  "referral scheme",
+  "multiple location access",
+  "gym or community app",
+] as const;
+
+export type MemberOffer = (typeof ALL_MEMBER_OFFERS)[number];
+
+export const MEMBER_OFFER_ICONS: Record<string, string> = {
+  "no contract": "🆓",
+  "contract": "📝",
+  "new member trial": "🎁",
+  "referral scheme": "🤝",
+  "multiple location access": "📍",
+  "gym or community app": "📱",
+};
+
 export interface FilterOptions {
   postcode?: string;
   amenities: string[];
+  memberOffers?: string[];
   radiusKm?: number;
 }
 
@@ -164,6 +185,13 @@ export function filterGyms(
     );
   }
 
+  // Filter by selected member offers (must have ALL selected)
+  if (options.memberOffers && options.memberOffers.length > 0) {
+    results = results.filter((g) =>
+      options.memberOffers!.every((o) => (g.memberOffers ?? []).includes(o))
+    );
+  }
+
   return results;
 }
 
@@ -171,6 +199,7 @@ export function filterGyms(
 function gymTier(gym: Gym): number {
   const isOwned = gym.ownerId !== "owner-3" && gym.ownerId !== "unclaimed" && gym.ownerId !== "";
   const hasPricing = (gym.priceVerified ?? false) && (gym.pricePerWeek ?? 0) > 0;
+  if (gym.isPaid) return 4;
   if (isOwned && hasPricing) return 3;
   if (isOwned) return 2;
   if (hasPricing) return 1;

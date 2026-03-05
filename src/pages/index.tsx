@@ -6,6 +6,7 @@ import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
+import MemberOfferFilter from "@/components/MemberOfferFilter";
 import GymCard from "@/components/GymCard";
 import { filterGyms, rankGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
@@ -22,6 +23,7 @@ interface Props {
 export default function HomePage({ gyms }: Props) {
   const [postcode, setPostcode] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
   const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc">("distance-asc");
@@ -51,6 +53,7 @@ export default function HomePage({ gyms }: Props) {
     const filtered = filterGyms(visibleGyms, {
       postcode: postcode || undefined,
       amenities: selectedAmenities,
+      memberOffers: selectedMemberOffers,
       radiusKm,
     });
     let sorted = filtered;
@@ -62,7 +65,7 @@ export default function HomePage({ gyms }: Props) {
       sorted = [...filtered].sort((a, b) => b.pricePerWeek - a.pricePerWeek);
     }
     return rankGyms(sorted, rotationSeed);
-  }, [visibleGyms, postcode, selectedAmenities, hasSearched, radiusKm, sortBy, rotationSeed]);
+  }, [visibleGyms, postcode, selectedAmenities, selectedMemberOffers, hasSearched, radiusKm, sortBy, rotationSeed]);
 
   function handleSearch(pc: string) {
     setPostcode(pc);
@@ -113,12 +116,14 @@ export default function HomePage({ gyms }: Props) {
           {/* Sidebar */}
           <div className="w-52 shrink-0 hidden sm:block">
             <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
+            <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
           </div>
 
           {/* Results */}
           <div className="flex-1 min-w-0">
             <div className="sm:hidden mb-4">
               <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
+              <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
             </div>
 
             {!hasSearched ? (

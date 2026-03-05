@@ -27,6 +27,8 @@ const schema = a.schema({
       phone: a.string(),
       email: a.string(),
       website: a.string(),
+      instagram: a.string(),
+      facebook: a.string(),
       // hours (flattened)
       hoursMonday: a.string(),
       hoursTuesday: a.string(),
@@ -35,6 +37,13 @@ const schema = a.schema({
       hoursFriday: a.string(),
       hoursSaturday: a.string(),
       hoursSunday: a.string(),
+      hoursComment: a.string(),
+      // paid listing flag
+      isPaid: a.boolean(),
+      // member offers
+      memberOffers: a.string().array(),
+      memberOffersNotes: a.string(),
+      memberOffersTnC: a.string(),
     })
     // API key allows public reads and owner writes from server-side API routes.
     // The API routes themselves enforce ownership by comparing ownerId values.
@@ -80,6 +89,18 @@ const schema = a.schema({
       proposedChanges: a.string(), // JSON of proposed full gym
       status: a.string(),          // "pending" | "approved" | "rejected"
       notes: a.string(),           // internal admin notes
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  Lead: a
+    .model({
+      gymId: a.string().required(),
+      gymName: a.string(),
+      name: a.string().required(),
+      email: a.string().required(),
+      phone: a.string(),
+      message: a.string(),
+      status: a.string(), // "new" | "read"
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });

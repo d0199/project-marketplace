@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { Gym, OpeningHours } from "@/types";
-import { ALL_AMENITIES, AMENITY_ICONS, POSTCODE_COORDS } from "@/lib/utils";
+import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, POSTCODE_COORDS } from "@/lib/utils";
 
 interface Props {
   gym: Gym;
@@ -52,6 +52,17 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         amenities: has
           ? f.amenities.filter((a) => a !== amenity)
           : [...f.amenities, amenity],
+      };
+    });
+  }
+
+  function toggleMemberOffer(offer: string) {
+    setForm((f) => {
+      const current = f.memberOffers ?? [];
+      const has = current.includes(offer);
+      return {
+        ...f,
+        memberOffers: has ? current.filter((o) => o !== offer) : [...current, offer],
       };
     });
   }
@@ -156,6 +167,39 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         </div>
       </section>
 
+      {/* Social Media */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+          Social Media
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instagram URL
+            </label>
+            <input
+              type="url"
+              value={form.instagram ?? ""}
+              onChange={(e) => setField("instagram", e.target.value || undefined)}
+              placeholder="https://instagram.com/yourgym"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Facebook URL
+            </label>
+            <input
+              type="url"
+              value={form.facebook ?? ""}
+              onChange={(e) => setField("facebook", e.target.value || undefined)}
+              placeholder="https://facebook.com/yourgym"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Address */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
@@ -218,6 +262,57 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
               </span>
             </label>
           ))}
+        </div>
+      </section>
+
+      {/* Member Offers */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+          Member Offers
+        </h2>
+        <p className="text-xs text-gray-500 mb-3">
+          Member offers and hours notes are displayed on paid listings.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          {ALL_MEMBER_OFFERS.map((offer) => (
+            <label key={offer} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={(form.memberOffers ?? []).includes(offer)}
+                onChange={() => toggleMemberOffer(offer)}
+                className="w-4 h-4 rounded accent-brand-orange"
+              />
+              <span className="text-sm text-gray-700">
+                {MEMBER_OFFER_ICONS[offer]} {offer}
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Benefits / affiliations
+            </label>
+            <textarea
+              rows={3}
+              value={form.memberOffersNotes ?? ""}
+              onChange={(e) => setField("memberOffersNotes", e.target.value || undefined)}
+              placeholder="e.g. Corporate discounts, health fund rebates…"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Terms &amp; Conditions
+            </label>
+            <textarea
+              rows={3}
+              value={form.memberOffersTnC ?? ""}
+              onChange={(e) => setField("memberOffersTnC", e.target.value || undefined)}
+              placeholder="Any T&Cs for the above offers…"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none text-sm"
+            />
+          </div>
         </div>
       </section>
 
@@ -295,6 +390,26 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
               />
             </div>
           ))}
+        </div>
+        <div className="mt-4">
+          <label className="flex items-center gap-2 cursor-pointer mb-2">
+            <input
+              type="checkbox"
+              checked={form.hoursComment !== undefined && form.hoursComment !== ""}
+              onChange={(e) => setField("hoursComment", e.target.checked ? (form.hoursComment || " ").trim() || "" : undefined)}
+              className="w-4 h-4 accent-brand-orange"
+            />
+            <span className="text-sm text-gray-700">Add a note to opening hours</span>
+          </label>
+          {form.hoursComment !== undefined && (
+            <textarea
+              rows={2}
+              value={form.hoursComment}
+              onChange={(e) => setField("hoursComment", e.target.value)}
+              placeholder="e.g. Public holidays may vary. 24/7 access via key fob."
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+            />
+          )}
         </div>
       </section>
 

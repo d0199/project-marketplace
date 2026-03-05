@@ -22,18 +22,37 @@ export interface Gym {
   isTest?: boolean;
   isFeatured?: boolean;
   priceVerified?: boolean;
+  isPaid?: boolean;
   name: string;
   description: string;
   address: Address;
   phone: string;
   email: string;
   website: string;
+  instagram?: string;
+  facebook?: string;
   lat: number;
   lng: number;
   amenities: string[];
   hours: OpeningHours;
+  hoursComment?: string;
+  memberOffers?: string[];
+  memberOffersNotes?: string;
+  memberOffersTnC?: string;
   pricePerWeek: number;
   images: string[];
+}
+
+export interface Lead {
+  id: string;
+  gymId: string;
+  gymName?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  submittedAt?: string;
+  status?: string;
 }
 
 export interface OwnerSession {

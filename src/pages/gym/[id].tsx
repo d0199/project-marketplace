@@ -8,6 +8,7 @@ import AmenityBadge from "@/components/AmenityBadge";
 import ImageCarousel from "@/components/ImageCarousel";
 import type { Gym } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
+import { MEMBER_OFFER_ICONS } from "@/lib/utils";
 
 const DAYS = [
   "monday",
@@ -31,9 +32,18 @@ function track(gymId: string, event: string) {
   }).catch(() => {});
 }
 
+interface ContactForm {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}
+
 export default function GymProfilePage({ gym }: Props) {
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [contactForm, setContactForm] = useState<ContactForm>({ name: "", email: "", phone: "", message: "" });
+  const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   useEffect(() => {
     getCurrentUser()
@@ -47,6 +57,26 @@ export default function GymProfilePage({ gym }: Props) {
       });
     track(gym.id, "pageViews");
   }, [gym.id, gym.ownerId]);
+
+  async function handleContactSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setContactStatus("sending");
+    try {
+      const r = await fetch(`/api/contact/${gym.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactForm),
+      });
+      if (r.ok) {
+        setContactStatus("sent");
+        track(gym.id, "contactFormSubmissions");
+      } else {
+        setContactStatus("error");
+      }
+    } catch {
+      setContactStatus("error");
+    }
+  }
 
   return (
     <>
@@ -129,10 +159,36 @@ export default function GymProfilePage({ gym }: Props) {
               </div>
             </section>
 
+            {/* Member Offers — paid listings only */}
+            {gym.isPaid && (gym.memberOffers?.length || gym.memberOffersNotes) && (
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                  Member Offers
+                </h2>
+                {gym.memberOffers && gym.memberOffers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {gym.memberOffers.map((offer) => (
+                      <span key={offer} className="inline-flex items-center gap-1 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
+                        {MEMBER_OFFER_ICONS[offer]} {offer}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {gym.memberOffersNotes && (
+                  <p className="text-gray-700 text-sm mb-2">{gym.memberOffersNotes}</p>
+                )}
+                {gym.memberOffersTnC && (
+                  <p className="text-xs text-gray-400 mt-2">{gym.memberOffersTnC}</p>
+                )}
+              </section>
+            )}
+
             {/* Hours */}
             <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                Opening Hours
+                Opening Hours{gym.amenities.includes("24/7 access") && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">(24/7 access)</span>
+                )}
               </h2>
               <dl className="grid gap-2">
                 {DAYS.map((day) => (
@@ -149,6 +205,9 @@ export default function GymProfilePage({ gym }: Props) {
                   </div>
                 ))}
               </dl>
+              {gym.isPaid && gym.hoursComment && (
+                <p className="mt-3 text-sm italic text-gray-500">{gym.hoursComment}</p>
+              )}
             </section>
           </div>
 
@@ -166,15 +225,81 @@ export default function GymProfilePage({ gym }: Props) {
                   Check out website for pricing
                 </p>
               )}
-              <a
-                href={gym.website || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track(gym.id, "websiteClicks")}
-                className="block mt-4 bg-white text-brand-orange text-center font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors"
-              >
-                Visit Website
-              </a>
+
+              {/* Contact form for paid gyms with email; otherwise Visit Website button */}
+              {gym.isPaid && gym.email ? (
+                <div className="mt-4">
+                  {contactStatus === "sent" ? (
+                    <div className="bg-white/20 rounded-lg p-4 text-center">
+                      <p className="font-semibold text-white">Message sent!</p>
+                      <p className="text-orange-100 text-sm mt-1">We&apos;ll be in touch shortly.</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleContactSubmit} className="space-y-2">
+                      <p className="text-orange-100 text-sm font-medium mb-2">Send an enquiry</p>
+                      <input
+                        required
+                        placeholder="Your name"
+                        value={contactForm.name}
+                        onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                      />
+                      <input
+                        required
+                        type="email"
+                        placeholder="Your email"
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                      />
+                      <input
+                        placeholder="Phone (optional)"
+                        value={contactForm.phone}
+                        onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                      />
+                      <textarea
+                        rows={3}
+                        placeholder="Your message…"
+                        value={contactForm.message}
+                        onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none resize-none"
+                      />
+                      {contactStatus === "error" && (
+                        <p className="text-orange-100 text-xs">Something went wrong. Please try again.</p>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={contactStatus === "sending"}
+                        className="w-full bg-white text-brand-orange font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors disabled:opacity-50"
+                      >
+                        {contactStatus === "sending" ? "Sending…" : "Send Enquiry"}
+                      </button>
+                    </form>
+                  )}
+                  {gym.website && (
+                    <a
+                      href={gym.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track(gym.id, "websiteClicks")}
+                      className="block mt-2 text-center text-orange-100 text-xs hover:underline"
+                    >
+                      Visit website
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href={gym.website || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => track(gym.id, "websiteClicks")}
+                  className="block mt-4 bg-white text-brand-orange text-center font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors"
+                >
+                  Visit Website
+                </a>
+              )}
             </div>
 
             {/* Contact */}
@@ -193,7 +318,7 @@ export default function GymProfilePage({ gym }: Props) {
                     </a>
                   </li>
                 )}
-                {gym.email && (
+                {gym.isPaid && gym.email && (
                   <li className="flex items-center gap-2">
                     <span>✉️</span>
                     <a
@@ -205,7 +330,43 @@ export default function GymProfilePage({ gym }: Props) {
                     </a>
                   </li>
                 )}
+                {gym.isPaid && gym.instagram && (
+                  <li className="flex items-center gap-2">
+                    <span>📷</span>
+                    <a
+                      href={gym.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline truncate"
+                    >
+                      Instagram
+                    </a>
+                  </li>
+                )}
+                {gym.isPaid && gym.facebook && (
+                  <li className="flex items-center gap-2">
+                    <span>💬</span>
+                    <a
+                      href={gym.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline truncate"
+                    >
+                      Facebook
+                    </a>
+                  </li>
+                )}
               </ul>
+              {(gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <Link
+                    href="/claim-gym"
+                    className="text-sm text-brand-orange hover:underline"
+                  >
+                    Claim this listing for free →
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Address */}
