@@ -1,17 +1,16 @@
 /**
  * scripts/importGyms.ts
- * Bulk-imports gyms from a JSON file into DynamoDB, skipping any that already exist.
- *
- * Deduplication logic (in order):
- *   1. googlePlaceId match — reliable, works for any gym fetched via Google Places
- *   2. Normalised name + state match — fallback for older records without a Place ID
+ * Bulk-imports gyms from a JSON file into DynamoDB with three outcomes per record:
+ *   CREATE  — no match found, insert as new
+ *   BACKFILL — name+state match found but existing record has no googlePlaceId → update it
+ *   SKIP    — already exists with a googlePlaceId (or no new place ID to add)
  *
  * Usage:
- *   npx tsx scripts/importGyms.ts                          # imports data/gyms_eastern.json
- *   npx tsx scripts/importGyms.ts data/gyms.json           # re-import WA data safely
+ *   npx tsx scripts/importGyms.ts                        # imports data/gyms_all.json
+ *   npx tsx scripts/importGyms.ts data/gyms_all.json
  *   npx tsx scripts/importGyms.ts data/gyms_eastern.json
  *
- * Safe to re-run — duplicates are skipped, not overwritten.
+ * Safe to re-run — creates/updates only what's needed.
  */
 
 import { Amplify } from "aws-amplify";
@@ -34,24 +33,37 @@ function normalise(name: string, state: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}|${state.toUpperCase()}`;
 }
 
-async function fetchAllExisting() {
-  const placeIds = new Set<string>();
-  const nameKeys = new Set<string>();
-  let nextToken: string | null | undefined;
+interface ExistingGym {
+  id: string;
+  googlePlaceId?: string | null;
+}
 
+async function fetchAllExisting() {
+  // placeId → true (quick dedup)
+  const placeIdSet = new Set<string>();
+  // normalised name+state → existing gym record (for backfill)
+  const nameMap = new Map<string, ExistingGym>();
+
+  let nextToken: string | null | undefined;
   process.stdout.write("Fetching existing gyms from DynamoDB");
+
   do {
     const res = await client.models.Gym.list({ limit: 1000, nextToken });
     for (const g of res.data ?? []) {
-      if (g.googlePlaceId) placeIds.add(g.googlePlaceId);
-      if (g.name && g.addressState) nameKeys.add(normalise(g.name, g.addressState));
+      if (g.googlePlaceId) placeIdSet.add(g.googlePlaceId);
+      if (g.name && g.addressState) {
+        nameMap.set(normalise(g.name, g.addressState), {
+          id: g.id,
+          googlePlaceId: g.googlePlaceId,
+        });
+      }
     }
     nextToken = res.nextToken;
     process.stdout.write(".");
   } while (nextToken);
 
-  console.log(` done. Found ${placeIds.size} place IDs, ${nameKeys.size} name keys.`);
-  return { placeIds, nameKeys };
+  console.log(` done. ${nameMap.size} gyms loaded.`);
+  return { placeIdSet, nameMap };
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +96,7 @@ interface GymJson {
 }
 
 async function run() {
-  const filePath = process.argv[2] ?? "data/gyms_eastern.json";
+  const filePath = process.argv[2] ?? "data/gyms_all.json";
 
   let gyms: GymJson[];
   try {
@@ -96,28 +108,52 @@ async function run() {
 
   console.log(`\nImporting from ${filePath} (${gyms.length} records)\n`);
 
-  const { placeIds, nameKeys } = await fetchAllExisting();
+  const { placeIdSet, nameMap } = await fetchAllExisting();
 
-  let skipped = 0;
   let created = 0;
+  let backfilled = 0;
+  let skipped = 0;
   let errors = 0;
 
   for (const gym of gyms) {
-    // --- Dedup check ---
-    const byPlaceId = gym.googlePlaceId && placeIds.has(gym.googlePlaceId);
-    const byName    = nameKeys.has(normalise(gym.name, gym.address.state));
+    const key = normalise(gym.name, gym.address.state);
 
-    if (byPlaceId || byName) {
-      const reason = byPlaceId ? "place ID" : "name+state";
-      console.log(`  ⟳  SKIP  ${gym.name} (${gym.address.state}) — matched by ${reason}`);
+    // 1. Exact place ID match → already fully imported
+    if (gym.googlePlaceId && placeIdSet.has(gym.googlePlaceId)) {
+      console.log(`  ⟳  SKIP      ${gym.name} (${gym.address.state}) — place ID match`);
       skipped++;
       continue;
     }
 
-    // --- Insert ---
+    // 2. Name+state match
+    const existing = nameMap.get(key);
+    if (existing) {
+      // Backfill googlePlaceId if the existing record doesn't have one
+      if (gym.googlePlaceId && !existing.googlePlaceId) {
+        const { errors: errs } = await client.models.Gym.update({
+          id: existing.id,
+          googlePlaceId: gym.googlePlaceId,
+        });
+        if (errs?.length) {
+          console.error(`  ✗  BACKFILL  ${gym.name}: ${errs.map((e) => e.message).join(", ")}`);
+          errors++;
+        } else {
+          console.log(`  ↑  BACKFILL  ${gym.name} (${gym.address.state}) — place ID added`);
+          placeIdSet.add(gym.googlePlaceId);
+          backfilled++;
+        }
+      } else {
+        console.log(`  ⟳  SKIP      ${gym.name} (${gym.address.state}) — name+state match`);
+        skipped++;
+      }
+      continue;
+    }
+
+    // 3. No match → create
     const { errors: errs } = await client.models.Gym.create({
       id: gym.id,
-      // googlePlaceId omitted until Amplify backend redeploys with new schema field
+      // googlePlaceId included — works once Amplify backend redeploys new schema
+      googlePlaceId: gym.googlePlaceId,
       ownerId: gym.ownerId,
       isActive: gym.isActive ?? true,
       isTest: gym.isTest ?? false,
@@ -150,22 +186,67 @@ async function run() {
     });
 
     if (errs?.length) {
-      console.error(`  ✗  ERROR  ${gym.name}:`, errs.map((e) => e.message).join(", "));
-      errors++;
+      // If googlePlaceId field not yet in schema, retry without it
+      if (errs.some((e) => e.message.includes("not defined for input"))) {
+        const { errors: errs2 } = await client.models.Gym.create({
+          id: gym.id,
+          ownerId: gym.ownerId,
+          isActive: gym.isActive ?? true,
+          isTest: gym.isTest ?? false,
+          isFeatured: gym.isFeatured ?? false,
+          priceVerified: gym.priceVerified ?? false,
+          isPaid: gym.isPaid ?? false,
+          name: gym.name,
+          description: gym.description,
+          images: gym.images ?? [],
+          amenities: gym.amenities ?? [],
+          lat: gym.lat,
+          lng: gym.lng,
+          pricePerWeek: gym.pricePerWeek,
+          addressStreet: gym.address.street,
+          addressSuburb: gym.address.suburb,
+          addressState: gym.address.state,
+          addressPostcode: gym.address.postcode,
+          phone: gym.phone ?? "",
+          email: gym.email ?? "",
+          website: gym.website ?? "",
+          hoursMonday: gym.hours?.monday,
+          hoursTuesday: gym.hours?.tuesday,
+          hoursWednesday: gym.hours?.wednesday,
+          hoursThursday: gym.hours?.thursday,
+          hoursFriday: gym.hours?.friday,
+          hoursSaturday: gym.hours?.saturday,
+          hoursSunday: gym.hours?.sunday,
+          memberOffers: gym.memberOffers ?? [],
+          memberOffersScroll: gym.memberOffersScroll ?? false,
+        });
+        if (errs2?.length) {
+          console.error(`  ✗  ERROR     ${gym.name}:`, errs2.map((e) => e.message).join(", "));
+          errors++;
+        } else {
+          console.log(`  ✓  NEW       ${gym.name} (${gym.address.suburb}, ${gym.address.state})`);
+          if (gym.googlePlaceId) placeIdSet.add(gym.googlePlaceId);
+          nameMap.set(key, { id: gym.id, googlePlaceId: gym.googlePlaceId });
+          created++;
+        }
+      } else {
+        console.error(`  ✗  ERROR     ${gym.name}:`, errs.map((e) => e.message).join(", "));
+        errors++;
+      }
     } else {
-      console.log(`  ✓  NEW    ${gym.name} (${gym.address.suburb}, ${gym.address.state})`);
-      // Add to seen sets so later records in the same file don't re-insert
-      if (gym.googlePlaceId) placeIds.add(gym.googlePlaceId);
-      nameKeys.add(normalise(gym.name, gym.address.state));
+      console.log(`  ✓  NEW       ${gym.name} (${gym.address.suburb}, ${gym.address.state})`);
+      if (gym.googlePlaceId) placeIdSet.add(gym.googlePlaceId);
+      nameMap.set(key, { id: gym.id, googlePlaceId: gym.googlePlaceId });
       created++;
     }
   }
 
   console.log(`\n─────────────────────────────`);
-  console.log(`  Created : ${created}`);
-  console.log(`  Skipped : ${skipped}`);
-  console.log(`  Errors  : ${errors}`);
-  console.log(`  Total   : ${gyms.length}`);
+  console.log(`  Created   : ${created}`);
+  console.log(`  Backfilled: ${backfilled}`);
+  console.log(`  Skipped   : ${skipped}`);
+  console.log(`  Errors    : ${errors}`);
+  console.log(`  Total     : ${gyms.length}`);
   console.log(`─────────────────────────────\n`);
 }
 
