@@ -1,16 +1,26 @@
 /**
- * Server-side config — reads from process.env at request time.
+ * Server-side config for Amplify SSR.
  *
- * Amplify Gen 2 Secrets (set via `npx ampx secret set`) are injected into
- * the SSR Lambda runtime's process.env via the compute role, but are NOT
- * available during the frontend build phase. Reading at request time (not at
- * module load / build time) ensures the values are always present.
+ * Stripe keys must be set as Amplify Console Environment Variables
+ * (Hosting → Environment variables), NOT as Gen 2 CLI secrets (`npx ampx
+ * secret set`). Gen 2 secrets are SSM-based and only accessible via secret()
+ * in backend.ts — they are never in process.env at build or Lambda runtime.
+ *
+ * Console env vars are in process.env at BUILD time → baked into
+ * serverRuntimeConfig → accessible via getConfig() at Lambda runtime.
+ * They are also in process.env at Lambda runtime directly.
  */
+import getConfig from "next/config";
+
+function cfg(key: string): string {
+  return process.env[key] ?? getConfig()?.serverRuntimeConfig?.[key] ?? "";
+}
+
 export const serverConfig = {
-  get STRIPE_SECRET_KEY()         { return process.env.STRIPE_SECRET_KEY         ?? ""; },
-  get STRIPE_WEBHOOK_SECRET()     { return process.env.STRIPE_WEBHOOK_SECRET     ?? ""; },
-  get STRIPE_PRICE_PAID_MONTHLY() { return process.env.STRIPE_PRICE_PAID_MONTHLY ?? ""; },
-  get STRIPE_PRICE_PAID_ANNUAL()  { return process.env.STRIPE_PRICE_PAID_ANNUAL  ?? ""; },
-  get STRIPE_PRICE_FEATURED_MONTHLY() { return process.env.STRIPE_PRICE_FEATURED_MONTHLY ?? ""; },
-  get STRIPE_PRICE_FEATURED_ANNUAL()  { return process.env.STRIPE_PRICE_FEATURED_ANNUAL  ?? ""; },
+  get STRIPE_SECRET_KEY()             { return cfg("STRIPE_SECRET_KEY"); },
+  get STRIPE_WEBHOOK_SECRET()         { return cfg("STRIPE_WEBHOOK_SECRET"); },
+  get STRIPE_PRICE_PAID_MONTHLY()     { return cfg("STRIPE_PRICE_PAID_MONTHLY"); },
+  get STRIPE_PRICE_PAID_ANNUAL()      { return cfg("STRIPE_PRICE_PAID_ANNUAL"); },
+  get STRIPE_PRICE_FEATURED_MONTHLY() { return cfg("STRIPE_PRICE_FEATURED_MONTHLY"); },
+  get STRIPE_PRICE_FEATURED_ANNUAL()  { return cfg("STRIPE_PRICE_FEATURED_ANNUAL"); },
 };
