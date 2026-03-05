@@ -96,9 +96,11 @@ export default function AdminPage() {
       fetch("/api/admin/claims").then((r) => r.json()).catch(() => []),
       fetch("/api/admin/moderation").then((r) => r.json()).catch(() => []),
     ]).then(([claims, edits]) => {
+      const claimsArr = Array.isArray(claims) ? claims as Claim[] : [];
+      const editsArr = Array.isArray(edits) ? edits as GymEdit[] : [];
       setPendingCounts({
-        claims: (claims as Claim[]).filter((c) => c.status === "pending").length,
-        moderation: (edits as GymEdit[]).filter((e) => e.status === "pending").length,
+        claims: claimsArr.filter((c) => c.status === "pending").length,
+        moderation: editsArr.filter((e) => e.status === "pending").length,
       });
     });
   }, []);
