@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
   AdminCreateUserCommand,
+  AdminUpdateUserAttributesCommand,
   ListUsersCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
@@ -77,8 +78,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const attrs = Object.fromEntries(
             (Users[0].Attributes ?? []).map((a) => [a.Name, a.Value])
           );
-          ownerId = attrs["custom:ownerId"] ?? `owner-${id.slice(0, 8)}`;
+          const existingOwnerId = attrs["custom:ownerId"];
+          ownerId = existingOwnerId ?? `owner-${id.slice(0, 8)}`;
           isNewUser = false;
+          // If existing user had no ownerId, write the generated one back to Cognito
+          if (!existingOwnerId) {
+            await cognitoClient.send(
+              new AdminUpdateUserAttributesCommand({
+                UserPoolId: USER_POOL_ID,
+                Username: Users[0].Username!,
+                UserAttributes: [{ Name: "custom:ownerId", Value: ownerId }],
+              })
+            );
+          }
         } else {
           ownerId = `owner-${id.slice(0, 8)}`;
           const tempPassword = `Welcome${id.slice(0, 4).toUpperCase()}1!`;
