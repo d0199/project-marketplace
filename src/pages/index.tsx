@@ -26,7 +26,7 @@ export default function HomePage({ gyms }: Props) {
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
-  const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc">("distance-asc");
+  const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc" | null>(null);
   const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
   // Rotation seed changes every 8 hours — stable for the session
   const rotationSeed = useMemo(() => Math.floor(Date.now() / (8 * 60 * 60 * 1000)), []);
@@ -56,15 +56,13 @@ export default function HomePage({ gyms }: Props) {
       memberOffers: selectedMemberOffers,
       radiusKm,
     });
-    let sorted = filtered;
-    if (sortBy === "distance-desc") {
-      sorted = [...filtered].sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
-    } else if (sortBy === "price-asc") {
-      sorted = [...filtered].sort((a, b) => a.pricePerWeek - b.pricePerWeek);
-    } else if (sortBy === "price-desc") {
-      sorted = [...filtered].sort((a, b) => b.pricePerWeek - a.pricePerWeek);
-    }
-    return rankGyms(sorted, rotationSeed);
+    if (!sortBy) return rankGyms(filtered, rotationSeed);
+    const sorted = [...filtered];
+    if (sortBy === "distance-asc") sorted.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+    else if (sortBy === "distance-desc") sorted.sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
+    else if (sortBy === "price-asc") sorted.sort((a, b) => a.pricePerWeek - b.pricePerWeek);
+    else if (sortBy === "price-desc") sorted.sort((a, b) => b.pricePerWeek - a.pricePerWeek);
+    return sorted;
   }, [visibleGyms, postcode, selectedAmenities, selectedMemberOffers, hasSearched, radiusKm, sortBy, rotationSeed]);
 
   function handleSearch(pc: string) {
@@ -147,10 +145,11 @@ export default function HomePage({ gyms }: Props) {
                     {results.length} gym{results.length !== 1 ? "s" : ""} within {radiusKm} km of {postcode}
                   </p>
                   <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    value={sortBy ?? ""}
+                    onChange={(e) => setSortBy((e.target.value || null) as typeof sortBy)}
                     className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   >
+                    <option value="">Sort by</option>
                     <option value="distance-asc">Distance: Nearest first</option>
                     <option value="distance-desc">Distance: Farthest first</option>
                     <option value="price-asc">Price: Low to high</option>
