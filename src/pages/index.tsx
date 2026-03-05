@@ -73,10 +73,10 @@ export default function HomePage({ gyms }: Props) {
   return (
     <>
       <Head>
-        <title>Find Gyms in Perth, WA | mynextgym.com.au</title>
-        <meta name="description" content="Search 300+ gyms across Perth and WA. Find gyms near you by suburb and postcode. Compare prices, amenities and opening hours." />
-        <meta property="og:title" content="Find Gyms in Perth, WA | mynextgym.com.au" />
-        <meta property="og:description" content="Search 300+ gyms across Perth and WA. Find gyms near you by suburb and postcode." />
+        <title>Find Gyms across Australia | mynextgym.com.au</title>
+        <meta name="description" content="Search gyms across Australia by suburb and postcode. Compare prices, amenities and opening hours in WA, NSW, VIC, QLD and SA." />
+        <meta property="og:title" content="Find Gyms across Australia | mynextgym.com.au" />
+        <meta property="og:description" content="Search gyms across Australia by suburb and postcode. Compare prices, amenities and opening hours." />
         <meta property="og:type" content="website" />
       </Head>
       <Layout>
@@ -128,7 +128,7 @@ export default function HomePage({ gyms }: Props) {
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">🏋️</p>
                 <p className="text-lg font-medium text-gray-500">Enter a postcode above to find gyms near you</p>
-                <p className="text-sm mt-2">Try <strong className="text-gray-600">6000</strong> for Perth CBD or <strong className="text-gray-600">6160</strong> for Fremantle</p>
+                <p className="text-sm mt-2">Try <strong className="text-gray-600">6000</strong> for Perth CBD or <strong className="text-gray-600">2000</strong> for Sydney CBD</p>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">
@@ -166,22 +166,33 @@ export default function HomePage({ gyms }: Props) {
           </div>
         </div>
 
-        {/* Browse by suburb — full width, below results, hidden once user has searched */}
+        {/* Browse by suburb — grouped by state, hidden once user has searched */}
         {!hasSearched && (
           <div className="mt-12 border-t pt-8">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">
               Browse gyms by suburb
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2">
-              {Object.entries(POSTCODE_META).map(([, meta]) => (
-                <Link
-                  key={meta.slug}
-                  href={`/gyms/${meta.slug}`}
-                  className="text-sm text-brand-orange hover:underline py-0.5"
-                >
-                  Gyms in {meta.name}
-                </Link>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+              {(["WA", "NSW", "VIC", "QLD", "SA"] as const).map((state) => {
+                const suburbs = Object.values(POSTCODE_META).filter((m) => m.state === state);
+                return (
+                  <div key={state}>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{state}</p>
+                    <ul className="space-y-1">
+                      {suburbs.map((meta) => (
+                        <li key={meta.slug}>
+                          <Link
+                            href={`/gyms/${meta.slug}`}
+                            className="text-sm text-brand-orange hover:underline"
+                          >
+                            {meta.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
