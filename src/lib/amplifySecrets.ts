@@ -25,14 +25,8 @@ let loadPromise: Promise<void> | null = null;
 export async function loadStripeSecrets(): Promise<void> {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
-    const appId  = process.env.AMPLIFY_APP_ID;
+    const appId  = process.env.AMPLIFY_APP_ID ?? "d36uz2q25gygnh";
     const region = process.env.AWS_REGION ?? "ap-southeast-2";
-
-    // Local dev: no appId, fall back to process.env
-    if (!appId) {
-      for (const key of STRIPE_KEYS) cache[key] = process.env[key] ?? "";
-      return;
-    }
 
     const client = new SSMClient({ region });
     const paths  = STRIPE_KEYS.map(k => `/amplify/shared/${appId}/${k}`);
