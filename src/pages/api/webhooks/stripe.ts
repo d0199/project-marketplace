@@ -69,10 +69,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     case "customer.subscription.updated": {
       const sub = event.data.object as Stripe.Subscription;
-      const sessions = await stripe.checkout.sessions.list({
-        subscription: sub.id,
-        limit: 1,
-      });
+      // If cancelling at period end, keep flags active until subscription actually deletes
+      if (sub.cancel_at_period_end) break;
+
+      const sessions = await stripe.checkout.sessions.list({ subscription: sub.id, limit: 1 });
       const gymId = sessions.data[0]?.metadata?.gymId;
       if (!gymId) break;
 

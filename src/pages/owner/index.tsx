@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import Link from "next/link";
 import {
   signIn,
-  signOut,
   signUp,
   confirmSignUp,
   confirmSignIn,
@@ -13,19 +11,12 @@ import {
   getCurrentUser,
   fetchUserAttributes,
 } from "aws-amplify/auth";
-import ImageCarousel from "@/components/ImageCarousel";
 import Layout from "@/components/Layout";
-import type { OwnerSession, Gym } from "@/types";
-import type { GymStats } from "@/lib/statsStore";
 
 type View = "login" | "signup" | "confirm-signup" | "forgot" | "reset-confirm" | "new-password";
 
 export default function OwnerPortalPage() {
   const router = useRouter();
-  const [session, setSession] = useState<OwnerSession | null>(null);
-  const [gyms, setGyms] = useState<Gym[]>([]);
-  const [gymsLoaded, setGymsLoaded] = useState(false);
-  const [stats, setStats] = useState<Record<string, GymStats>>({});
   const [loading, setLoading] = useState(true);
 
   // Shared form state
@@ -50,39 +41,18 @@ export default function OwnerPortalPage() {
 
   useEffect(() => {
     getCurrentUser()
-      .then(async (user) => {
+      .then(async () => {
         const attributes = await fetchUserAttributes();
         if (attributes["custom:isAdmin"] === "true") {
           router.replace("/admin");
           return;
         }
-        setSession({
-          ownerId: attributes["custom:ownerId"] ?? "",
-          email: user.signInDetails?.loginId ?? "",
-          name: attributes.name ?? attributes.email ?? "",
-        });
+        router.replace("/billing");
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
 
-  useEffect(() => {
-    if (!session) return;
-    fetch(`/api/owner/gyms?ownerId=${session.ownerId}`)
-      .then((r) => r.json())
-      .then((data: Gym[]) => {
-        setGyms(data);
-        setGymsLoaded(true);
-        return Promise.all(
-          data.map((g) =>
-            fetch(`/api/stats/${g.id}`)
-              .then((r) => r.json() as Promise<GymStats>)
-              .then((s) => [g.id, s] as const)
-          )
-        );
-      })
-      .then((entries) => setStats(Object.fromEntries(entries)));
-  }, [session]);
 
   // ── Login ──────────────────────────────────────────────────────────────────
   async function handleLogin(e: React.FormEvent) {
@@ -95,17 +65,12 @@ export default function OwnerPortalPage() {
         switchView("new-password");
         return;
       }
-      const user = await getCurrentUser();
       const attributes = await fetchUserAttributes();
       if (attributes["custom:isAdmin"] === "true") {
         router.replace("/admin");
         return;
       }
-      setSession({
-        ownerId: attributes["custom:ownerId"] ?? "",
-        email: user.signInDetails?.loginId ?? "",
-        name: attributes.name ?? attributes.email ?? "",
-      });
+      router.replace("/billing");
     } catch {
       setError("Incorrect email or password.");
     }
@@ -144,13 +109,7 @@ export default function OwnerPortalPage() {
       await confirmSignUp({ username: email, confirmationCode: code });
       // Auto sign in after confirmation
       await signIn({ username: email, password });
-      const user = await getCurrentUser();
-      const attributes = await fetchUserAttributes();
-      setSession({
-        ownerId: attributes["custom:ownerId"] ?? "",
-        email: user.signInDetails?.loginId ?? "",
-        name: attributes.name ?? attributes.email ?? "",
-      });
+      router.replace("/billing");
     } catch {
       setError("Invalid or expired code. Please try again.");
     }
@@ -204,17 +163,12 @@ export default function OwnerPortalPage() {
     }
     try {
       await confirmSignIn({ challengeResponse: newPassword });
-      const user = await getCurrentUser();
       const attributes = await fetchUserAttributes();
       if (attributes["custom:isAdmin"] === "true") {
         router.replace("/admin");
         return;
       }
-      setSession({
-        ownerId: attributes["custom:ownerId"] ?? "",
-        email: user.signInDetails?.loginId ?? "",
-        name: attributes.name ?? attributes.email ?? "",
-      });
+      router.replace("/billing");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg.includes("password") ? "Password does not meet requirements." : msg);
@@ -234,8 +188,7 @@ export default function OwnerPortalPage() {
   }
 
   // ── Auth views ─────────────────────────────────────────────────────────────
-  if (!session) {
-    return (
+  return (
       <>
         <Head>
           <title>Owner Portal — mynextgym.com.au</title>
@@ -449,121 +402,4 @@ export default function OwnerPortalPage() {
         </Layout>
       </>
     );
-  }
-
-  // ── Dashboard ──────────────────────────────────────────────────────────────
-  return (
-    <>
-      <Head>
-        <title>Dashboard — mynextgym.com.au Owner Portal</title>
-      </Head>
-      <Layout>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Gyms</h1>
-            <p className="text-gray-500 text-sm mt-1">
-              Welcome back, {session.name}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/billing" className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium">
-              Billing
-            </Link>
-            <button
-              onClick={async () => {
-                await signOut();
-                router.reload();
-              }}
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-
-        {!gymsLoaded ? (
-          <div className="text-center py-20 text-gray-400">Loading your gyms…</div>
-        ) : gyms.length === 0 ? (
-          <div className="max-w-md mx-auto text-center py-16">
-            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">No gyms yet</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Create your first listing or claim your gym to manage them here.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/list-gym"
-                className="px-5 py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors text-sm"
-              >
-                Create a listing
-              </Link>
-              <Link
-                href="/claim-gym"
-                className="px-5 py-2.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors text-sm"
-              >
-                Claim your gym
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {gyms.map((gym) => (
-              <div
-                key={gym.id}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
-              >
-                <div className="relative h-36 w-full bg-gray-100">
-                  <ImageCarousel images={gym.images} alt={gym.name} sizes="33vw" />
-                </div>
-                <div className="p-4 flex flex-col flex-1">
-                  <h2 className="font-semibold text-gray-900 text-base mb-1">
-                    {gym.name}
-                  </h2>
-                  <p className="text-sm text-gray-500 mb-3">
-                    {gym.address.suburb}, {gym.address.postcode}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {[
-                      { label: "Page views", icon: "👁", key: "pageViews" },
-                      { label: "Website clicks", icon: "🌐", key: "websiteClicks" },
-                      { label: "Phone clicks", icon: "📞", key: "phoneClicks" },
-                      { label: "Email clicks", icon: "✉️", key: "emailClicks" },
-                    ].map(({ label, icon, key }) => (
-                      <div key={key} className="bg-gray-50 rounded-lg px-3 py-2">
-                        <p className="text-xs text-gray-500">{icon} {label}</p>
-                        <p className="text-lg font-bold text-gray-900">
-                          {stats[gym.id]?.[key as keyof GymStats] ?? 0}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto flex gap-2">
-                    <Link
-                      href={`/gym/${gym.id}`}
-                      className="flex-1 text-center text-sm py-1.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      View
-                    </Link>
-                    <Link
-                      href={`/owner/${gym.id}`}
-                      className="flex-1 text-center text-sm py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-lg font-medium transition-colors"
-                    >
-                      Edit
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Layout>
-    </>
-  );
 }

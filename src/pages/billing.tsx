@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
-import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
+import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import type { OwnerSession, Gym } from "@/types";
 
@@ -21,7 +21,6 @@ const PAID_FEATURES = [
 ];
 
 const FEATURED_FEATURES = [
-  "Everything in Paid",
   "Pinned to top of search results",
   "Rotated among max 3 per postcode",
 ];
@@ -46,16 +45,18 @@ function GymRow({
   busy,
   onUpgrade,
   onManage,
+  onCancel,
 }: {
   gym: Gym;
   interval: Interval;
+  email?: string;
   busy: string | null;
   onUpgrade: (gym: Gym, plan: "paid" | "featured") => void;
   onManage: () => void;
+  onCancel: (gym: Gym) => void;
 }) {
   const currentPlan =
     gym.stripePlan ?? (gym.isFeatured ? "featured" : gym.isPaid ? "paid" : null);
-  const hasActiveSub = currentPlan !== null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -67,7 +68,7 @@ function GymRow({
         </div>
         <Link
           href={`/owner/${gym.id}`}
-          className="text-sm text-gray-500 hover:text-brand-orange transition-colors"
+          className="text-sm font-bold text-gray-700 hover:text-brand-orange transition-colors"
         >
           Edit listing →
         </Link>
@@ -93,6 +94,17 @@ function GymRow({
             <li className="text-gray-300">✗ Member offers</li>
             <li className="text-gray-300">✗ Featured placement</li>
           </ul>
+          {currentPlan && (
+            <div className="mt-4">
+              <button
+                onClick={() => onCancel(gym)}
+                disabled={busy === `${gym.id}-cancel`}
+                className="w-full text-xs py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-300 transition-colors disabled:opacity-50"
+              >
+                {busy === `${gym.id}-cancel` ? "Cancelling…" : "Downgrade to Free"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Paid */}
@@ -113,7 +125,7 @@ function GymRow({
             <li className="text-gray-300">✗ Featured placement</li>
           </ul>
           <div className="mt-4">
-            {currentPlan === "paid" && hasActiveSub ? (
+            {currentPlan === "paid" ? (
               <button
                 onClick={onManage}
                 disabled={busy === "portal"}
@@ -129,7 +141,7 @@ function GymRow({
               >
                 {busy === "portal" ? "Loading…" : "Switch plan ↗"}
               </button>
-            ) : !currentPlan ? (
+            ) : (
               <button
                 onClick={() => onUpgrade(gym, "paid")}
                 disabled={busy === `${gym.id}-paid`}
@@ -137,7 +149,7 @@ function GymRow({
               >
                 {busy === `${gym.id}-paid` ? "Loading…" : "Upgrade to Paid"}
               </button>
-            ) : null}
+            )}
           </div>
         </div>
 
@@ -156,10 +168,10 @@ function GymRow({
             <li>✓ Basic listing</li>
             <li>✓ Search visibility</li>
             {PAID_FEATURES.map((f) => <li key={f}>✓ {f}</li>)}
-            {FEATURED_FEATURES.slice(1).map((f) => <li key={f} className="font-medium text-amber-700">★ {f}</li>)}
+            {FEATURED_FEATURES.map((f) => <li key={f} className="font-medium text-amber-700">★ {f}</li>)}
           </ul>
           <div className="mt-4">
-            {currentPlan === "featured" && hasActiveSub ? (
+            {currentPlan === "featured" ? (
               <button
                 onClick={onManage}
                 disabled={busy === "portal"}
@@ -191,11 +203,16 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [interval, setInterval] = useState<Interval>("month");
   const [busy, setBusy] = useState<string | null>(null);
+  const [cancelToast, setCancelToast] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser()
       .then(async (user) => {
         const attributes = await fetchUserAttributes();
+        if (attributes["custom:isAdmin"] === "true") {
+          router.replace("/admin");
+          return;
+        }
         setSession({
           ownerId: attributes["custom:ownerId"] ?? "",
           email: user.signInDetails?.loginId ?? "",
@@ -261,6 +278,28 @@ export default function BillingPage() {
     setBusy(null);
   }
 
+  async function handleCancel(gym: Gym) {
+    if (!session) return;
+    if (!confirm(`Downgrade ${gym.name} to Free? Your paid features will remain active until the end of the current billing period.`)) return;
+    setBusy(`${gym.id}-cancel`);
+    try {
+      const res = await fetch("/api/billing/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gymId: gym.id, email: session.email }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setCancelToast(`Subscription cancelled. ${gym.name} will revert to Free on ${data.periodEnd}.`);
+      } else {
+        alert(data.error ?? "Something went wrong");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    }
+    setBusy(null);
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -277,13 +316,25 @@ export default function BillingPage() {
       <Layout>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
-            <p className="text-sm text-gray-500 mt-1">Choose a plan for each of your gym listings</p>
+            <h1 className="text-2xl font-bold text-gray-900">My Listings</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {session?.name && `Welcome back, ${session.name} · `}Choose a plan for each gym
+            </p>
           </div>
-          <Link href="/owner" className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium">
-            ← Dashboard
-          </Link>
+          <button
+            onClick={async () => { await signOut(); router.replace("/owner"); }}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Sign out
+          </button>
         </div>
+
+        {cancelToast && (
+          <div className="mb-6 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800 flex items-center justify-between">
+            <span>{cancelToast}</span>
+            <button onClick={() => setCancelToast(null)} className="ml-4 text-green-600 hover:text-green-800">✕</button>
+          </div>
+        )}
 
         {/* Interval toggle */}
         <div className="flex items-center gap-3 mb-8">
@@ -309,7 +360,17 @@ export default function BillingPage() {
         </div>
 
         {gyms.length === 0 ? (
-          <p className="text-gray-500 py-8 text-center">No gym listings found.</p>
+          <div className="text-center py-16">
+            <p className="text-gray-500 mb-4">No gym listings yet.</p>
+            <div className="flex gap-3 justify-center">
+              <Link href="/list-gym" className="px-5 py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg text-sm transition-colors">
+                Create a listing
+              </Link>
+              <Link href="/claim-gym" className="px-5 py-2.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg text-sm transition-colors">
+                Claim your gym
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="space-y-6">
             {gyms.map((gym) => (
@@ -317,9 +378,11 @@ export default function BillingPage() {
                 key={gym.id}
                 gym={gym}
                 interval={interval}
+                email={session?.email ?? ""}
                 busy={busy}
                 onUpgrade={handleUpgrade}
                 onManage={handleManage}
+                onCancel={handleCancel}
               />
             ))}
           </div>
