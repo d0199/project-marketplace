@@ -318,18 +318,6 @@ export default function GymProfilePage({ gym }: Props) {
                     </a>
                   </li>
                 )}
-                {gym.isPaid && gym.email && (
-                  <li className="flex items-center gap-2">
-                    <span>✉️</span>
-                    <a
-                      href={`mailto:${gym.email}`}
-                      onClick={() => track(gym.id, "emailClicks")}
-                      className="hover:underline truncate"
-                    >
-                      {gym.email}
-                    </a>
-                  </li>
-                )}
                 {gym.isPaid && gym.instagram && (
                   <li className="flex items-center gap-2">
                     <span>📷</span>
