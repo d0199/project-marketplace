@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { stripe } from "@/lib/stripe";
+import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import type Stripe from "stripe";
 
@@ -14,12 +15,14 @@ async function getRawBody(req: NextApiRequest): Promise<Buffer> {
   });
 }
 
-const PRICE_TO_PLAN: Record<string, "paid" | "featured"> = {
-  [process.env.STRIPE_PRICE_PAID_MONTHLY ?? ""]: "paid",
-  [process.env.STRIPE_PRICE_PAID_ANNUAL ?? ""]: "paid",
-  [process.env.STRIPE_PRICE_FEATURED_MONTHLY ?? ""]: "featured",
-  [process.env.STRIPE_PRICE_FEATURED_ANNUAL ?? ""]: "featured",
-};
+function getPriceToPlan(): Record<string, "paid" | "featured"> {
+  return {
+    [serverConfig.STRIPE_PRICE_PAID_MONTHLY]: "paid",
+    [serverConfig.STRIPE_PRICE_PAID_ANNUAL]: "paid",
+    [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY]: "featured",
+    [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL]: "featured",
+  };
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
@@ -29,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(rawBody, sig, serverConfig.STRIPE_WEBHOOK_SECRET);
   } catch {
     return res.status(400).json({ error: "Invalid signature" });
   }
@@ -77,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!gymId) break;
 
       const priceId = sub.items.data[0]?.price.id ?? "";
-      const newPlan = PRICE_TO_PLAN[priceId];
+      const newPlan = getPriceToPlan()[priceId];
       if (!newPlan) break;
 
       await ownerStore.updateBilling(gymId, {

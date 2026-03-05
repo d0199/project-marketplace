@@ -1,17 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { stripe } from "@/lib/stripe";
+import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
 
-const PRICE_MAP: Record<string, Record<string, string>> = {
-  paid: {
-    month: process.env.STRIPE_PRICE_PAID_MONTHLY!,
-    year: process.env.STRIPE_PRICE_PAID_ANNUAL!,
-  },
-  featured: {
-    month: process.env.STRIPE_PRICE_FEATURED_MONTHLY!,
-    year: process.env.STRIPE_PRICE_FEATURED_ANNUAL!,
-  },
-};
+function getPriceMap() {
+  return {
+    paid: {
+      month: serverConfig.STRIPE_PRICE_PAID_MONTHLY,
+      year: serverConfig.STRIPE_PRICE_PAID_ANNUAL,
+    },
+    featured: {
+      month: serverConfig.STRIPE_PRICE_FEATURED_MONTHLY,
+      year: serverConfig.STRIPE_PRICE_FEATURED_ANNUAL,
+    },
+  };
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
@@ -57,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ? existing.data[0]
     : await stripe.customers.create({ email });
 
-  const priceId = PRICE_MAP[plan]?.[interval];
+  const priceId = getPriceMap()[plan]?.[interval];
   if (!priceId) {
     return res.status(400).json({ error: "Invalid plan or interval" });
   }
