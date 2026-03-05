@@ -275,6 +275,7 @@ const gyms = dataRows
   .map((row, i) => {
     const seqId = existingCount + i + 1;
     const id = `gym-${String(seqId).padStart(3, "0")}`;
+    const googlePlaceId = row[colIndex.id] ?? "";
     const name = row[colIndex.name] ?? "";
     const address = row[colIndex.address] ?? "";
     const state = (row[colIndex.state] ?? "").toUpperCase();
@@ -294,6 +295,7 @@ const gyms = dataRows
 
     return {
       id,
+      googlePlaceId,
       ownerId: "unclaimed",
       isActive: true,
       isTest: false,

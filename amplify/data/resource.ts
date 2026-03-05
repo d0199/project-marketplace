@@ -40,6 +40,8 @@ const schema = a.schema({
       hoursComment: a.string(),
       // paid listing flag
       isPaid: a.boolean(),
+      // Google Places ID — used for deduplication on re-import
+      googlePlaceId: a.string(),
       // member offers
       memberOffers: a.string().array(),
       memberOffersNotes: a.string(),

@@ -20,6 +20,7 @@ function toGym(r: GymRecord): Gym {
     isFeatured: r.isFeatured ?? false,
     priceVerified: r.priceVerified ?? false,
     isPaid: r.isPaid ?? false,
+    ...(r.googlePlaceId != null && { googlePlaceId: r.googlePlaceId }),
     name: r.name ?? "",
     description: r.description ?? "",
     address: {
@@ -65,6 +66,7 @@ function fromGym(gym: Gym) {
     isFeatured: gym.isFeatured ?? false,
     priceVerified: gym.priceVerified ?? false,
     isPaid: gym.isPaid ?? false,
+    googlePlaceId: gym.googlePlaceId,
     name: gym.name,
     description: gym.description,
     addressStreet: gym.address.street,

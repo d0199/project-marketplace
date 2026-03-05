@@ -23,6 +23,7 @@ export interface Gym {
   isFeatured?: boolean;
   priceVerified?: boolean;
   isPaid?: boolean;
+  googlePlaceId?: string;
   name: string;
   description: string;
   address: Address;

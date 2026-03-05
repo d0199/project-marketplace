@@ -295,6 +295,7 @@ const colIndex = Object.fromEntries(header.map((h, i) => [h, i]));
 
 const gyms = dataRows.map((row, i) => {
   const id = `gym-${String(i + 1).padStart(3, "0")}`;
+  const googlePlaceId = row[colIndex.id] ?? "";
   const name = row[colIndex.name] ?? "";
   const address = row[colIndex.address] ?? "";
   const suburb = row[colIndex.suburb] ?? "";
@@ -313,6 +314,7 @@ const gyms = dataRows.map((row, i) => {
 
   return {
     id,
+    googlePlaceId,
     ownerId: "owner-3",
     name,
     description,
