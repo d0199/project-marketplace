@@ -801,6 +801,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
+  const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
 
   const filteredGyms = gyms.filter((g) => {
     if (activeFilter === "active" && g.isActive === false) return false;
@@ -808,6 +809,9 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
     if (ownerFilter === "owned" && (g.ownerId === "unclaimed" || g.ownerId === "owner-3")) return false;
     if (ownerFilter === "unclaimed" && g.ownerId !== "unclaimed" && g.ownerId !== "owner-3") return false;
     if (stateFilter !== "all" && g.address.state !== stateFilter) return false;
+    if (planFilter === "featured" && !g.isFeatured) return false;
+    if (planFilter === "paid" && (!g.isPaid || g.isFeatured)) return false;
+    if (planFilter === "free" && (g.isPaid || g.isFeatured)) return false;
     return true;
   });
 
@@ -1045,6 +1049,16 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
           {["WA", "NSW", "VIC", "QLD", "SA", "TAS", "ACT", "NT"].map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
+        </select>
+        <select
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value as typeof planFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All plans</option>
+          <option value="featured">Featured</option>
+          <option value="paid">Paid</option>
+          <option value="free">Free</option>
         </select>
         <span className="text-sm text-gray-400">{filteredGyms.length} gym{filteredGyms.length !== 1 ? "s" : ""}</span>
       </div>
