@@ -1,7 +1,7 @@
 /**
  * scripts/seedAllGymsCSV.ts
  * Fetches gym listings from Google Places API for ALL Australian states
- * (WA, NSW, VIC, QLD, SA, TAS). Runs two queries per location
+ * (WA, NSW, VIC, QLD, SA, TAS, NT, ACT). Runs two queries per location
  * ("gym" + "fitness centre") to maximise results past the 20-result cap.
  * Outputs: data/gyms_all.csv
  *
@@ -193,6 +193,30 @@ const STATE_CONFIGS: Record<string, {
       "Devonport", "Burnie", "Ulverstone",
     ],
   },
+  NT: {
+    center: { latitude: -12.4634, longitude: 130.8456 },
+    radius: 50000,
+    locations: [
+      "Darwin CBD", "Casuarina", "Palmerston", "Nightcliff",
+      "Rapid Creek", "Winnellie", "Stuart Park", "Fannie Bay",
+    ],
+  },
+  NT_CENTRAL: {
+    center: { latitude: -23.6980, longitude: 133.8807 },
+    radius: 40000,
+    locations: [
+      "Alice Springs", "Larapinta", "Gillen",
+    ],
+  },
+  ACT: {
+    center: { latitude: -35.2809, longitude: 149.1300 },
+    radius: 40000,
+    locations: [
+      "Canberra CBD", "Belconnen", "Tuggeranong", "Woden",
+      "Gungahlin", "Bruce", "Phillip", "Fyshwick",
+      "Braddon", "Kingston", "Manuka", "Weston Creek",
+    ],
+  },
 };
 
 const STATE_CODE: Record<string, string> = {
@@ -202,6 +226,8 @@ const STATE_CODE: Record<string, string> = {
   QLD: "QLD", QLD_GOLDCOAST: "QLD", QLD_SUNSHINE: "QLD", QLD_NORTH: "QLD",
   SA: "SA", SA_REGIONAL: "SA",
   TAS: "TAS", TAS_NORTH: "TAS",
+  NT: "NT", NT_CENTRAL: "NT",
+  ACT: "ACT",
 };
 
 interface Gym {

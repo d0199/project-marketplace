@@ -69,8 +69,8 @@ function extractSuburb(address: string, state: string): string {
 }
 
 function extractPostcode(address: string): string {
-  // All Australian postcodes: 0200–9999 (in practice 2000–7999 for the states we cover)
-  const m = address.match(/\b[2-9]\d{3}\b/);
+  // Australian postcodes: 0200–9999 (NT starts with 0, e.g. 0800)
+  const m = address.match(/\b0[2-9]\d{2}\b|\b[2-9]\d{3}\b/);
   return m ? m[0] : "";
 }
 
@@ -284,7 +284,6 @@ const gyms = dataRows
 
     const type = classify(name);
     const description = generateDescription(type, name, suburb, id);
-    const amenities = inferAmenities(type, name);
     const pricePerWeek = inferPrice(type, id);
 
     return {
@@ -304,7 +303,7 @@ const gyms = dataRows
       website,
       lat,
       lng,
-      amenities,
+      amenities: [],
       hours: {},
       memberOffers: [],
       memberOffersScroll: false,
