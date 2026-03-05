@@ -40,6 +40,9 @@ const schema = a.schema({
       hoursComment: a.string(),
       // paid listing flag
       isPaid: a.boolean(),
+      // Stripe billing
+      stripeSubscriptionId: a.string(),
+      stripePlan: a.string(), // "paid" | "featured" | null
       // Google Places ID — used for deduplication on re-import
       googlePlaceId: a.string(),
       // member offers

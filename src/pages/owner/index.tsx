@@ -465,15 +465,20 @@ export default function OwnerPortalPage() {
               Welcome back, {session.name}
             </p>
           </div>
-          <button
-            onClick={async () => {
-              await signOut();
-              router.reload();
-            }}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <Link href="/billing" className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium">
+              Billing
+            </Link>
+            <button
+              onClick={async () => {
+                await signOut();
+                router.reload();
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
 
         {!gymsLoaded ? (

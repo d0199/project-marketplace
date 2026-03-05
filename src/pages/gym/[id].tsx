@@ -148,16 +148,18 @@ export default function GymProfilePage({ gym }: Props) {
             </section>
 
             {/* Amenities */}
-            <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                Amenities
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {gym.amenities.map((a) => (
-                  <AmenityBadge key={a} amenity={a} />
-                ))}
-              </div>
-            </section>
+            {gym.amenities.length > 0 && (
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                  Amenities
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {gym.amenities.map((a) => (
+                    <AmenityBadge key={a} amenity={a} />
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Member Offers — paid listings only */}
             {gym.isPaid && (gym.memberOffers?.length || gym.memberOffersNotes) && (
@@ -193,32 +195,34 @@ export default function GymProfilePage({ gym }: Props) {
               </section>
             )}
 
-            {/* Hours */}
-            <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                Opening Hours{gym.amenities.includes("24/7 access") && (
-                  <span className="ml-2 text-sm font-normal text-gray-500">(24/7 access)</span>
+            {/* Hours — only shown if at least one day is populated */}
+            {DAYS.some((day) => gym.hours[day]) && (
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                  Opening Hours{gym.amenities.includes("24/7 access") && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">(24/7 access)</span>
+                  )}
+                </h2>
+                <dl className="grid gap-2">
+                  {DAYS.map((day) => (
+                    <div
+                      key={day}
+                      className="flex justify-between text-sm border-b border-gray-50 pb-2 last:border-0"
+                    >
+                      <dt className="font-medium text-gray-700 capitalize">
+                        {day}
+                      </dt>
+                      <dd className="text-gray-600">
+                        {gym.hours[day] ?? "Closed"}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {gym.isPaid && gym.hoursComment && (
+                  <p className="mt-3 text-sm italic text-gray-500">{gym.hoursComment}</p>
                 )}
-              </h2>
-              <dl className="grid gap-2">
-                {DAYS.map((day) => (
-                  <div
-                    key={day}
-                    className="flex justify-between text-sm border-b border-gray-50 pb-2 last:border-0"
-                  >
-                    <dt className="font-medium text-gray-700 capitalize">
-                      {day}
-                    </dt>
-                    <dd className="text-gray-600">
-                      {gym.hours[day] ?? "Closed"}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              {gym.isPaid && gym.hoursComment && (
-                <p className="mt-3 text-sm italic text-gray-500">{gym.hoursComment}</p>
-              )}
-            </section>
+              </section>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -312,60 +316,62 @@ export default function GymProfilePage({ gym }: Props) {
               )}
             </div>
 
-            {/* Contact */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-              <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
-              <ul className="space-y-2 text-sm text-gray-700">
-                {gym.phone && (
-                  <li className="flex items-center gap-2">
-                    <span>📞</span>
-                    <a
-                      href={`tel:${gym.phone}`}
-                      onClick={() => track(gym.id, "phoneClicks")}
-                      className="hover:underline"
+            {/* Contact — only shown if there is something to display */}
+            {(gym.phone || (gym.isPaid && (gym.instagram || gym.facebook)) || gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {gym.phone && (
+                    <li className="flex items-center gap-2">
+                      <span>📞</span>
+                      <a
+                        href={`tel:${gym.phone}`}
+                        onClick={() => track(gym.id, "phoneClicks")}
+                        className="hover:underline"
+                      >
+                        {gym.phone}
+                      </a>
+                    </li>
+                  )}
+                  {gym.isPaid && gym.instagram && (
+                    <li className="flex items-center gap-2">
+                      <span>📷</span>
+                      <a
+                        href={gym.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline truncate"
+                      >
+                        Instagram
+                      </a>
+                    </li>
+                  )}
+                  {gym.isPaid && gym.facebook && (
+                    <li className="flex items-center gap-2">
+                      <span>💬</span>
+                      <a
+                        href={gym.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline truncate"
+                      >
+                        Facebook
+                      </a>
+                    </li>
+                  )}
+                </ul>
+                {(gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
+                  <div className={`${gym.phone || (gym.isPaid && (gym.instagram || gym.facebook)) ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
+                    <Link
+                      href="/claim-gym"
+                      className="text-sm text-brand-orange hover:underline"
                     >
-                      {gym.phone}
-                    </a>
-                  </li>
+                      Claim this listing for free →
+                    </Link>
+                  </div>
                 )}
-                {gym.isPaid && gym.instagram && (
-                  <li className="flex items-center gap-2">
-                    <span>📷</span>
-                    <a
-                      href={gym.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline truncate"
-                    >
-                      Instagram
-                    </a>
-                  </li>
-                )}
-                {gym.isPaid && gym.facebook && (
-                  <li className="flex items-center gap-2">
-                    <span>💬</span>
-                    <a
-                      href={gym.facebook}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline truncate"
-                    >
-                      Facebook
-                    </a>
-                  </li>
-                )}
-              </ul>
-              {(gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <Link
-                    href="/claim-gym"
-                    className="text-sm text-brand-orange hover:underline"
-                  >
-                    Claim this listing for free →
-                  </Link>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Address */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">

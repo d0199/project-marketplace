@@ -23,6 +23,8 @@ export interface Gym {
   isFeatured?: boolean;
   priceVerified?: boolean;
   isPaid?: boolean;
+  stripeSubscriptionId?: string;
+  stripePlan?: "paid" | "featured";
   googlePlaceId?: string;
   name: string;
   description: string;
