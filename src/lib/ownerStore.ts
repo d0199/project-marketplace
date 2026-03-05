@@ -2,6 +2,7 @@ import { createRequire } from "module";
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { Gym } from "@/types";
+import { postcodeToState } from "./utils";
 
 const require = createRequire(import.meta.url);
 const seedGyms: Gym[] = require("../../data/gyms.json");
@@ -26,7 +27,7 @@ function toGym(r: GymRecord): Gym {
     address: {
       street: r.addressStreet ?? "",
       suburb: r.addressSuburb ?? "",
-      state: r.addressState ?? "",
+      state: r.addressState || postcodeToState(r.addressPostcode ?? ""),
       postcode: r.addressPostcode ?? "",
     },
     phone: r.phone ?? "",

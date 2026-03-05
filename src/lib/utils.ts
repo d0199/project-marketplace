@@ -26,6 +26,24 @@ export const POSTCODE_COORDS: Record<string, [number, number]> = {
   ...EASTERN_POSTCODE_COORDS,
 };
 
+// Derive AU state from postcode prefix
+export function postcodeToState(postcode: string): string {
+  const n = parseInt(postcode, 10);
+  if (isNaN(n)) return "";
+  if (n >= 1000 && n <= 2599) return "NSW";
+  if (n >= 2619 && n <= 2899) return "NSW";
+  if (n >= 2921 && n <= 2999) return "NSW";
+  if (n >= 2600 && n <= 2618) return "ACT";
+  if (n >= 2900 && n <= 2920) return "ACT";
+  if (n >= 3000 && n <= 3999) return "VIC";
+  if (n >= 4000 && n <= 4999) return "QLD";
+  if (n >= 5000 && n <= 5999) return "SA";
+  if (n >= 6000 && n <= 6999) return "WA";
+  if (n >= 7000 && n <= 7999) return "TAS";
+  if (n >= 800  && n <= 999)  return "NT";
+  return "";
+}
+
 // Suburb metadata for SEO landing pages — one entry per searchable postcode
 export const POSTCODE_META: Record<string, { name: string; slug: string }> = {
   "6000": { name: "Perth CBD",          slug: "perth-6000" },

@@ -793,12 +793,14 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
+  const [stateFilter, setStateFilter] = useState<string>("all");
 
   const filteredGyms = gyms.filter((g) => {
     if (activeFilter === "active" && g.isActive === false) return false;
     if (activeFilter === "inactive" && g.isActive !== false) return false;
     if (ownerFilter === "owned" && (g.ownerId === "unclaimed" || g.ownerId === "owner-3")) return false;
     if (ownerFilter === "unclaimed" && g.ownerId !== "unclaimed" && g.ownerId !== "owner-3") return false;
+    if (stateFilter !== "all" && g.address.state !== stateFilter) return false;
     return true;
   });
 
@@ -1006,6 +1008,16 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
           <option value="all">All owners</option>
           <option value="owned">Owned</option>
           <option value="unclaimed">Unclaimed</option>
+        </select>
+        <select
+          value={stateFilter}
+          onChange={(e) => setStateFilter(e.target.value)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All states</option>
+          {["WA", "NSW", "VIC", "QLD", "SA", "TAS", "ACT", "NT"].map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
         </select>
         <span className="text-sm text-gray-400">{filteredGyms.length} gym{filteredGyms.length !== 1 ? "s" : ""}</span>
       </div>
