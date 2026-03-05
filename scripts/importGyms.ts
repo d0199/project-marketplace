@@ -117,7 +117,7 @@ async function run() {
     // --- Insert ---
     const { errors: errs } = await client.models.Gym.create({
       id: gym.id,
-      googlePlaceId: gym.googlePlaceId,
+      // googlePlaceId omitted until Amplify backend redeploys with new schema field
       ownerId: gym.ownerId,
       isActive: gym.isActive ?? true,
       isTest: gym.isTest ?? false,
