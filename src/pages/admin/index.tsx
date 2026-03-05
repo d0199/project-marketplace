@@ -791,6 +791,13 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
     removeAmenities: Set<string>;
   }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set() });
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [clearAmenitiesOpen, setClearAmenitiesOpen] = useState(false);
+  const [clearWord, setClearWord] = useState("");
+  const [clearBusy, setClearBusy] = useState(false);
+  const [clearConfirmWord] = useState(() => {
+    const words = ["CONFIRM", "ERASE", "CLEAR", "PROCEED", "WIPE", "RESET", "APPLY", "DELETE"];
+    return words[Math.floor(Math.random() * words.length)];
+  });
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
@@ -872,6 +879,26 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
     setSelected(new Set());
     resetBulk();
     showToast(`Updated ${targets.length} gym${targets.length !== 1 ? "s" : ""}.`);
+    search(q);
+  }
+
+  async function clearAmenities() {
+    setClearBusy(true);
+    const targets = gyms.filter((g) => selected.has(g.id));
+    await Promise.all(
+      targets.map((g) =>
+        fetch(`/api/admin/gym/${g.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...g, amenities: [] }),
+        })
+      )
+    );
+    setClearBusy(false);
+    setClearAmenitiesOpen(false);
+    setClearWord("");
+    setSelected(new Set());
+    showToast(`Cleared amenities for ${targets.length} gym${targets.length !== 1 ? "s" : ""}.`);
     search(q);
   }
 
@@ -1032,8 +1059,14 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
           >
             Bulk Edit
           </button>
+          <button
+            onClick={() => { setClearWord(""); setClearAmenitiesOpen(true); }}
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg"
+          >
+            Clear Amenities
+          </button>
           <button onClick={() => setSelected(new Set())} className="text-sm text-blue-600 hover:underline">
-            Clear
+            Deselect
           </button>
         </div>
       )}
@@ -1178,6 +1211,44 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50"
               >
                 {bulkBusy ? "Applying…" : `Apply to ${selected.size} gym${selected.size !== 1 ? "s" : ""}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Amenities confirmation modal */}
+      {clearAmenitiesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">Clear Amenities</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This will remove <strong>all amenities</strong> from{" "}
+              <strong>{selected.size} gym{selected.size !== 1 ? "s" : ""}</strong>. This cannot be undone.
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+              Type <span className="font-mono font-bold text-red-600">{clearConfirmWord}</span> to confirm:
+            </p>
+            <input
+              type="text"
+              value={clearWord}
+              onChange={(e) => setClearWord(e.target.value.toUpperCase())}
+              placeholder={clearConfirmWord}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono mb-5 focus:outline-none focus:ring-2 focus:ring-red-400"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setClearAmenitiesOpen(false); setClearWord(""); }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={clearAmenities}
+                disabled={clearWord !== clearConfirmWord || clearBusy}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {clearBusy ? "Clearing…" : `Clear amenities for ${selected.size} gym${selected.size !== 1 ? "s" : ""}`}
               </button>
             </div>
           </div>
