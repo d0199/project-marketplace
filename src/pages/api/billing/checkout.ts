@@ -54,11 +54,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ redirect: "portal" });
   }
 
+  const stripe = await getStripe();
+
   // Find or create Stripe Customer
-  const existing = await getStripe().customers.list({ email, limit: 1 });
+  const existing = await stripe.customers.list({ email, limit: 1 });
   const customer = existing.data.length > 0
     ? existing.data[0]
-    : await getStripe().customers.create({ email });
+    : await stripe.customers.create({ email });
 
   const priceId = getPriceMap()[plan]?.[interval];
   if (!priceId) {
@@ -67,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
 
-  const session = await getStripe().checkout.sessions.create({
+  const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customer.id,
     line_items: [{ price: priceId, quantity: 1 }],

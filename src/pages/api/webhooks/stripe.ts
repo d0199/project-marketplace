@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getStripe } from "@/lib/stripe";
+import { loadStripeSecrets } from "@/lib/amplifySecrets";
 import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import type Stripe from "stripe";
@@ -27,12 +28,15 @@ function getPriceToPlan(): Record<string, "paid" | "featured"> {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
+  await loadStripeSecrets();
+
   const sig = req.headers["stripe-signature"] as string;
   const rawBody = await getRawBody(req);
 
   let event: Stripe.Event;
   try {
-    event = getStripe().webhooks.constructEvent(rawBody, sig, serverConfig.STRIPE_WEBHOOK_SECRET);
+    const stripe = await getStripe();
+    event = stripe.webhooks.constructEvent(rawBody, sig, serverConfig.STRIPE_WEBHOOK_SECRET);
   } catch {
     return res.status(400).json({ error: "Invalid signature" });
   }
@@ -59,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case "customer.subscription.deleted": {
       // Find gym by looking up the customer's metadata via Stripe
       const sub = event.data.object as Stripe.Subscription;
-      const sessions = await getStripe().checkout.sessions.list({
+      const sessions = await (await getStripe()).checkout.sessions.list({
         subscription: sub.id,
         limit: 1,
       });
@@ -75,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // If cancelling at period end, keep flags active until subscription actually deletes
       if (sub.cancel_at_period_end) break;
 
-      const sessions = await getStripe().checkout.sessions.list({ subscription: sub.id, limit: 1 });
+      const sessions = await (await getStripe()).checkout.sessions.list({ subscription: sub.id, limit: 1 });
       const gymId = sessions.data[0]?.metadata?.gymId;
       if (!gymId) break;
 
