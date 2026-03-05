@@ -149,9 +149,8 @@ async function run() {
       continue;
     }
 
-    // 3. No match → create
+    // 3. No match → create (omit id — let Amplify auto-generate a UUID to avoid conflicts)
     const { errors: errs } = await client.models.Gym.create({
-      id: gym.id,
       // googlePlaceId included — works once Amplify backend redeploys new schema
       googlePlaceId: gym.googlePlaceId,
       ownerId: gym.ownerId,
@@ -189,7 +188,6 @@ async function run() {
       // If googlePlaceId field not yet in schema, retry without it
       if (errs.some((e) => e.message.includes("not defined for input"))) {
         const { errors: errs2 } = await client.models.Gym.create({
-          id: gym.id,
           ownerId: gym.ownerId,
           isActive: gym.isActive ?? true,
           isTest: gym.isTest ?? false,
