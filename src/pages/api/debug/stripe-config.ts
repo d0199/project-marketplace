@@ -17,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const results: Record<string, unknown> = {
     env: { AWS_APP_ID: appId, AWS_BRANCH: branch, AWS_REGION: region },
+    allEnvKeys: Object.keys(process.env).sort(),
     branchPaths,
     sharedPaths,
   };
