@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, POSTCODE_COORDS } from "@/lib/utils";
@@ -22,6 +22,11 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
   const [form, setForm] = useState<Gym>({ ...gym });
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
+
+  // Sync admin-only flags into form state when the panel updates them
+  useEffect(() => {
+    setForm((f) => ({ ...f, isPaid: gym.isPaid }));
+  }, [gym.isPaid]);
 
   function setField<K extends keyof Gym>(key: K, value: Gym[K]) {
     setForm((f) => ({ ...f, [key]: value }));
