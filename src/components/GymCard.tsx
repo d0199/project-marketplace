@@ -71,7 +71,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
 
         <div className="flex flex-wrap gap-1 mb-4">
           {shown.map((a) => (
-            <AmenityBadge key={a} amenity={a} />
+            <AmenityBadge key={a} amenity={a} size="sm" />
           ))}
           {extra > 0 && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
