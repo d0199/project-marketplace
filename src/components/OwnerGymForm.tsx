@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, POSTCODE_COORDS } from "@/lib/utils";
@@ -27,6 +27,24 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
   useEffect(() => {
     setForm((f) => ({ ...f, isPaid: gym.isPaid }));
   }, [gym.isPaid]);
+
+  const dragIndex = useRef<number | null>(null);
+
+  function onDragStart(idx: number) {
+    dragIndex.current = idx;
+  }
+
+  function onDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault();
+    const from = dragIndex.current;
+    if (from === null || from === idx) return;
+    setForm((f) => {
+      const imgs = [...f.images];
+      imgs.splice(idx, 0, imgs.splice(from, 1)[0]);
+      return { ...f, images: imgs };
+    });
+    dragIndex.current = idx;
+  }
 
   function setField<K extends keyof Gym>(key: K, value: Gym[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -339,7 +357,14 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         </p>
         <div className="space-y-3 mb-4">
           {form.images.map((url, idx) => (
-            <div key={idx} className="flex items-center gap-3">
+            <div
+              key={url + idx}
+              draggable
+              onDragStart={() => onDragStart(idx)}
+              onDragOver={(e) => onDragOver(e, idx)}
+              className="flex items-center gap-3 cursor-grab active:cursor-grabbing rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 px-1 -mx-1 transition-colors"
+            >
+              <span className="text-gray-300 select-none text-base leading-none shrink-0" title="Drag to reorder">⠿</span>
               <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
                 <Image src={url} alt={`Image ${idx + 1}`} fill className="object-cover" unoptimized sizes="64px" />
               </div>
