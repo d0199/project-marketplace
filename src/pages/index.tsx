@@ -84,7 +84,7 @@ export default function HomePage({ gyms }: Props) {
         <div className="bg-gradient-to-r from-brand-orange to-brand-orange-dark rounded-2xl px-8 py-12 mb-8 text-white">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Find your perfect gym</h1>
           <p className="text-orange-100 mb-6 text-lg">
-            Search hundreds of gyms across Australia by postcode and amenities.
+            Search thousands of gyms across Australia by postcode and amenities.
           </p>
           <SearchBar onSearch={handleSearch} initialValue={postcode} />
 
