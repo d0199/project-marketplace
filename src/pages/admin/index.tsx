@@ -1245,11 +1245,19 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                   <input
                     type="checkbox"
                     checked={panel.gym.isPaid ?? false}
-                    onChange={(e) =>
-                      setPanel((p) =>
-                        p ? { ...p, gym: { ...p.gym, isPaid: e.target.checked } } : p
-                      )
-                    }
+                    onChange={(e) => {
+                      const isPaid = e.target.checked;
+                      setPanel((p) => {
+                        if (!p) return p;
+                        const gym = { ...p.gym, isPaid };
+                        if (!isPaid) {
+                          gym.memberOffers = [];
+                          delete gym.memberOffersNotes;
+                          delete gym.memberOffersTnC;
+                        }
+                        return { ...p, gym };
+                      });
+                    }}
                     className="w-4 h-4 accent-brand-orange"
                   />
                   <span className="text-sm font-medium text-gray-700">

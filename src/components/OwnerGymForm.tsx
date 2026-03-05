@@ -167,8 +167,8 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         </div>
       </section>
 
-      {/* Social Media */}
-      <section>
+      {/* Social Media — paid listings only */}
+      {form.isPaid && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
           Social Media
         </h2>
@@ -198,7 +198,7 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
             />
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Address */}
       <section>
@@ -265,14 +265,11 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         </div>
       </section>
 
-      {/* Member Offers */}
-      <section>
+      {/* Member Offers — paid listings only */}
+      {form.isPaid && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
           Member Offers
         </h2>
-        <p className="text-xs text-gray-500 mb-3">
-          Member offers and hours notes are displayed on paid listings.
-        </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {ALL_MEMBER_OFFERS.map((offer) => (
             <label key={offer} className="flex items-center gap-2 cursor-pointer">
@@ -314,7 +311,7 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
             />
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Images */}
       <section>
@@ -391,26 +388,28 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
             </div>
           ))}
         </div>
-        <div className="mt-4">
-          <label className="flex items-center gap-2 cursor-pointer mb-2">
-            <input
-              type="checkbox"
-              checked={form.hoursComment !== undefined && form.hoursComment !== ""}
-              onChange={(e) => setField("hoursComment", e.target.checked ? (form.hoursComment || " ").trim() || "" : undefined)}
-              className="w-4 h-4 accent-brand-orange"
-            />
-            <span className="text-sm text-gray-700">Add a note to opening hours</span>
-          </label>
-          {form.hoursComment !== undefined && (
-            <textarea
-              rows={2}
-              value={form.hoursComment}
-              onChange={(e) => setField("hoursComment", e.target.value)}
-              placeholder="e.g. Public holidays may vary. 24/7 access via key fob."
-              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
-            />
-          )}
-        </div>
+        {form.isPaid && (
+          <div className="mt-4">
+            <label className="flex items-center gap-2 cursor-pointer mb-2">
+              <input
+                type="checkbox"
+                checked={form.hoursComment !== undefined && form.hoursComment !== ""}
+                onChange={(e) => setField("hoursComment", e.target.checked ? (form.hoursComment || " ").trim() || "" : undefined)}
+                className="w-4 h-4 accent-brand-orange"
+              />
+              <span className="text-sm text-gray-700">Add a note to opening hours</span>
+            </label>
+            {form.hoursComment !== undefined && (
+              <textarea
+                rows={2}
+                value={form.hoursComment}
+                onChange={(e) => setField("hoursComment", e.target.value)}
+                placeholder="e.g. Public holidays may vary. 24/7 access via key fob."
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+              />
+            )}
+          </div>
+        )}
       </section>
 
       <div className="flex justify-end">
