@@ -16,6 +16,8 @@ const PRICE_MAP: Record<string, Record<string, string>> = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
+  try {
+
   const { gymId, ownerId, email, plan, interval } = req.body as {
     gymId: string;
     ownerId: string;
@@ -72,4 +74,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   return res.status(200).json({ url: session.url });
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[billing/checkout]", msg);
+    return res.status(500).json({ error: msg });
+  }
 }
