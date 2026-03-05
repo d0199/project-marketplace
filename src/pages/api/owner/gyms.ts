@@ -10,5 +10,6 @@ export default async function handler(
   if (!ownerId || typeof ownerId !== "string") {
     return res.status(400).json([]);
   }
+  res.setHeader("Cache-Control", "no-store");
   return res.status(200).json(await ownerStore.getByOwner(ownerId));
 }

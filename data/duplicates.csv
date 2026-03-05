@@ -1,0 +1,549 @@
+match_type,similarity_pct,a_id,a_name,a_suburb,a_state,a_postcode,a_owner,b_id,b_name,b_suburb,b_state,b_postcode,b_owner
+LOCATION,100,gym-1177,Zap Fitness 24/7 Woolloongabba,woolloongabba,QLD,4102,unclaimed,8e35e55e-ec06-4fd7-b8a6-43c8a8ea5280,Functional For Life,woolloongabba,QLD,4102,unclaimed
+LOCATION,100,gym-1347,CrossFit Brisbane,coorparoo,QLD,4151,unclaimed,gym-1337,ATÓRA Training Coorparoo,coorparoo,QLD,4151,unclaimed
+LOCATION,100,15b9e9af-0739-4e30-80cd-bbc4e8e3bc6a,Conditioning Club,cessnock,NSW,2325,unclaimed,66e2c06e-c2eb-4896-a1d2-462b4db50879,RIP Training Cessnock,cessnock,NSW,2325,unclaimed
+LOCATION,100,d6d6084b-2a72-427b-b1dd-49258aa2897a,Peek Fitness,leichhardt,NSW,2040,unclaimed,5ba554e4-7ae9-4b29-b443-14aa9ffee744,Anytime Fitness Leichhardt,leichhardt,NSW,2040,unclaimed
+LOCATION,100,02d5b0f3-dd98-4313-8e60-e4c9688657c7,Waverley Gymnastics Centre (Oakleigh Campus),oakleigh,VIC,3166,unclaimed,9363b19f-96b1-46e3-b4c8-2c1665a37d54,Oakleigh Recreation Centre,oakleigh,VIC,3166,unclaimed
+LOCATION,100,gym-196,Adapt Health Club,claremont,WA,6010,owner-3,ee1d85c5-c316-4039-a3ef-fda44b7e5cb5,Revo Fitness Head Office,claremont,WA,6010,unclaimed
+LOCATION,100,gym-944,CorePlus Frankston - Pilates Yoga Reformer,frankston,VIC,3199,unclaimed,gym-938,REVL Training Frankston,frankston,VIC,3199,unclaimed
+LOCATION,100,acd05daf-a0b5-403f-9764-bfa8cfdb6938,Apex Gym 24/7 Ashfield,ashfield,NSW,2131,unclaimed,900ceb4f-1cce-4ca6-af3f-c35907cbf9e8,5xFitness.com.au - Online Personal Training & Studio,ashfield,NSW,2131,unclaimed
+LOCATION,100,bd280044-40c9-4058-ac2f-775eec6e9bd7,inLIFE Wellness Kogarah,kogarah,NSW,2217,unclaimed,f4c24f88-e3da-402f-a4d3-24e8b3283809,Vision Personal Training Kogarah,kogarah,NSW,2217,unclaimed
+LOCATION,100,gym-1408,MyFitness Club Broadbeach,broadbeach,QLD,4218,unclaimed,gym-1401,Club Lime Broadbeach,broadbeach,QLD,4218,unclaimed
+LOCATION,100,gym-868,Physique Club Prahran,prahran,VIC,3181,unclaimed,gym-867,Anytime Fitness Prahran,prahran,VIC,3182,unclaimed
+LOCATION,100,f860d7e1-8c9f-44fc-9ec9-b4779bcbda78,Inpower Fitness,north sydney,NSW,2060,unclaimed,gym-459,Gold's Gym,north sydney,NSW,2060,unclaimed
+LOCATION,100,30bfb1ea-80c8-42bd-a839-194fc729bc2e,101fitness.Glenwaverley,glen waverley,VIC,3150,unclaimed,7579ed69-4d08-4527-bb23-ca294b8e29a5,Max Power Fitness,glen waverley,VIC,3150,unclaimed
+LOCATION,100,gym-1633,Empower Gym,unley,SA,5061,unclaimed,gym-1645,Studio Pilates International Unley,unley,SA,5061,unclaimed
+LOCATION,100,gym-970,Aqualink Box Hill,box hill,VIC,3128,unclaimed,36266137-6c62-425b-8ea8-0a73d6e17e66,Surrey Park Swimming,box hill,VIC,3128,unclaimed
+LOCATION,100,7a7ecbdf-85a0-4d50-b386-ef9534736c31,Sports Training And Recovery Australia,capalaba,QLD,4157,unclaimed,fa852f93-192f-4107-802b-dd942076c9f5,Honoured A Social Enterprise Gym,capalaba,QLD,4157,unclaimed
+LOCATION,100,gym-1185,Goodlife Health Clubs Toowong,toowong,QLD,4066,unclaimed,gym-1199,Active Matters Exercise Physiology,toowong,QLD,4066,unclaimed
+LOCATION,100,ec2237c8-0162-4ac5-8e88-1f7c6852feb1,Maitland Central,maitland,NSW,2320,unclaimed,40bf6c07-7c97-4240-9b38-355dc2dfbe87,Kmart Maitland,maitland,NSW,2320,unclaimed
+LOCATION,100,gym-1372,Goodlife Health Clubs Nundah,nundah,QLD,4012,unclaimed,c38942c8-5996-47dc-a07a-780b3ec06e19,Studio Pilates International Nundah Village,nundah,QLD,4012,unclaimed
+LOCATION,100,9118b861-2652-4281-a51c-53bc8ddfd44c,Reservoir Health & Fitness,reservoir,VIC,3072,unclaimed,8bf4cf0d-3b7a-46e3-9e7d-803d1997843d,BFT Preston,preston,VIC,3072,unclaimed
+LOCATION,100,db41a524-718b-4c41-b591-4a39bc748a3a,Anytime Fitness Glebe,glebe,NSW,2037,unclaimed,4e4302e5-5772-4d4b-8d5f-89525e74f0ee,Peek Fitness Glebe,glebe,NSW,2037,unclaimed
+LOCATION,100,db41a524-718b-4c41-b591-4a39bc748a3a,Anytime Fitness Glebe,glebe,NSW,2037,unclaimed,765f29d9-5be7-419d-81d8-ced3fe88734c,Plus Fitness 24/7 Glebe,glebe,NSW,2037,unclaimed
+LOCATION,100,gym-138,Plus Fitness 24/7 Subiaco,subiaco,WA,6008,owner-3,89a64449-cb1b-4e29-9162-e570b6632b4f,@Pilates 24/7 Subiaco,subiaco,WA,6008,unclaimed
+LOCATION,100,cf63f60f-2ab3-4d17-a69e-3f6d6b73e608,Apex Strength,coburg north,VIC,3058,unclaimed,8961b57e-7205-48b7-8734-a83f5b4ca61d,Matrix Fitness,coburg north,VIC,3058,unclaimed
+LOCATION,100,c47af05d-ffd5-474f-8cd4-52b4be312154,Flex Fitness Equipment - Parafield,parafield,SA,5106,unclaimed,gym-1591,Vibe Fitness 24/7,parafield,SA,5106,unclaimed
+LOCATION,100,7136fb54-890d-4a9e-ba2c-5cd0d4e1ec67,The Bay Fitness Club,lilyfield,NSW,2040,unclaimed,d62965ad-9bc5-4d9e-abe1-1ad030790058,MOVEMETHOD,lilyfield,NSW,2040,unclaimed
+LOCATION,100,gym-791,Dukes Gym Richmond,richmond,VIC,3121,unclaimed,2b6fc1ef-100e-4f63-8e48-ec8169386e45,Hurt Locker,richmond,VIC,3121,unclaimed
+LOCATION,100,d294f021-7935-4ea2-b2f5-8d82db054079,Coaching Zone,kelmscott,WA,2948,unclaimed,7d8dd17d-00a4-4661-8daa-bbd34a28742a,XCD Fitness Personal Training & Online Coaching,kelmscott,WA,2948,unclaimed
+LOCATION,100,gym-169,Revo Fitness Innaloo,osborne park,WA,6018,owner-3,gym-260,Rumble Boxing Innaloo,innaloo,WA,6018,owner-3
+LOCATION,100,669f160a-d8cb-4b3e-8bcd-cb7a9560014d,Fusion Reformer Pilates Studio,rockdale,NSW,2216,unclaimed,e583e5cf-00d7-48f7-8691-6b3f4b7ac5b8,Rockdale Pilates Reformer Mat Studio,rockdale,NSW,2216,unclaimed
+LOCATION,100,gym-471,Cube Fitness,hornsby,NSW,2077,unclaimed,gym-487,Icon Gymsports,hornsby,NSW,2077,unclaimed
+LOCATION,100,ff18e498-d6eb-4078-8ddb-60b98fd7ce03,The Yard Gym Burwood,burwood,NSW,2134,unclaimed,18a003a5-0b3c-4804-b51e-c0bfb0c71669,inLIFE Wellness Burwood,burwood,NSW,2134,unclaimed
+LOCATION,100,gym-150,Intense Health,subiaco,WA,6008,owner-3,200052a9-d5ea-4b8f-bb72-0c681211a8ff,Scot Henderson,subiaco,WA,6008,unclaimed
+LOCATION,100,gym-562,SCRIPT Strength & Fitness,castle hill,NSW,2154,unclaimed,b75eaa36-4f6e-44b1-84cf-eb4e8e9512e4,Bulldog Gym Castle Hill,castle hill,NSW,2154,unclaimed
+LOCATION,100,74368461-4b3b-416d-8d06-daf7f4d8ff40,Top Set Fitness,bundall,QLD,4217,unclaimed,gym-1400,Goodlife Health Clubs Bundall,bundall,QLD,4217,unclaimed
+LOCATION,100,07f76fa7-9022-44e3-9d09-65de33d7b8ce,Muse Pilates Studio Hamilton,hamilton,NSW,2303,unclaimed,58786941-6aea-4e4f-b744-2722e09af571,inLIFE Wellness Newcastle,hamilton,NSW,2303,unclaimed
+LOCATION,100,07f76fa7-9022-44e3-9d09-65de33d7b8ce,Muse Pilates Studio Hamilton,hamilton,NSW,2303,unclaimed,39ed0479-5827-47f4-b0d2-34ca5bd667e5,Manisha Fitness,hamilton,NSW,2303,unclaimed
+LOCATION,100,gym-206,Anytime Fitness Nedlands,claremont,WA,6009,owner-3,ce1bea2d-fa21-47ec-adfe-45fbf6c86cb0,Nes Fitness,nedlands,WA,6009,unclaimed
+LOCATION,100,75fbb744-46ea-4f23-8271-bf12796393dc,Fitness Cartel Sippy Downs - 24/7 Gym,sippy downs,QLD,4556,unclaimed,f851bd3e-cdf3-4ec7-b93c-9dda074ece89,REVL Training Sippy Downs,sippy downs,QLD,4556,unclaimed
+LOCATION,100,75fbb744-46ea-4f23-8271-bf12796393dc,Fitness Cartel Sippy Downs - 24/7 Gym,sippy downs,QLD,4556,unclaimed,648d406a-5adc-4dd1-8315-76491f6bb3ed,Trainr @ Fitness Cartel,sippy downs,QLD,4556,unclaimed
+LOCATION,100,28754c37-ea64-4881-b5bf-ec0433911b0d,Essentials Studio Coolangatta,coolangatta,QLD,4225,unclaimed,ba3daeaa-e591-4a4d-ab78-5e9603d75336,Cooly 24/7 gym Coolangatta,coolangatta,QLD,4225,unclaimed
+LOCATION,100,129ca932-cdb6-4f71-861c-8ee2c44f1fbe,Best Body Pilates - Bassendean,bassendean,WA,6054,unclaimed,d8d7c68d-22bb-4e74-88c5-1198719371ee,Jetts Bassendean,bassendean,WA,6054,unclaimed
+LOCATION,100,ba6fac87-271a-48c0-a12a-bd3edde0a709,Westfield Hornsby,hornsby,NSW,2077,unclaimed,gym-477,Conditn Hornsby,hornsby,NSW,2077,unclaimed
+LOCATION,100,gym-1341,Perform 360 - Coorparoo,coorparoo,QLD,4151,unclaimed,gym-1343,FIT360 Movement,coorparoo,QLD,4151,unclaimed
+LOCATION,100,gym-192,SpeedFit Morley,morley,WA,6062,owner-3,gym-182,Bemore Fitness Morley,morley,WA,6062,owner-3
+LOCATION,100,gym-089,inLIFE Wellness Rockingham,rockingham,WA,6168,owner-3,gym-083,RARE Fitness Rockingham,rockingham,WA,6168,owner-3
+LOCATION,100,c2d89bb9-aa37-4291-a5b1-f5b4035df793,FORM Pilates,glenelg,SA,5045,unclaimed,gym-1571,Anytime Fitness Glenelg,glenelg,SA,5045,unclaimed
+LOCATION,100,c2d89bb9-aa37-4291-a5b1-f5b4035df793,FORM Pilates,glenelg,SA,5045,unclaimed,904f052b-268e-4e4b-9510-592c1a5c37fb,Lilli May Fitness,glenelg,SA,5045,unclaimed
+LOCATION,100,9077c73c-2989-4e8c-ac2d-3f02fd6ca5a7,Dynamique Physiotherapy + Wellness,tugun,QLD,4224,unclaimed,d65ae518-f83d-41e9-914c-3ee06199f835,The Body Method - Tugun,tugun,QLD,4224,unclaimed
+LOCATION,100,6eb7e882-49cd-4c21-8635-09983ca03308,Life Hub,moorabbin,VIC,3189,unclaimed,3cc0a52a-a90a-4bcc-adc1-a6c9ec27046f,WILDFIGHTER GYM,moorabbin,VIC,3189,unclaimed
+LOCATION,100,gym-500,Club Lime Gladesville,gladesville,NSW,2111,unclaimed,gym-504,Club Bodyworx,gladesville,NSW,2111,unclaimed
+LOCATION,100,c52f4d95-406e-4f2d-b520-fd275d5c7a62,FWZ Strength & Fitness,aitkenvale,QLD,4814,unclaimed,43fcc539-0677-4da6-82e6-c198b3f62dd0,"Courage Training Centre (MMA, BJJ, Muay Thai and Boxing)",aitkenvale,QLD,4814,unclaimed
+LOCATION,100,c52f4d95-406e-4f2d-b520-fd275d5c7a62,FWZ Strength & Fitness,aitkenvale,QLD,4814,unclaimed,6f808a1e-8fed-4712-896e-a6f14729d194,Enhanced Health and Fitness,aitkenvale,QLD,4814,unclaimed
+LOCATION,100,gym-1685,Southern Fitness Wholesale,lonsdale,SA,5160,unclaimed,gym-1675,Southbound 24/7 Mega Gym,lonsdale,SA,5160,unclaimed
+LOCATION,100,a6b8963d-40ec-47ce-aa1e-57157bec1823,Villa Pilates Carlton,carlton,VIC,3053,unclaimed,36b5cbf1-ff7a-4fe0-8f6c-c5b7aed66156,PhysiPole Studios Carlton,carlton,VIC,3053,unclaimed
+LOCATION,100,9d5e455f-5c2f-4455-8b3b-25bf0c32160b,Nurture Fit,sippy downs,QLD,4556,unclaimed,0f199771-a60a-4948-9995-e22d76cbf5a4,Forged performance,sippy downs,QLD,4556,unclaimed
+LOCATION,100,9d5e455f-5c2f-4455-8b3b-25bf0c32160b,Nurture Fit,sippy downs,QLD,4556,unclaimed,61c6e021-c96c-439d-a75e-12a6d69c88c2,Club Pilates,sippy downs,QLD,4556,unclaimed
+LOCATION,100,gym-060,Strength and Motion Academy Midland 24/7 Gym,midland,WA,6056,owner-3,gym-062,Anytime Fitness Midvale,midland,WA,6056,owner-3
+LOCATION,100,e3d3f585-1a47-4c0f-a882-1c21dd74dc92,WickedBodz First Class Fitness Centre,surfers paradise,QLD,4217,unclaimed,gym-1448,EMF Fitness Centre Surfers Paradise,surfers paradise,QLD,3184,unclaimed
+LOCATION,100,9a25d5a8-100f-4a84-a172-36d474eae7b1,BFT Reservoir,reservoir,VIC,3073,unclaimed,901da422-92ca-4a50-b0eb-e67519f56abf,247Xercise Gym,reservoir,VIC,3073,unclaimed
+LOCATION,100,9a25d5a8-100f-4a84-a172-36d474eae7b1,BFT Reservoir,reservoir,VIC,3073,unclaimed,56abf3eb-ab01-4797-a4f8-9599854c8aa0,3 Zone Recovery,reservoir,VIC,3073,unclaimed
+LOCATION,100,14fe48f1-224d-4cfb-a3e5-2332f26d65d8,Elements Pole & Aerial Tingalpa,tingalpa,QLD,4173,unclaimed,gym-1364,Precision Fitness 24/7,tingalpa,QLD,4173,unclaimed
+LOCATION,100,14fe48f1-224d-4cfb-a3e5-2332f26d65d8,Elements Pole & Aerial Tingalpa,tingalpa,QLD,4173,unclaimed,d8c4136d-e76c-4f92-a4b1-f3b9663fc0b0,Kai Woods Personal Training,tingalpa,QLD,4173,unclaimed
+LOCATION,100,14fe48f1-224d-4cfb-a3e5-2332f26d65d8,Elements Pole & Aerial Tingalpa,tingalpa,QLD,4173,unclaimed,831dc56b-ff35-4b02-80c1-459a7070f334,Built By Brandon,tingalpa,QLD,4173,unclaimed
+LOCATION,100,gym-382,Anytime Fitness Blacktown,blacktown,NSW,2148,unclaimed,gym-398,Gym Physio,blacktown,NSW,2148,unclaimed
+LOCATION,100,05c583ad-efa3-48f0-afdb-05e308176a4d,Pronto Pilates - Miranda,miranda,NSW,2228,unclaimed,2072b185-647c-42c8-a997-b0c728601d08,Genisys Gymnasium,miranda,NSW,2228,unclaimed
+LOCATION,100,gym-1791,Moonah Sports Centre,moonah,TAS,7009,unclaimed,gym-1795,Evolve Personal Training & Fitness,moonah,TAS,7009,unclaimed
+LOCATION,100,gym-1791,Moonah Sports Centre,moonah,TAS,7009,unclaimed,2d5b737f-a284-407f-b1ef-065a20160f4c,National Fitness Southern Recreation Association,moonah,TAS,7009,unclaimed
+LOCATION,100,4586ee22-67ba-4c63-9302-60b5ffd15ad8,Emerge Martial Arts,mascot,NSW,2020,unclaimed,480f9709-9ce3-4d63-b2d5-b001d68190d1,Peak_Form_Testing,mascot,NSW,2020,unclaimed
+LOCATION,100,79a4e5ff-3a57-4f1c-aa4a-aa9a07e02c75,Fuel Bar - Cockburn,jandakot,WA,6164,unclaimed,b8add8aa-3b86-42e5-a168-5b7facb504e6,Roar Active Cockburn,cockburn central,WA,6164,unclaimed
+LOCATION,100,gym-594,SJJA Cronulla,cronulla,NSW,2230,unclaimed,gym-584,Anytime Fitness Cronulla,cronulla,NSW,2230,unclaimed
+LOCATION,100,gym-594,SJJA Cronulla,cronulla,NSW,2230,unclaimed,gym-591,RCVRI Cronulla,cronulla,NSW,2230,unclaimed
+LOCATION,100,6ac85e27-f73d-4094-abb2-505c0693e2e1,1 Million Strong Gym,smithfield,QLD,4878,unclaimed,9765a61f-1838-4e61-9956-4b101c4a985c,Gymstar Fitness,smithfield,QLD,4879,unclaimed
+LOCATION,100,29c11334-c3be-4e8d-8c98-db2423b2e3d0,Top Tier Strength & Conditioning,kelmscott,WA,2938,unclaimed,ad833579-22d3-4297-ad1b-884143cbaede,The Pilates Garage- Foothills Perth,kelmscott,WA,2938,unclaimed
+LOCATION,100,29c11334-c3be-4e8d-8c98-db2423b2e3d0,Top Tier Strength & Conditioning,kelmscott,WA,2938,unclaimed,9470b196-2a73-4cd1-9968-fa05548da3e6,The Muay Thai Academy,kelmscott,WA,2938,unclaimed
+LOCATION,100,7833c3cd-e267-401b-b368-647a50bd8093,Think 24hr Fitness,bulimba,QLD,4171,unclaimed,1c0389ea-04b5-4eb0-8294-b8803e74df37,SJJA Bulimba,bulimba,QLD,4171,unclaimed
+LOCATION,100,d3d1186e-4514-4808-980d-b583da6060e1,Coast Fitness HQ,gosford,NSW,2250,unclaimed,871b865f-cf36-43a4-b48d-4dd89a4d0908,The Altitude Gym,gosford,NSW,2250,unclaimed
+LOCATION,100,d3d1186e-4514-4808-980d-b583da6060e1,Coast Fitness HQ,gosford,NSW,2250,unclaimed,1513c921-e429-48d7-9abc-c1eafb4e80cc,Active Nation CC,gosford,NSW,2250,unclaimed
+LOCATION,100,gym-271,Platinum Fitness Aveley,ellenbrook,WA,6069,owner-3,gym-282,Arachnid Gym,ellenbrook,WA,6069,owner-3
+LOCATION,100,b85d877b-fbb6-4590-9e6d-55a5384a303a,PCYC Auburn,lidcombe,NSW,2141,unclaimed,dc74ba50-1b47-4994-974f-b426b74d6417,OLYMPIA FIT AUSTRALIA,auburn,NSW,2141,unclaimed
+LOCATION,100,fc2bb185-5cf5-4882-89cd-c4372a82bb6e,Total Body PT & Fitness,old reynella,SA,5161,unclaimed,eb6d7882-470d-420e-9550-ed84e26f07f3,Zenith Fitness Academy,old reynella,SA,5161,unclaimed
+LOCATION,100,gym-1219,Flow Physique,chermside,QLD,4032,unclaimed,3b490ca1-fd77-46be-b7c4-83e2e22e882a,Chermside Sports and Rehab,chermside,QLD,4032,unclaimed
+LOCATION,100,fe95f8d1-1374-406f-ae69-b2647b15c223,Jetts Canning Vale South,canning vale,WA,6155,unclaimed,4fdeca5a-a159-4061-a307-ccd0b5b2dd57,Flex Fitness Equipment - Canning Vale,canning vale,WA,6155,unclaimed
+LOCATION,100,fe95f8d1-1374-406f-ae69-b2647b15c223,Jetts Canning Vale South,canning vale,WA,6155,unclaimed,276538be-45cc-48fb-876c-c86f9bfbbdf2,BFT Canning Vale,canning vale,WA,6155,unclaimed
+LOCATION,100,1037d03f-882f-481a-b51f-77f8ee62c1a9,F45 Training Tweed Heads,tweed heads nsw 2485,QLD,2485,unclaimed,d16bd8bf-658d-46d3-a353-7739cc8997ee,Studio 4 Higher Ground Fitness,tweed heads nsw 2485,QLD,2485,unclaimed
+LOCATION,100,1fd1c703-263a-4602-bdb1-a480b64edb60,Olympian Frontiers Gym,leichhardt,NSW,2040,unclaimed,3dd0b9f6-6afb-4056-8b67-a9abc52eb382,Olympian Frontiers,leichhardt,NSW,2040,unclaimed
+LOCATION,100,gym-1782,The Y Glenorchy,glenorchy,TAS,7010,unclaimed,gym-1784,YMCA Y-Fitness - Glenorchy,glenorchy,TAS,7010,unclaimed
+LOCATION,100,gym-771,South Pacific Health Club St Kilda,st kilda,VIC,3182,unclaimed,gym-787,St Kilda Sea Baths Complex,st kilda,VIC,3182,unclaimed
+LOCATION,100,ed28c34e-70e4-4bee-b1a0-3de11f830a1f,InnerFit Wellness & Recovery,leichhardt,NSW,2040,unclaimed,1862000e-1261-46f9-acf2-0de9662a6bd4,F45 Training Leichhardt,leichhardt,NSW,2040,unclaimed
+LOCATION,100,gym-992,Fitness Fit 24 Hours,northcote,VIC,3070,unclaimed,051b3a28-6b5f-4c1c-8b70-dd5db56e302f,Kieser Northcote,northcote,VIC,3070,unclaimed
+LOCATION,100,gym-992,Fitness Fit 24 Hours,northcote,VIC,3070,unclaimed,gym-998,Revive Thrive Northcote,northcote,VIC,3070,unclaimed
+LOCATION,100,0750d31c-3711-4e0c-9733-916473601e1a,Good Times Training,manunda,QLD,4870,unclaimed,a9549a9c-c013-4fe1-b655-1c86b8de35da,Nukzu muay thai,manunda,QLD,4870,unclaimed
+LOCATION,100,gym-1261,Over 50's Health @ Dolphins Gym,redcliffe,QLD,4021,unclaimed,gym-1259,Dolphins Fitness & Aquatic,redcliffe,QLD,4020,unclaimed
+LOCATION,100,e16d1d9d-02ae-4f80-b22c-4ea85c2636a2,Fazfit,miranda,NSW,2228,unclaimed,c3ac1312-03fd-4e3e-b91e-25c05d5abb00,EMF Jnr Miranda,miranda,NSW,2228,unclaimed
+LOCATION,100,e16d1d9d-02ae-4f80-b22c-4ea85c2636a2,Fazfit,miranda,NSW,2228,unclaimed,35f3afa3-8faf-4beb-b474-b02abb8f180b,EMF Performance and Recovery Centre Miranda,miranda,NSW,2228,unclaimed
+LOCATION,100,32baca33-62c0-4d57-ab5b-a93be958f171,Garage Jiu Jitsu Central Coast,tuggerah,NSW,2259,unclaimed,c30e0b1c-e855-4442-8979-e11dea8fbdf6,KRÜW.HQ,tuggerah,NSW,2259,unclaimed
+LOCATION,100,gym-1190,Bionic Fitness,toowong,QLD,4066,unclaimed,gym-1198,Performance Physio Fitness Health,toowong,QLD,4066,unclaimed
+LOCATION,100,gym-1190,Bionic Fitness,toowong,QLD,4066,unclaimed,gym-1187,Riverside Fitness,toowong,QLD,4066,unclaimed
+LOCATION,100,gym-1198,Performance Physio Fitness Health,toowong,QLD,4066,unclaimed,gym-1187,Riverside Fitness,toowong,QLD,4066,unclaimed
+LOCATION,100,gym-827,Upstate Studios,fitzroy,VIC,3065,unclaimed,gym-815,Mind and Body Gym Fitzroy,fitzroy,VIC,3065,unclaimed
+LOCATION,100,gym-1618,Karmony Performance & Wellbeing,norwood,SA,5067,unclaimed,gym-1622,The Nth Degree,norwood,SA,5067,unclaimed
+LOCATION,100,gym-1332,Victorious Gym,woolloongabba,QLD,4102,unclaimed,7dc99aed-48b3-46b4-9e09-2dda52c38fbc,Sports & Spinal Woolloongabba,woolloongabba,QLD,4102,unclaimed
+LOCATION,100,gym-234,Bolt Athletic,victoria park,WA,6100,owner-3,gym-236,Mindbody Lounge,victoria park,WA,6100,owner-3
+LOCATION,100,gym-234,Bolt Athletic,victoria park,WA,6100,owner-3,gym-233,BOLT Health and Fitness,victoria park,WA,6100,owner-3
+LOCATION,100,gym-234,Bolt Athletic,victoria park,WA,6100,owner-3,gym-230,20FIT Victoria Park,victoria park,WA,6100,owner-3
+LOCATION,100,gym-234,Bolt Athletic,victoria park,WA,6100,owner-3,gym-227,Females over 45 Fitness,victoria park,WA,6100,owner-3
+LOCATION,100,gym-392,Full Force Gym,blacktown,NSW,2148,unclaimed,gym-383,Plus Fitness 24/7 Blacktown,blacktown,NSW,2148,unclaimed
+LOCATION,100,3f59127c-4c84-4ac1-a033-444f53c5774e,Coaching Zone Belmont,belmont,WA,6104,unclaimed,e7504efa-f266-40e4-b9f1-5cbf4ab9634f,Genesis Health and Fitness Belmont,belmont,WA,6104,unclaimed
+LOCATION,100,gym-120,Royalty Fitness 24/7,cannington,WA,6107,owner-3,gym-129,SpeedFit Cannington,cannington,WA,6107,owner-3
+LOCATION,100,gym-1365,F45 Training Wynnum,wynnum,QLD,4178,unclaimed,gym-1359,BFT Wynnum,wynnum,QLD,4178,unclaimed
+LOCATION,100,a37a6be8-de49-45f9-a7d3-108c86b0d0e2,Melton Pilates,melton,VIC,3337,unclaimed,c5a72b77-143a-42c7-9732-de62116b8a94,Melton Yoga,melton,VIC,3337,unclaimed
+LOCATION,100,6f320782-3176-4fbe-a95e-b8648f6e4e35,Body Agility - Belmont Gym,belmont,WA,6104,unclaimed,e7504efa-f266-40e4-b9f1-5cbf4ab9634f,Genesis Health and Fitness Belmont,belmont,WA,6104,unclaimed
+LOCATION,100,b75710bf-86ea-4dc6-8c38-975b47508b12,Central Performance,surry hills,NSW,2010,unclaimed,gym-442,Edge Fit Surry Hills,surry hills,NSW,2010,unclaimed
+LOCATION,100,f851bd3e-cdf3-4ec7-b93c-9dda074ece89,REVL Training Sippy Downs,sippy downs,QLD,4556,unclaimed,648d406a-5adc-4dd1-8315-76491f6bb3ed,Trainr @ Fitness Cartel,sippy downs,QLD,4556,unclaimed
+LOCATION,100,f851bd3e-cdf3-4ec7-b93c-9dda074ece89,REVL Training Sippy Downs,sippy downs,QLD,4556,unclaimed,61c6e021-c96c-439d-a75e-12a6d69c88c2,Club Pilates,sippy downs,QLD,4556,unclaimed
+LOCATION,100,gym-1180,Furlani Fitness,brisbane city,QLD,4000,unclaimed,gym-1140,EMF Performance and Recovery Centre Brisbane,brisbane city,QLD,4000,unclaimed
+LOCATION,100,gym-1831,Group Fit Devonport,devonport,TAS,7310,unclaimed,gym-1830,Anytime Fitness Devonport,devonport,TAS,7310,unclaimed
+LOCATION,100,gym-1526,NYG Fitness,nambour,QLD,4506,unclaimed,gym-1518,Snap Fitness 24/7 ( Nambour),nambour,QLD,4560,unclaimed
+LOCATION,100,gym-1182,Inertia Fitness - West End Gym,west end,QLD,4101,unclaimed,gym-1196,Anytime Fitness West End,west end,QLD,4101,unclaimed
+LOCATION,100,a1ff7519-96c4-49c6-8ed5-4be8df04c0e4,HY PT Studio,strathfield,NSW,2135,unclaimed,b3cf7657-1d7c-4d51-a54b-0b0971f3b721,Deepwater Performance,strathfield,NSW,2135,unclaimed
+LOCATION,100,55366ee2-2349-489b-b4d3-6f49a3ae1634,City Cave Everton Park,everton park,QLD,4053,unclaimed,292575f7-047b-4f5b-b68e-936f112ce14a,Studio Pilates International Everton Park,everton park,QLD,4053,unclaimed
+LOCATION,100,55366ee2-2349-489b-b4d3-6f49a3ae1634,City Cave Everton Park,everton park,QLD,4053,unclaimed,fa222ead-a283-4b3d-bd20-330e248c7cc9,BFT Everton Park,everton park,QLD,4053,unclaimed
+LOCATION,100,39530ad8-6890-4627-843f-cc763c9ac2d3,#HER GYM 24/7,kings meadows,TAS,7249,unclaimed,0c1e320a-4ec3-4d33-9849-fb76bddaad1d,GYM@ONE,kings meadows,TAS,7249,unclaimed
+LOCATION,100,d0ae9f0d-b489-40d3-b204-6b12bd7c712a,Sole Studios,lilydale,VIC,3140,unclaimed,e96394ce-9584-46ba-9b91-44e1b18f88cf,Anytime Fitness Lilydale,lilydale,VIC,3140,unclaimed
+LOCATION,100,9508e103-cc7b-4bd9-b9b9-dbfa1108e848,LiFT Strength and Conditioning Sippy Downs,sippy downs,QLD,4556,unclaimed,3d8a9291-b639-4ab1-b65e-fdd8f8f95672,@pilates Sippy Downs,sippy downs,QLD,4556,unclaimed
+LOCATION,100,797c73ec-da19-4060-9587-de4bb8beb1fc,Alt+ State Pilates,geraldton,WA,6530,unclaimed,ab2997c8-29f3-423e-a054-476b6af67288,Geraldton Pilates & Yoga,geraldton,WA,6530,unclaimed
+LOCATION,100,f8e42a98-6e8e-484d-a03b-2b310cd04ac7,W.Tribe Centre,tuggerah,NSW,2259,unclaimed,7e9c75a3-13eb-42fc-ba4d-ef3b589bad32,F45 Training Tuggerah,tuggerah,NSW,2259,unclaimed
+LOCATION,100,95b3ccb7-0fe5-4781-8882-ab1e727b1921,Elquera Mundine Tony Gym,redfern,NSW,2016,unclaimed,a85e3c30-7c64-4802-a3fe-e894b06347c5,Elouera Tony Mundine Gym,redfern,NSW,2016,unclaimed
+LOCATION,100,gym-1506,Fitstop Noosa,noosaville,QLD,4566,unclaimed,gym-1504,EFM Health Clubs Noosaville (Noosa Gym),noosaville,QLD,4566,unclaimed
+LOCATION,100,21f4dae1-d6b7-4640-831e-70d1864fb6ca,Anytime Fitness - Belmont,belmont,WA,6104,unclaimed,e79bc4e2-d398-419d-a305-9f0b3ab7f889,Fitstop Belmont,belmont,WA,6105,unclaimed
+LOCATION,100,gym-1548,PCYC Cairns,manunda,QLD,4870,unclaimed,2140ba5c-3de0-4d7c-8fbc-42af593943e8,FIT College Cairns,manunda,QLD,4870,unclaimed
+LOCATION,100,d05b6f06-0fe9-463d-bbe0-947750ace849,F45 Training Reservoir,reservoir,VIC,3073,unclaimed,41ef90d0-167c-46ad-814b-874c8b6b7bd3,T1 Performance,reservoir,VIC,3073,unclaimed
+LOCATION,100,gym-087,Hammer Strength,rockingham,WA,6168,owner-3,gym-079,Roar MMA 24/7 Gym - Rockingham,rockingham,WA,6168,owner-3
+LOCATION,100,efef0280-eb87-44c5-899b-bdfbde1c3a41,Club Lime Norman Park,norman park,QLD,4170,unclaimed,897b19a8-5c37-456b-8d0a-5fe1fb2681a7,Restart Exercise Physiology,norman park,QLD,4170,unclaimed
+LOCATION,100,efef0280-eb87-44c5-899b-bdfbde1c3a41,Club Lime Norman Park,norman park,QLD,4170,unclaimed,53353f4d-d966-4975-8f41-03697a614e2c,Bolt-On Health & Fitness,norman park,QLD,4170,unclaimed
+LOCATION,100,efef0280-eb87-44c5-899b-bdfbde1c3a41,Club Lime Norman Park,norman park,QLD,4170,unclaimed,1e1ec197-7739-4cb3-aa6e-e4c19bcf329e,Unlocked Performance,norman park,QLD,4170,unclaimed
+LOCATION,100,d790e670-4afe-4547-b681-e158592115b9,Snap Fitness 24/7 Heidelberg,heidelberg,VIC,3084,unclaimed,57c8ca1b-2ff7-4668-85af-bca13d9016ae,Jamie Fitness Heidelberg Personal Training,heidelberg,VIC,3084,unclaimed
+LOCATION,100,d790e670-4afe-4547-b681-e158592115b9,Snap Fitness 24/7 Heidelberg,heidelberg,VIC,3084,unclaimed,c4432f56-b018-47cd-aa4d-a278a8c2adf0,Fit Tone Femme,heidelberg,VIC,3084,unclaimed
+LOCATION,100,d790e670-4afe-4547-b681-e158592115b9,Snap Fitness 24/7 Heidelberg,heidelberg,VIC,3084,unclaimed,e4e2caf6-f5a6-44a5-9f61-c3761b1ac2cb,Strong Pilates Heidelberg,heidelberg,VIC,3084,unclaimed
+LOCATION,100,gym-168,Dynamo Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3,gym-158,Founders Fitness 24/7 Gym,osborne park,WA,6017,owner-3
+LOCATION,100,gym-604,Anytime Fitness Manly,manly,NSW,2095,unclaimed,gym-619,Flowcore Studio,manly,NSW,2095,unclaimed
+LOCATION,100,7b18cfed-5334-48c2-9efb-d2c2f8d84bc8,RT Strength and Fitness,victoria park,WA,6100,unclaimed,gym-231,Hybrid House,victoria park,WA,6100,owner-3
+LOCATION,100,7b18cfed-5334-48c2-9efb-d2c2f8d84bc8,RT Strength and Fitness,victoria park,WA,6100,unclaimed,gym-221,XS Fitness Vic Park Gym,victoria park,WA,6100,owner-3
+LOCATION,100,gym-1732,Active8 Fitness,mount gambier,SA,5290,unclaimed,018e0c98-e3da-48e1-94dd-b5c53ad546b6,Arena 51 Trampoline Park,mount gambier,SA,5290,unclaimed
+LOCATION,100,gym-1650,Tim's Training HQ,unley,SA,5061,unclaimed,gym-1647,Unley Boxing Club,unley,SA,5061,unclaimed
+LOCATION,100,gym-1650,Tim's Training HQ,unley,SA,5061,unclaimed,gym-1649,Raf Fitness PT,unley,SA,5061,unclaimed
+LOCATION,100,gym-058,Snap Fitness 24/7 Midland,midland,WA,6056,owner-3,gym-056,World Gym Midland,midland,WA,6056,owner-3
+LOCATION,100,5f62b5e1-796c-4a9e-8e48-e3b875f96572,Revive Pilates,toorak gardens,SA,5065,unclaimed,0f60e751-4019-461c-9dd9-fcad3bfc3c9e,Eastside Studio,toorak gardens,SA,5065,unclaimed
+LOCATION,100,94451a00-89c1-44dc-a458-765e998d438a,Hobart Boxing,kingston,TAS,7050,unclaimed,gym-1807,Kingston Pool & Swimming Centre,kingston,TAS,7050,unclaimed
+LOCATION,100,4d735404-d33f-45ac-adba-d5241f20da9f,The Cardio Room,bellevue,WA,6056,unclaimed,gym-067,Hillside CrossFit,midland,WA,6056,owner-3
+LOCATION,100,e044cb89-e7ac-4d9f-a44b-db1ef7a2818c,Studio Pilates International Training Academy,hawthorne,QLD,4171,unclaimed,f4b5f7c3-7540-45a4-a436-9fa78475f0e5,Studio Pilates International Hawthorne,hawthorne,QLD,4171,unclaimed
+LOCATION,100,3a460646-5e7a-4b0f-83b8-a127853f6516,Balance Lane,helensvale,QLD,4212,unclaimed,gym-1437,Anytime Fitness Helensvale,helensvale,QLD,4212,unclaimed
+LOCATION,100,gym-509,Hurstville Aquatic Leisure Centre,hurstville,NSW,2221,unclaimed,gym-507,BlueFit Health Club - Hurstville,hurstville,NSW,2220,unclaimed
+LOCATION,100,gym-258,Fitstop Innaloo,innaloo,WA,6018,owner-3,gym-259,Active Women's Fitness,innaloo,WA,6018,owner-3
+LOCATION,100,gym-1157,Athletix Gym Brisbane: Strength & Conditioning,fortitude valley,QLD,4006,unclaimed,61f584a6-c9b6-4eb7-9788-70f3fa6903dc,Fight Nutrition Australia,fortitude valley,QLD,4006,unclaimed
+LOCATION,100,gym-1386,Best Brisbane Boxing And Fitness,nundah,QLD,4012,unclaimed,gym-1378,Northside Boxing,nundah,QLD,4012,unclaimed
+LOCATION,100,6791a94b-fa5f-4d02-8045-6e44612a640d,Empowered Strength and Fitness Studio,tugun,QLD,4224,unclaimed,86f2bd00-e223-47db-ac1a-03c337180208,Soul Athletic,tugun,QLD,4224,unclaimed
+LOCATION,100,gym-561,Everwilling Health and Fitness Castle Hill,castle hill,NSW,2154,unclaimed,gym-547,XGYM Castle Hill 24/7 Gym,castle hill,NSW,2154,unclaimed
+LOCATION,100,gym-1184,Anytime Fitness Toowong,toowong,QLD,4066,unclaimed,gym-1193,Personal Best (Toowong),toowong,QLD,4066,unclaimed
+LOCATION,100,67403be9-432d-4760-98ab-05a2d784bb69,Club Lime Coburg,coburg,VIC,3058,unclaimed,7a85782e-8e63-4147-987d-b2fa1aa55c50,Hiit Republic Coburg,coburg,VIC,3058,unclaimed
+LOCATION,100,f2c72283-269d-495a-ac79-1c35a95677d2,City Cave Balmain,balmain,NSW,2041,unclaimed,9a47ba0c-79f7-4fde-995b-803c12d9a6c7,Balmain Bodies Pilates Studio,balmain,NSW,2041,unclaimed
+LOCATION,100,gym-1653,Orangetheory Fitness Mitcham,hawthorn,SA,5062,unclaimed,gym-1652,Zap Fitness 24/7 Mitcham,hawthorn,SA,5062,unclaimed
+LOCATION,100,95947192-8b30-4736-836a-a0a3c762a3d3,inLIFE Wellness Balcatta,balcatta,WA,6021,unclaimed,gym-248,Combine Air Balcatta,balcatta,WA,6021,owner-3
+LOCATION,100,gym-014,GDS Fitness,perth cbd,WA,6000,owner-3,gym-216,Society Fitness at The Switch,northbridge,WA,6000,owner-3
+LOCATION,100,gym-603,Conditn Manly,manly,NSW,2095,unclaimed,gym-605,Plus Fitness Manly Central Ave,manly,NSW,2095,unclaimed
+LOCATION,100,gym-1756,Zap Fitness 24/7 Hobart City,hobart,TAS,7000,unclaimed,gym-1761,BurnTheory,hobart,TAS,7000,unclaimed
+LOCATION,100,df0388ed-8d90-4215-9e08-c9a3e867a75c,Rebalance Hamilton North,hamilton north,NSW,2292,unclaimed,bdcb604b-b281-44f2-b635-b5a922e2cfc2,Courtney Miller Strength & Fitness,hamilton north,NSW,2292,unclaimed
+LOCATION,100,df0388ed-8d90-4215-9e08-c9a3e867a75c,Rebalance Hamilton North,hamilton north,NSW,2292,unclaimed,582219f6-aba0-4e18-ad7a-a16360e8448b,ToneLAB: Performance (Hamilton North),hamilton north,NSW,2292,unclaimed
+LOCATION,100,gym-236,Mindbody Lounge,victoria park,WA,6100,owner-3,gym-233,BOLT Health and Fitness,victoria park,WA,6100,owner-3
+LOCATION,100,gym-236,Mindbody Lounge,victoria park,WA,6100,owner-3,gym-230,20FIT Victoria Park,victoria park,WA,6100,owner-3
+LOCATION,100,gym-236,Mindbody Lounge,victoria park,WA,6100,owner-3,gym-227,Females over 45 Fitness,victoria park,WA,6100,owner-3
+LOCATION,100,gym-280,F45 Training Ellenbrook,ellenbrook,WA,6069,owner-3,gym-281,Airborne Circus and Fitness,ellenbrook,WA,6069,owner-3
+LOCATION,100,6c17043d-cf24-483a-914c-ca7ccbd3631e,Snap Fitness 24/7 Bayswater,bayswater,WA,6053,unclaimed,574c93bb-428e-480e-8a30-3cd5dffde033,HBF Physio Bayswater,bayswater,WA,6053,unclaimed
+LOCATION,100,f8dcefbd-13e7-4188-92ec-dbbddf90c8a4,Sculpt Pilates and Barre,bunbury,WA,6230,unclaimed,0ba5a82f-1e19-47f4-8521-816cf3cf63c1,Bunbury PT - Boutique Gym,bunbury,WA,6230,unclaimed
+LOCATION,100,gym-1634,MU | FU Fitness,unley,SA,5061,unclaimed,d1154b0f-642f-4b9b-97ef-58dffca5004d,Studio360 Cycle,unley,SA,5061,unclaimed
+LOCATION,100,4fdeca5a-a159-4061-a307-ccd0b5b2dd57,Flex Fitness Equipment - Canning Vale,canning vale,WA,6155,unclaimed,276538be-45cc-48fb-876c-c86f9bfbbdf2,BFT Canning Vale,canning vale,WA,6155,unclaimed
+LOCATION,100,7cfdfae2-c341-46a6-bde5-e05357d1bef9,AG Pilates Studio,mascot,NSW,2020,unclaimed,c47b0c61-1380-49a0-b44e-bc66aa782c80,BFT Mascot,mascot,NSW,2020,unclaimed
+LOCATION,100,gym-1222,STRONG Pilates Chermside,chermside,QLD,4032,unclaimed,gym-1210,Fitstop Chermside,chermside,QLD,4032,unclaimed
+LOCATION,100,a058a8a0-08bd-4fd3-9b5b-34ffe119021a,F45 Training Nedlands,nedlands,WA,6009,unclaimed,7f899130-41ff-4ed0-947c-16a46f584725,"Club Pilates, Nedlands",nedlands,WA,6009,unclaimed
+LOCATION,100,a058a8a0-08bd-4fd3-9b5b-34ffe119021a,F45 Training Nedlands,nedlands,WA,6009,unclaimed,f668bb48-dd8f-47fe-a1af-d5b82ea73e7f,Body Project,nedlands,WA,6009,unclaimed
+LOCATION,100,228aeda4-03e5-4110-82ee-db2740828cda,Concise X Training,cairns city,QLD,4870,unclaimed,gym-1531,Your Fitness Cairns,cairns city,QLD,4870,unclaimed
+LOCATION,100,gym-1425,MyFirstGym Robina,robina,QLD,4226,unclaimed,gym-1420,Fernwood Fitness Robina,robina,QLD,4226,unclaimed
+LOCATION,100,gym-640,Anytime Fitness Pymble,pymble,NSW,2073,unclaimed,gym-642,Energize Fit（CrossFit Young Pymble）,pymble,NSW,2073,unclaimed
+LOCATION,100,7223b44a-95fe-4583-9dd2-604a7ba639f3,Fusion Exercise Physiology,sippy downs,QLD,4556,unclaimed,5c7a0bc9-007e-4dda-9f00-ddc0d3527074,Jetts Sippy Downs,sippy downs,QLD,4556,unclaimed
+LOCATION,100,gym-1845,Unigym Burnie,burnie,TAS,7320,unclaimed,98193903-1334-41ea-ace8-66b0135d966f,Burnie Surf Life Saving Club Inc,burnie,TAS,7320,unclaimed
+LOCATION,100,gym-997,Zap Fitness 24/7 Northcote,northcote,VIC,3070,unclaimed,05d4fb34-6bea-47db-942a-e40e797e6c5e,Bodyfit Physio,northcote,VIC,3070,unclaimed
+LOCATION,100,37029d34-c2af-425e-99fd-db83e60bbe92,World Gym Australia,helensvale,QLD,4212,unclaimed,53cbd6da-e6b5-45d7-8553-09a4558eaa46,Body Express Personal Training,helensvale,QLD,4212,unclaimed
+LOCATION,100,f07ad0c9-3b53-44db-b322-81ade60211ae,f.i.t (fit in time),heidelberg,VIC,3084,unclaimed,7cd83cb7-04e6-448b-8c00-eceeb846297c,Kieser Heidelberg,heidelberg,VIC,3084,unclaimed
+LOCATION,100,gym-653,98 Gym Newcastle,newcastle west,NSW,2300,unclaimed,gym-664,ToneLAB: Training (Newcastle),newcastle west,NSW,2302,unclaimed
+LOCATION,100,0622b94a-5150-4ba2-8723-e69808361c88,Sonny’s Gym,windsor,VIC,3181,unclaimed,gym-874,Windsor Gym,windsor,VIC,3181,unclaimed
+LOCATION,100,gym-654,The Forum Harbourside,newcastle,NSW,2300,unclaimed,550176bb-582a-442a-9149-76501133603d,NUSPORT,newcastle,NSW,2300,unclaimed
+LOCATION,100,dcb0c335-71b2-4687-bed7-d1cccdd21fd0,Studio 99 Fitness Centre,west end,QLD,4101,unclaimed,gym-1195,Limitless Performance Centre,west end,QLD,4101,unclaimed
+LOCATION,100,7c76afb4-d720-40ca-85ed-ad6152189045,The Health Oasis,kingston,TAS,7050,unclaimed,gym-1805,Colossus - Kingston,kingston,TAS,7050,unclaimed
+LOCATION,100,gym-802,Zap Fitness 24/7 East Richmond,richmond,VIC,3121,unclaimed,gym-798,BFT Richmond,richmond,VIC,3121,unclaimed
+LOCATION,100,gym-1450,EMF Performance and Recovery Centre Nerang,nerang,QLD,4211,unclaimed,gym-1453,EMF Jnr Nerang,nerang,QLD,4211,unclaimed
+LOCATION,100,gym-1450,EMF Performance and Recovery Centre Nerang,nerang,QLD,4211,unclaimed,gym-1456,Embody Female Fitness,nerang,QLD,4211,unclaimed
+LOCATION,100,gym-1694,STRONG Pilates Modbury,modbury,SA,5092,unclaimed,gym-1687,Revo Fitness - Modbury,modbury,SA,5092,unclaimed
+LOCATION,100,6a2f5fea-68b4-406b-91ab-b04bfc5b1b67,Be Strongher Training Studio,campbelltown,SA,5074,unclaimed,7284f7f1-98ad-49ef-9324-8757bdc87576,Real Fitness Solutions,campbelltown,SA,5074,unclaimed
+LOCATION,100,5827baab-f76c-43b6-a1fd-4d92604de3ce,Anytime Fitness Bulimba,bulimba,QLD,4171,unclaimed,3bc7f029-c88a-4a04-bd88-435537694dab,Brisbane Strength & Movement,bulimba,QLD,4171,unclaimed
+LOCATION,100,gym-1226,Fitness Cartel Health Clubs Nundah - 24/7 Gym,nundah,QLD,4012,unclaimed,gym-1377,Your Fit Nutrition & Fitness Professionals,nundah,QLD,4012,unclaimed
+LOCATION,100,a7100ae4-3568-4221-9c10-094f1916314c,Group Fit Zetland,rosebery,NSW,2018,unclaimed,03388a98-b0d3-410a-bcac-6c8e9def9ac5,Anytime Fitness Zetland,rosebery,NSW,2018,unclaimed
+LOCATION,100,13ce81f1-e0c0-44cd-9a63-2b73c8cb923f,Nutrition Warehouse Cannington,cannington,WA,6107,unclaimed,gym-136,Cobra Martial Arts & Fitness Centre - Cannington,cannington,WA,6107,owner-3
+LOCATION,100,gym-1301,Listen to Your Body Springwood,springwood,QLD,3442,unclaimed,gym-1303,Club Pilates Springwood,springwood,QLD,3442,unclaimed
+LOCATION,100,6aaec022-567a-453c-9dbc-4a73c59430a2,Bodycare Squash & Fitness,port augusta,SA,5700,unclaimed,507ca1dd-015a-468e-b937-1ad2fa7f448e,Crossfit Port Augusta,port augusta,SA,5700,unclaimed
+LOCATION,100,6aaec022-567a-453c-9dbc-4a73c59430a2,Bodycare Squash & Fitness,port augusta,SA,5700,unclaimed,cd6590f4-9f65-4dec-86c2-9ace23fb52b9,MacxFit 24,port augusta,SA,5700,unclaimed
+LOCATION,100,a0fdb1d4-e7a5-4aa6-8614-91ff45728b97,Rebound Studio,coolangatta,QLD,4225,unclaimed,fb1342c1-552e-4695-a561-c8f241106e23,Holistic Pro Health Performance Studio,coolangatta,QLD,4225,unclaimed
+LOCATION,100,a0fdb1d4-e7a5-4aa6-8614-91ff45728b97,Rebound Studio,coolangatta,QLD,4225,unclaimed,8d498619-3a24-47b9-8747-368a8e9e2a43,Eleven Eleven Boxing,coolangatta,QLD,4225,unclaimed
+LOCATION,100,gym-1631,Studio Pilates International Norwood,norwood,SA,5067,unclaimed,gym-1621,F45 Training Norwood,norwood,SA,5067,unclaimed
+LOCATION,100,gym-914,747Fitness,dandenong,VIC,3175,unclaimed,gym-921,Sting Gym,dandenong,VIC,3175,unclaimed
+LOCATION,100,gym-1596,Halo Exercise Physiology,salisbury downs,SA,5108,unclaimed,gym-1587,Fernwood Fitness,salisbury downs,SA,5108,unclaimed
+LOCATION,100,a5a5f3e7-cc3f-4adf-bb6a-6722371a1075,No Limits Gym Sutherland,sutherland,NSW,2232,unclaimed,d74c6377-586b-49a5-8b63-ede1dedbf8b3,Anytime Fitness Sutherland,sutherland,NSW,2232,unclaimed
+LOCATION,100,37260baa-0bc9-4e30-aede-50f0efd7f549,Shapes Health Club,kelmscott,WA,6111,unclaimed,eb63f236-1c27-4aba-a898-7cedc934fd97,Southern Power Gym home of Dirty South Boxing Club,kelmscott,WA,6111,unclaimed
+LOCATION,100,gym-583,Rileys Gym Cronulla,cronulla,NSW,2230,unclaimed,gym-584,Anytime Fitness Cronulla,cronulla,NSW,2230,unclaimed
+LOCATION,100,442ff9a2-f827-4307-9d18-d2df9a41a6ca,Fitness for Every Body,werribee,VIC,3030,unclaimed,gym-1051,In-Balance Fitness,werribee,VIC,3030,unclaimed
+LOCATION,100,507ca1dd-015a-468e-b937-1ad2fa7f448e,Crossfit Port Augusta,port augusta,SA,5700,unclaimed,cd6590f4-9f65-4dec-86c2-9ace23fb52b9,MacxFit 24,port augusta,SA,5700,unclaimed
+LOCATION,100,gym-1084,Upstate Geelong Boxing and Reformer,geelong,VIC,3220,unclaimed,e06c1575-8b2e-4d07-8487-5a816dab61f1,Upstate Geelong Mat,geelong,VIC,3220,unclaimed
+LOCATION,100,65bc84ab-018b-4ac9-b299-5205a3b03ef5,KX Pilates Mooloolaba,mooloolaba,QLD,4557,unclaimed,87a0940c-f765-4cd8-a588-ede2e08fd3fd,Jetts Mooloolaba,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,65bc84ab-018b-4ac9-b299-5205a3b03ef5,KX Pilates Mooloolaba,mooloolaba,QLD,4557,unclaimed,8478db6e-119f-44cc-bbfc-4829baf27ccf,Bulletproof Training Method,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,65bc84ab-018b-4ac9-b299-5205a3b03ef5,KX Pilates Mooloolaba,mooloolaba,QLD,4557,unclaimed,f699ad62-1bf3-4291-a1ef-1e526c65fc75,Radiant Strength - Rachel,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,gym-188,Physique Performance Specialists Morley,morley,WA,6062,owner-3,8c27e068-6cce-48c0-aa16-8ec011e45140,Studio Dre,morley,WA,6062,unclaimed
+LOCATION,100,68d83b7b-293c-4559-a9f5-9ef86ff14fe1,AEP Health Group,noarlunga centre,SA,5168,unclaimed,gym-1727,Fitstop Noarlunga,noarlunga centre,SA,5168,unclaimed
+LOCATION,100,ab4c5b3f-f917-429d-948b-6f8d8cc93ce8,Salisbury Aquatic Centre,salisbury north,SA,5108,unclaimed,44ae77d1-6f5d-4aab-aa02-fda9075f70d7,Salisbury Recreation Precinct,salisbury north,SA,5108,unclaimed
+LOCATION,100,f4ac6507-d3c4-4f46-9b44-526db11e0688,Body Agility - Kelmscott Gym,kelmscott,WA,6111,unclaimed,91526f3b-537e-4fb6-94a9-9bd13f65231e,Cyber Fitness,kelmscott,WA,6111,unclaimed
+LOCATION,100,3dfb3b64-04ea-4905-96ef-facc68365967,686 PT Studio,mascot,NSW,2020,unclaimed,3122cddf-945a-46e7-bbab-486016c8d41b,The BNK Boxing,mascot,NSW,2020,unclaimed
+LOCATION,100,gym-285,VAMPfit Bunbury,bunbury,WA,6230,owner-3,f253494e-75f2-4113-91c8-51902cda30fb,MK FITT,bunbury,WA,6230,unclaimed
+LOCATION,100,gym-1669,Oasis 24/7 Gym,morphett vale,SA,5162,unclaimed,e4b389ec-e565-4961-936d-1f7ae4867118,Sam Cam Fitness,morphett vale,SA,5162,unclaimed
+LOCATION,100,d4ebdb51-5d61-4679-b024-386e16016abb,Smithfield Shopping Centre,smithfield,QLD,4878,unclaimed,25d306cd-230d-4d43-918c-d9b06bf686d9,FS8 Cairns Northern Beaches,smithfield,QLD,4878,unclaimed
+LOCATION,100,gym-1357,Anytime Fitness Wynnum West,wynnum,QLD,4178,unclaimed,gym-1356,Club Active Wynnum,wynnum,QLD,4178,unclaimed
+LOCATION,100,971b01a7-15dd-4eda-ae57-5bed0fdf9382,Life Fitness Australia,bassendean,WA,6054,unclaimed,08b6fdca-23f3-4aa7-a52c-b74f378295f5,GymCare,bassendean,WA,6054,unclaimed
+LOCATION,100,gym-563,Aquafit,campbelltown,NSW,2560,unclaimed,gym-574,Hakea Wellness,campbelltown,NSW,2560,unclaimed
+LOCATION,100,gym-1213,Snap Fitness 24/7 Chermside,chermside,QLD,4032,unclaimed,gym-1210,Fitstop Chermside,chermside,QLD,4032,unclaimed
+LOCATION,100,a09bb822-dffb-4f21-afc3-a694011001f9,World Gym Bayside,capalaba,QLD,4157,unclaimed,71eec114-75b9-414e-90ca-05f16fbe86d1,T’s Pole and Fitness,capalaba,QLD,4157,unclaimed
+LOCATION,100,9571b282-6cb6-49a8-9799-91b31357d9f7,MartinprzybylekPT,fairfield,NSW,2165,unclaimed,5e90f223-7c18-4ed9-a8c0-77c97eba337c,Anytime Fitness Fairfield,fairfield,NSW,2165,unclaimed
+LOCATION,100,9f7b2d88-4c07-43a8-9be5-cf66ad5552e0,Hawthorne Park,hawthorne,QLD,4171,unclaimed,219b1857-5056-4fe6-a04d-e118e1eb15eb,Project Health and Fitness,hawthorne,QLD,4171,unclaimed
+LOCATION,100,9f7b2d88-4c07-43a8-9be5-cf66ad5552e0,Hawthorne Park,hawthorne,QLD,4171,unclaimed,fce3064c-48fa-4884-8423-5fb5eb7403d7,My First Gym Hawthorne,hawthorne,QLD,4171,unclaimed
+LOCATION,100,18fbe446-c400-41f9-aa44-367fdab9d2b9,Marrickville Park Outdoor Fitness Station,marrickville,NSW,2204,unclaimed,c374bb1b-7154-45b0-909e-74e29000df60,Marrickville Muscle Bench,marrickville,NSW,2204,unclaimed
+LOCATION,100,gym-826,Project Better Collingwood,collingwood,VIC,3066,unclaimed,gym-842,Strength & Flow Fitness,collingwood,VIC,3066,unclaimed
+LOCATION,100,2946005d-2360-47d4-9a83-54e7b34a8b74,BlueFit Swimming - Belmont,belmont,WA,6104,unclaimed,91244bd3-cd11-498a-b77f-022aa533b10b,Belmont Oasis Leisure Centre,belmont,WA,6104,unclaimed
+LOCATION,100,6d38a8cd-45a8-4d18-9593-c72657ca9d9b,MVMNT,miranda,NSW,2229,unclaimed,e113fb92-33a5-413b-99a9-da550f9a0bc0,STRONG Pilates Miranda,miranda,NSW,2228,unclaimed
+LOCATION,100,gym-752,Fitness First Melbourne Central Platinum,melbourne,VIC,3000,unclaimed,gym-763,Momentum Health & Fitness,melbourne,VIC,3000,unclaimed
+LOCATION,100,b391faf5-2e53-4d47-b092-9ef6e4e66a37,Anytime Fitness Bundall,bundall,QLD,4217,unclaimed,70962623-a93d-434c-91dd-469020855fbb,Rigs Recovery Bundall,bundall,QLD,4217,unclaimed
+LOCATION,100,afb5b9e4-8782-4440-9ee0-050d56fec8c8,Housed Caringbah,caringbah,NSW,2229,unclaimed,38a50716-d2bf-4a4f-b81c-f49b2cce612e,Joy in Movement - J.I.M Caringbah,caringbah,NSW,2229,unclaimed
+LOCATION,100,gym-1602,BlueFit Swimming - Aquadome,elizabeth,SA,5112,unclaimed,gym-1603,The Aquadome,elizabeth,SA,5112,unclaimed
+LOCATION,100,gym-1143,Anytime Fitness South Bank,south brisbane,QLD,4101,unclaimed,da3f7aaf-c8aa-41ff-aa12-56dcf0a90bea,Yin Fit Life,south brisbane,QLD,4101,unclaimed
+LOCATION,100,gym-454,Plus Fitness 24/7 North Sydney,north sydney,NSW,2060,unclaimed,gym-576,Campbelltown Gym,north sydney,NSW,2060,unclaimed
+LOCATION,100,b7df9caf-8908-45c1-99a2-5501f88e6efe,CorePlus Coolangatta,coolangatta,QLD,4225,unclaimed,ba3daeaa-e591-4a4d-ab78-5e9603d75336,Cooly 24/7 gym Coolangatta,coolangatta,QLD,4225,unclaimed
+LOCATION,100,b7df9caf-8908-45c1-99a2-5501f88e6efe,CorePlus Coolangatta,coolangatta,QLD,4225,unclaimed,cb5182aa-51b4-4252-847d-582dd2317a75,Cooly Gym,coolangatta,QLD,4225,unclaimed
+LOCATION,100,gym-1390,Fitstop Aspley,aspley,QLD,4034,unclaimed,3c5a514a-aaa0-4486-8e76-5b15a95edf69,Gym,aspley,QLD,4034,unclaimed
+LOCATION,100,gym-898,Empower Club,footscray,VIC,3011,unclaimed,26a51053-2317-4861-99b5-d6568eed20b3,pillar of strength,footscray,VIC,3011,unclaimed
+LOCATION,100,gym-346,Club Lime Liverpool,liverpool,NSW,2170,unclaimed,f4660628-f93c-4e7c-830e-c3afc90a7f73,The Grove Homemaker Centre,liverpool,NSW,2170,unclaimed
+LOCATION,100,4e3d4ed8-3d70-4d1a-915e-e1d3e087e51b,BodyEthos,balmain,NSW,2041,unclaimed,52e74c64-578b-4d18-bd9b-4bd6796057e9,KX Pilates Balmain,balmain,NSW,2041,unclaimed
+LOCATION,100,4e3d4ed8-3d70-4d1a-915e-e1d3e087e51b,BodyEthos,balmain,NSW,2041,unclaimed,c42086a3-b75a-4896-bcf1-188202c0dc57,New Level Fitness Training,balmain,NSW,2041,unclaimed
+LOCATION,100,gym-1453,EMF Jnr Nerang,nerang,QLD,4211,unclaimed,gym-1456,Embody Female Fitness,nerang,QLD,4211,unclaimed
+LOCATION,100,gym-870,L9 Prahran,prahran,VIC,3181,unclaimed,gym-864,The Fitness Concept,prahran,VIC,3181,unclaimed
+LOCATION,100,gym-047,Arena Joondalup,joondalup,WA,6027,owner-3,gym-038,Arena Joondalup Gym,joondalup,WA,6027,owner-3
+LOCATION,100,gym-514,F45 Training Hurstville,hurstville,NSW,2220,unclaimed,gym-512,FS8 Hurstville,hurstville,NSW,2220,unclaimed
+LOCATION,100,gym-514,F45 Training Hurstville,hurstville,NSW,2220,unclaimed,gym-510,Club Lime Hurstville,hurstville,NSW,2220,unclaimed
+LOCATION,100,57c8ca1b-2ff7-4668-85af-bca13d9016ae,Jamie Fitness Heidelberg Personal Training,heidelberg,VIC,3084,unclaimed,c4432f56-b018-47cd-aa4d-a278a8c2adf0,Fit Tone Femme,heidelberg,VIC,3084,unclaimed
+LOCATION,100,57c8ca1b-2ff7-4668-85af-bca13d9016ae,Jamie Fitness Heidelberg Personal Training,heidelberg,VIC,3084,unclaimed,e4e2caf6-f5a6-44a5-9f61-c3761b1ac2cb,Strong Pilates Heidelberg,heidelberg,VIC,3084,unclaimed
+LOCATION,100,c38942c8-5996-47dc-a07a-780b3ec06e19,Studio Pilates International Nundah Village,nundah,QLD,4012,unclaimed,gym-1379,F45 Training Nundah,nundah,QLD,4012,unclaimed
+LOCATION,100,8c67bcc5-c473-4944-aa70-592078ee994a,Soul Strength Mindfulness & Movement,epping,VIC,3076,unclaimed,f3c28410-e669-4a59-b36b-b622829107f0,Body Revival Strength & Performance,epping,VIC,3076,unclaimed
+LOCATION,100,gym-1380,PLATINUM,nundah,QLD,4012,unclaimed,gym-1373,Fitstop Nundah,nundah,QLD,4012,unclaimed
+LOCATION,100,8ca19566-0a4a-4d0d-83bf-8ec74de3f657,Anytime Fitness Redfern,redfern,NSW,2016,unclaimed,d77dc39d-dc90-40f4-9d95-b600d34cce6f,BodyXPlates,redfern,NSW,2016,unclaimed
+LOCATION,100,ad833579-22d3-4297-ad1b-884143cbaede,The Pilates Garage- Foothills Perth,kelmscott,WA,2938,unclaimed,9470b196-2a73-4cd1-9968-fa05548da3e6,The Muay Thai Academy,kelmscott,WA,2938,unclaimed
+LOCATION,100,gym-1646,Unley Community Centre,unley,SA,5061,unclaimed,gym-1632,Anytime Fitness Unley Club,unley,SA,5061,unclaimed
+LOCATION,100,gym-1823,HIIT Launceston,invermay,TAS,7248,unclaimed,a9eed1ab-f3ee-4b1c-9ac7-e368c906129b,Competitive Edge Headquarters,invermay,TAS,7248,unclaimed
+LOCATION,100,gym-1823,HIIT Launceston,invermay,TAS,7248,unclaimed,gym-1820,Hi-Per Centre,invermay,TAS,7248,unclaimed
+LOCATION,100,gym-1823,HIIT Launceston,invermay,TAS,7248,unclaimed,ce5ad35a-d495-4d94-b30e-fe651d8a7a60,HI-PEREVIVE,invermay,TAS,7248,unclaimed
+LOCATION,100,eef93f5c-6608-49a4-ab7b-75e68c36e9ee,CrossFit Remi,upper coomera,QLD,4209,unclaimed,337502f6-e865-4626-a202-03a505354af4,Total Body Composition Upper Coomera,upper coomera,QLD,4209,unclaimed
+LOCATION,100,eef93f5c-6608-49a4-ab7b-75e68c36e9ee,CrossFit Remi,upper coomera,QLD,4209,unclaimed,dda154ec-2fe9-470b-868f-fdc21b5b2925,Elev8 Health & Performance,upper coomera,QLD,4209,unclaimed
+LOCATION,100,b953ef07-c035-4f9e-a1d8-2623b5ac344e,The Running Company - South Adelaide,christies beach,SA,5165,unclaimed,gym-1725,Salt Yoga Studios | Christies Beach,christies beach,SA,5165,unclaimed
+LOCATION,100,343103d1-7ef4-4e3a-a3c8-98d8cbde0338,HYPOXI Miranda,miranda,NSW,2228,unclaimed,dac67de0-36ce-4d02-ac61-b0bf961c601c,The Barbell Project,miranda,NSW,2228,unclaimed
+LOCATION,100,648d406a-5adc-4dd1-8315-76491f6bb3ed,Trainr @ Fitness Cartel,sippy downs,QLD,4556,unclaimed,61c6e021-c96c-439d-a75e-12a6d69c88c2,Club Pilates,sippy downs,QLD,4556,unclaimed
+LOCATION,100,f1bed5f9-4118-4ffe-a234-4bac2e820109,Body20 Forest Lake,forest lake,QLD,4078,unclaimed,47239db7-3d74-4742-9ec0-c96e22dd6081,BFT Forest Lake,forest lake,QLD,4078,unclaimed
+LOCATION,100,f1bed5f9-4118-4ffe-a234-4bac2e820109,Body20 Forest Lake,forest lake,QLD,4078,unclaimed,d6c9e130-df53-40a3-bbd7-8d1a06979906,Snap Fitness 24/7 Forest Lake,forest lake,QLD,4078,unclaimed
+LOCATION,100,f1bed5f9-4118-4ffe-a234-4bac2e820109,Body20 Forest Lake,forest lake,QLD,4078,unclaimed,f2874db5-22ec-4881-9754-1b3309acf5a3,CF FIT,forest lake,QLD,4078,unclaimed
+LOCATION,100,f13fbe49-e850-4c6c-9f2a-3f28fcd92026,Revo Fitness - Charlestown,charlestown,NSW,8042,unclaimed,5f687827-ff8b-437c-8697-ff9ab663dfcf,MVMNT Training,charlestown,NSW,8042,unclaimed
+LOCATION,100,f13fbe49-e850-4c6c-9f2a-3f28fcd92026,Revo Fitness - Charlestown,charlestown,NSW,8042,unclaimed,ea2e2786-048b-4b52-961a-f5901c8cd368,Charlestown Square,charlestown,NSW,2290,unclaimed
+LOCATION,100,60e98037-25f6-4570-999f-ab5db25dafed,BFT Craigieburn,craigieburn,VIC,3064,unclaimed,20db72d0-9f67-4e5c-a006-e9bca05d6749,HYPOXI Craigieburn,craigieburn,VIC,3064,unclaimed
+LOCATION,100,0102cde3-6c15-4e85-9bf9-9a970c41ca45,Prospect Wellness Studio,prospect,SA,5082,unclaimed,0583eb7f-e167-4b31-8c61-6379638387cd,Healthy Inspirations Prospect,prospect,SA,5082,unclaimed
+LOCATION,100,810a7e42-d580-4225-b0f4-fb661dd6e033,VIBE Health and Performance,homebush,NSW,2140,unclaimed,926d31f8-7dae-4ca3-a0f0-da6587a4ba22,Ramp Physio And Fitness,homebush,NSW,2140,unclaimed
+LOCATION,100,gym-088,Total Physique Performance,rockingham,WA,6168,owner-3,gym-085,Just Ladies QuickFit,rockingham,WA,6168,owner-3
+LOCATION,100,871b865f-cf36-43a4-b48d-4dd89a4d0908,The Altitude Gym,gosford,NSW,2250,unclaimed,1513c921-e429-48d7-9abc-c1eafb4e80cc,Active Nation CC,gosford,NSW,2250,unclaimed
+LOCATION,100,gym-1840,Anytime Fitness Burnie,south burnie,TAS,7320,unclaimed,gym-1842,Group Fit Burnie,south burnie,TAS,7320,unclaimed
+LOCATION,100,58786941-6aea-4e4f-b744-2722e09af571,inLIFE Wellness Newcastle,hamilton,NSW,2303,unclaimed,39ed0479-5827-47f4-b0d2-34ca5bd667e5,Manisha Fitness,hamilton,NSW,2303,unclaimed
+LOCATION,100,88745f03-8585-419f-ad9f-a2fee6ece2dc,Goodlife Community Centre,buderim,QLD,4556,unclaimed,c1be59bd-a3ce-4a03-b074-8c1e9666ab2f,Squash Courts - Goodlife Community Centre,buderim,QLD,4556,unclaimed
+LOCATION,100,gym-1308,Anytime Fitness Browns Plains,browns plains,QLD,4118,unclaimed,gym-1320,Soar Health and Fitness,browns plains,QLD,4118,unclaimed
+LOCATION,100,0f199771-a60a-4948-9995-e22d76cbf5a4,Forged performance,sippy downs,QLD,4556,unclaimed,61c6e021-c96c-439d-a75e-12a6d69c88c2,Club Pilates,sippy downs,QLD,4556,unclaimed
+LOCATION,100,79b79a6e-9b90-48c2-9539-ba82fadf3d99,Phoenix-Strong Women,waitara,NSW,2077,unclaimed,gym-482,PCYC Hornsby / Ku-ring-gai,waitara,NSW,2077,unclaimed
+LOCATION,100,35fed74f-1066-4e97-a54b-9501773b0ec0,2500FIT,wollongong,NSW,2500,unclaimed,gym-711,Fitstop Wollongong,wollongong,NSW,2500,unclaimed
+LOCATION,100,gym-1336,Brickhouse Gym,coorparoo,QLD,4151,unclaimed,b6d24e58-214f-4e35-8638-0a02da0183af,Roger | Well | Personal Trainer,coorparoo,QLD,4151,unclaimed
+LOCATION,100,ee05471f-6248-4e3c-8a4a-075916cb609f,The Spinal Studio Prahran,prahran,VIC,3181,unclaimed,gym-871,Bennetts boxing gym,prahran,VIC,3181,unclaimed
+LOCATION,100,901da422-92ca-4a50-b0eb-e67519f56abf,247Xercise Gym,reservoir,VIC,3073,unclaimed,56abf3eb-ab01-4797-a4f8-9599854c8aa0,3 Zone Recovery,reservoir,VIC,3073,unclaimed
+LOCATION,100,gym-635,Balanced Life Dee Why,dee why,NSW,2099,unclaimed,fb8b2876-b5d5-4fcf-9979-b3eab1734dbf,Balanced Life Fitness and Wellbeing Gym,dee why,NSW,2099,unclaimed
+LOCATION,100,902a94ab-3149-48c0-ac55-09152d180f71,Fury Fitness,north ipswich,QLD,4305,unclaimed,gym-1245,Goodlife Health Clubs Ipswich,north ipswich,QLD,4305,unclaimed
+LOCATION,100,bdcb604b-b281-44f2-b635-b5a922e2cfc2,Courtney Miller Strength & Fitness,hamilton north,NSW,2292,unclaimed,582219f6-aba0-4e18-ad7a-a16360e8448b,ToneLAB: Performance (Hamilton North),hamilton north,NSW,2292,unclaimed
+LOCATION,100,gym-611,Active Mum Fitness/Gym - Mums & Bubs - Manly,manly,NSW,2095,unclaimed,gym-615,100Strong,manly,NSW,2095,unclaimed
+LOCATION,100,gym-091,Infrared Wellness Centre Perth,rockingham,WA,6168,owner-3,9b8d2d26-1675-4deb-bfec-df317e558cc7,Palm Beach Wellness - Rockingham,rockingham,WA,6168,unclaimed
+LOCATION,100,gym-764,Fit Tribe,melbourne,VIC,3000,unclaimed,dc05185d-c516-4312-bcaa-83ead23dd29c,Bodies By Barry Personal Training Melbourne,melbourne,VIC,3000,unclaimed
+LOCATION,100,gym-434,One Playground Newtown,newtown,NSW,2043,unclaimed,0880ffc9-dfa3-40c3-a07f-8a2e95ae9dae,Prima Fitness Academy,newtown,NSW,2043,unclaimed
+LOCATION,100,gym-1647,Unley Boxing Club,unley,SA,5061,unclaimed,gym-1649,Raf Fitness PT,unley,SA,5061,unclaimed
+LOCATION,100,gym-719,Better Shape Fitness,wollongong,NSW,2500,unclaimed,gym-705,The Health Haus Wollongong 24/7,wollongong,NSW,2500,unclaimed
+LOCATION,100,2101b958-0c84-412b-b09d-136ae23985f6,Westfield Tea Tree Plaza,modbury,SA,5092,unclaimed,gym-1702,rebel Tea Tree Plaza,modbury,SA,5092,unclaimed
+LOCATION,100,gym-777,Fernwood Fitness,st kilda,VIC,3182,unclaimed,gym-773,South Side Fitness,st kilda,VIC,3182,unclaimed
+LOCATION,100,a154726b-f9f4-42f6-919e-292befc36820,Girls Lift,sunshine,VIC,3020,unclaimed,gym-904,Sunshine Fitness 24/7,sunshine,VIC,3020,unclaimed
+LOCATION,100,0afbeb02-693e-4159-a12d-6b5218ece920,Affordable Fitness,balmain,NSW,2041,unclaimed,b6736c74-36b1-4272-a446-10c3a8942d71,Balmain Boxing Club,balmain,NSW,2041,unclaimed
+LOCATION,100,0afbeb02-693e-4159-a12d-6b5218ece920,Affordable Fitness,balmain,NSW,2041,unclaimed,2355f9a7-e210-48be-b24b-1ac96791d48d,Gracie Balmain,balmain,NSW,2041,unclaimed
+LOCATION,100,0afbeb02-693e-4159-a12d-6b5218ece920,Affordable Fitness,balmain,NSW,2041,unclaimed,a002c103-db64-4032-b12c-1008a150e08e,PCYC Balmain,balmain,NSW,2041,unclaimed
+LOCATION,100,gym-1696,Rock Solid 24/7 Gym,st agnes,SA,5097,unclaimed,gym-1705,Energetic Capacity,st agnes,SA,5097,unclaimed
+LOCATION,100,43e53d6b-9030-45a2-bc8d-583871535182,CrossFit Haapu,nerang,QLD,4211,unclaimed,dd658022-71fb-42b1-b80c-a7d8d924ab91,Heartbreak Conditioning,nerang,QLD,4211,unclaimed
+LOCATION,100,gym-1849,Burnie Boxing Club 7320,burnie,TAS,7320,unclaimed,gym-1853,Exercise classes - fitness workouts,burnie,TAS,7320,unclaimed
+LOCATION,100,gym-1849,Burnie Boxing Club 7320,burnie,TAS,7320,unclaimed,gym-1851,Personal Trainer Burnie - More Than Fitness -Shen Academy,burnie,TAS,7320,unclaimed
+LOCATION,100,gym-1511,FS8 Noosa,noosaville,QLD,4566,unclaimed,gym-1508,Base. Training Co,noosaville,QLD,4566,unclaimed
+LOCATION,100,067235c8-d0b7-4c95-8bb4-62d0a4193e38,Athletica Performance,springvale,VIC,3171,unclaimed,044513b4-84e1-4c15-950b-24b01ee4e678,Centre Studios,springvale,VIC,3171,unclaimed
+LOCATION,100,ebfee43f-6cc3-4f2f-ad81-d244797046ea,Reservoir Leisure Centre,reservoir,VIC,3073,unclaimed,2c2493b8-9796-4299-b5b1-e5110a99c830,Reservoir Leisure Centre Pool,reservoir,VIC,3073,unclaimed
+LOCATION,100,gym-949,StrongHouse Gym 24/7,ringwood,VIC,3134,unclaimed,gym-962,Prime Fitness,ringwood,VIC,3134,unclaimed
+LOCATION,100,gym-949,StrongHouse Gym 24/7,ringwood,VIC,3134,unclaimed,gym-950,Fitness Room - Group Training and 24/7 Gym,ringwood,VIC,3134,unclaimed
+LOCATION,100,cef6fb42-2c17-450a-bc80-273402af9039,PCYC Sutherland,sutherland,NSW,2232,unclaimed,24815c5a-c566-4ae5-a0a6-551bff5183b1,Team Being Active,sutherland,NSW,2232,unclaimed
+LOCATION,100,gym-1787,HUSTLE STREET Training Moonah,moonah,TAS,7009,unclaimed,gym-1785,BurnTheory Moonah,moonah,TAS,7009,unclaimed
+LOCATION,100,gym-1582,Courage Health & Fitness,salisbury,SA,5108,unclaimed,gym-1583,42FSY,salisbury,SA,5108,unclaimed
+LOCATION,100,a9eed1ab-f3ee-4b1c-9ac7-e368c906129b,Competitive Edge Headquarters,invermay,TAS,7248,unclaimed,gym-1820,Hi-Per Centre,invermay,TAS,7248,unclaimed
+LOCATION,100,a9eed1ab-f3ee-4b1c-9ac7-e368c906129b,Competitive Edge Headquarters,invermay,TAS,7248,unclaimed,ce5ad35a-d495-4d94-b30e-fe651d8a7a60,HI-PEREVIVE,invermay,TAS,7248,unclaimed
+LOCATION,100,38e360fb-1972-4e8e-a78c-d5ab1951e0f4,Injustice Crossfit,rockingham,WA,6168,unclaimed,gym-084,T.J'S Gymsports,rockingham,WA,6168,owner-3
+LOCATION,100,gym-126,Goodlife Health Clubs Cannington,cannington,WA,6107,owner-3,gym-132,DPI Fitness-Cannington,cannington,WA,6107,owner-3
+LOCATION,100,ea7411c0-70ec-4f1a-99cc-804472b28aab,Hannah Rorrison Fitness,charlestown,NSW,2290,unclaimed,ee7cd9e6-cd21-4a7b-9f67-71bf95f78202,Peak Performance Coaching - Connaugh Walsh,charlestown,NSW,2290,unclaimed
+LOCATION,100,ea7411c0-70ec-4f1a-99cc-804472b28aab,Hannah Rorrison Fitness,charlestown,NSW,2290,unclaimed,gym-702,Urth Fitness Charlestown,charlestown,NSW,2290,unclaimed
+LOCATION,100,gym-1295,Goodlife Health Clubs Springwood,underwood,QLD,4119,unclaimed,gym-1305,Arena Fitness MMA Springwood,underwood,QLD,4119,unclaimed
+LOCATION,100,c3ac1312-03fd-4e3e-b91e-25c05d5abb00,EMF Jnr Miranda,miranda,NSW,2228,unclaimed,35f3afa3-8faf-4beb-b474-b02abb8f180b,EMF Performance and Recovery Centre Miranda,miranda,NSW,2228,unclaimed
+LOCATION,100,gym-858,South Yarra Strength,south yarra,VIC,3141,unclaimed,gym-845,Snap Fitness 24/7 South Yarra,south yarra,VIC,3141,unclaimed
+LOCATION,100,7f899130-41ff-4ed0-947c-16a46f584725,"Club Pilates, Nedlands",nedlands,WA,6009,unclaimed,f668bb48-dd8f-47fe-a1af-d5b82ea73e7f,Body Project,nedlands,WA,6009,unclaimed
+LOCATION,100,9451d173-4e8d-4b0f-aafc-43fa7d7bbc5e,Integrative Performance,bassendean,WA,6054,unclaimed,3e3a12fc-ce08-43a6-b7e0-1345a9551539,Fitness Next,bassendean,WA,6054,unclaimed
+LOCATION,100,6ddfeaf0-2c5c-47a9-84a3-757245490e29,Fitness Factory Health Clubs Prospect,prospect,SA,5082,unclaimed,4998985d-b2e9-41c6-8430-f6437442a000,TJ Fitness,prospect,SA,5082,unclaimed
+LOCATION,100,6eb047bc-3b78-4c81-8420-015abb203dcb,Roar Active Canning Vale,canning vale,WA,6155,unclaimed,f9bf4a60-d399-4fad-926b-d314fd26ec31,The Emerge Method,canning vale,WA,6155,unclaimed
+LOCATION,100,6eb047bc-3b78-4c81-8420-015abb203dcb,Roar Active Canning Vale,canning vale,WA,6155,unclaimed,75ec3c5b-b4aa-4a82-bf09-4721dc3afe7d,RFX Athletic,canning vale,WA,6155,unclaimed
+LOCATION,100,e0a2f85d-a44e-4b44-a0c4-78aeeb5bedb8,Just Gym Gear,huntingfield,TAS,7055,unclaimed,gym-1799,The Yard Gym Kingston,huntingfield,TAS,7055,unclaimed
+LOCATION,100,gym-331,Genesis Health and Fitness,parramatta,NSW,2150,unclaimed,gym-337,The Yard Gym Parramatta,north parramatta,NSW,2151,unclaimed
+LOCATION,100,ab3c27c6-eaf3-42bc-9097-bd4aa1675e7c,Summer Hill Gym,summer hill,NSW,2130,unclaimed,a64994cb-a60c-437b-aeb2-1eb9b102e22b,MESSA Training Lab,summer hill,NSW,2130,unclaimed
+LOCATION,100,gym-092,Roar MMA - Rockingham,rockingham,WA,6168,owner-3,gym-078,Bemore Fitness Rockingham,rockingham,WA,6168,owner-3
+LOCATION,100,f34d0f94-b4b3-4465-a1db-c6e855f3cb4d,Beyond Personal Training Prahran,prahran,VIC,3181,unclaimed,gym-871,Bennetts boxing gym,prahran,VIC,3181,unclaimed
+LOCATION,100,f34d0f94-b4b3-4465-a1db-c6e855f3cb4d,Beyond Personal Training Prahran,prahran,VIC,3181,unclaimed,gym-869,BFT Prahran,prahran,VIC,3181,unclaimed
+LOCATION,100,f34d0f94-b4b3-4465-a1db-c6e855f3cb4d,Beyond Personal Training Prahran,prahran,VIC,3181,unclaimed,gym-873,REVL Training Prahran,prahran,VIC,3181,unclaimed
+LOCATION,100,gym-341,Anytime Fitness,liverpool,NSW,2170,unclaimed,13253d76-eaaf-410a-aa14-d6609386ac51,KX Pilates Liverpool,liverpool,NSW,2170,unclaimed
+LOCATION,100,b794c793-a226-4992-a42b-26dab3ab85db,CONDITN. Training Sutherland,sutherland,NSW,2232,unclaimed,91c02ae3-bda5-4587-9ad9-bdb67e5870f6,Plus Fitness 24/7 Sutherland,sutherland,NSW,2232,unclaimed
+LOCATION,100,337502f6-e865-4626-a202-03a505354af4,Total Body Composition Upper Coomera,upper coomera,QLD,4209,unclaimed,dda154ec-2fe9-470b-868f-fdc21b5b2925,Elev8 Health & Performance,upper coomera,QLD,4209,unclaimed
+LOCATION,100,gym-1238,Yogabox Carindale,carindale,QLD,4152,unclaimed,gym-1229,Goodlife Health Clubs Carindale,carindale,QLD,4152,unclaimed
+LOCATION,100,b6736c74-36b1-4272-a446-10c3a8942d71,Balmain Boxing Club,balmain,NSW,2041,unclaimed,2355f9a7-e210-48be-b24b-1ac96791d48d,Gracie Balmain,balmain,NSW,2041,unclaimed
+LOCATION,100,b6736c74-36b1-4272-a446-10c3a8942d71,Balmain Boxing Club,balmain,NSW,2041,unclaimed,a002c103-db64-4032-b12c-1008a150e08e,PCYC Balmain,balmain,NSW,2041,unclaimed
+LOCATION,100,f23d4b7a-b49c-4d7b-8928-bc50dc41fb5d,Anytime Fitness Balmain,rozelle,NSW,2039,unclaimed,a0a39b71-fb77-4d0a-9236-d388a3df92bc,Balmain Sports Medicine,rozelle,NSW,2039,unclaimed
+LOCATION,100,gym-505,Transform U Fitness,ryde,NSW,2112,unclaimed,gym-492,Anytime Fitness Ryde,ryde,NSW,2112,unclaimed
+LOCATION,100,gym-223,Victoria Park Leisurelife Centre,victoria park,WA,6101,owner-3,61b0ddaa-a0fa-42d2-b45d-3ec654c39089,Agility Rehabilitation,east victoria park,WA,6101,unclaimed
+LOCATION,100,gym-512,FS8 Hurstville,hurstville,NSW,2220,unclaimed,gym-510,Club Lime Hurstville,hurstville,NSW,2220,unclaimed
+LOCATION,100,gym-1571,Anytime Fitness Glenelg,glenelg,SA,5045,unclaimed,904f052b-268e-4e4b-9510-592c1a5c37fb,Lilli May Fitness,glenelg,SA,5045,unclaimed
+LOCATION,100,gym-1639,Club Pilates,unley,SA,5061,unclaimed,38076d52-61a5-4a70-b40b-0283dc0b02ba,UBX Unley,unley,SA,5061,unclaimed
+LOCATION,100,650fa668-6923-4a16-9530-b26854e2803b,Leo Berry's Gym - Richmond Boxing Club,richmond,VIC,3121,unclaimed,gym-801,Richmond Recreation Centre,richmond,VIC,3121,unclaimed
+LOCATION,100,gym-054,iamFIT Cafe,joondalup,WA,6027,owner-3,gym-050,iamFIT Training,joondalup,WA,6027,owner-3
+LOCATION,100,f3a45bd7-8ecc-4efb-b0f7-391bc5ab465d,Pronto Pilates - Mooloolaba,mooloolaba,QLD,4557,unclaimed,b42b26fb-eeb0-42fd-9da5-e947b6b8357b,The Yard Gym Mooloolaba,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,eda92fc1-a8a7-4163-b4b3-70eb0350d50e,Synergy Mind Body Fitness,miranda,NSW,2228,unclaimed,add36643-b155-469a-8556-eadfdf70c8d0,Studio Montel,miranda,NSW,2228,unclaimed
+LOCATION,100,gym-1813,Method Plus Action,launceston,TAS,7250,unclaimed,gym-1817,Curves Launceston,launceston,TAS,7250,unclaimed
+LOCATION,100,gym-412,Bondi Gym,bondi junction,NSW,2022,unclaimed,gym-426,BFT Bondi Junction,bondi junction,NSW,2022,unclaimed
+LOCATION,100,f22dbacc-6aa8-41ab-bdc9-98e41014b3c9,Fuller Fittness,subiaco,WA,6008,unclaimed,gym-137,Lords Recreation Centre,subiaco,WA,6008,owner-3
+LOCATION,100,97e7dba8-9511-4581-bd55-9494cf6e44fb,Plus Fitness Terrigal,terrigal,NSW,2260,unclaimed,4245fa31-d25c-4524-a4e1-69716c1ea68f,DRIP GYM,terrigal,NSW,2260,unclaimed
+LOCATION,100,292575f7-047b-4f5b-b68e-936f112ce14a,Studio Pilates International Everton Park,everton park,QLD,4053,unclaimed,fa222ead-a283-4b3d-bd20-330e248c7cc9,BFT Everton Park,everton park,QLD,4053,unclaimed
+LOCATION,100,gym-1673,Elite Fitness,morphett vale,SA,5162,unclaimed,gym-1670,Southern Workout,morphett vale,SA,5162,unclaimed
+LOCATION,100,ee7cd9e6-cd21-4a7b-9f67-71bf95f78202,Peak Performance Coaching - Connaugh Walsh,charlestown,NSW,2290,unclaimed,gym-702,Urth Fitness Charlestown,charlestown,NSW,2290,unclaimed
+LOCATION,100,14069f07-ef42-4ccc-82bf-faa2c36c5b6f,Studio Pilates International Zetland,zetland,NSW,2017,unclaimed,1289147a-7d6e-4c31-9c9b-2610b5757ce4,Wellness Pilates Zetland,zetland,NSW,2017,unclaimed
+LOCATION,100,2cdfd867-3ad6-4dc0-a0ff-7702b8dcf847,Monash Aquatic & Recreation Centre,glen waverley,VIC,3150,unclaimed,08948ee0-720f-414d-b928-b602d9f012a5,Active Monash,glen waverley,VIC,3150,unclaimed
+LOCATION,100,68c78a12-6bbb-488c-83f4-01a976c5c237,HIIT Pilates Studio,waterloo,NSW,2017,unclaimed,8f4f7892-53a3-4cc5-8d06-65976291a4a5,BFT Waterloo,waterloo,NSW,2017,unclaimed
+LOCATION,100,a46f95e0-a9c5-4a76-8bea-426dca8eeac3,Club Active Burleigh,burleigh heads,QLD,4220,unclaimed,06b6dc16-f393-4c4a-99df-778b8def5fbb,Elevation Complete Health & Fitness Centre - Burleigh,burleigh heads,QLD,4220,unclaimed
+LOCATION,100,735f3e28-2fe2-437f-8aa4-4518692a210c,Fitbodz,burwood,NSW,2134,unclaimed,13b3c405-4242-4b69-ac6c-a2f37335e131,Kronos BJJ,burwood,NSW,2134,unclaimed
+LOCATION,100,gym-1625,iNform Fitness Solutions,norwood,SA,5067,unclaimed,eacc7956-9ade-4883-842a-744eb8737e49,Corrective Exercise Australia,norwood,SA,5067,unclaimed
+LOCATION,100,405b543a-a003-4e7e-86ae-0bccf7ae58c1,KX Pilates Dee Why,dee why,NSW,2099,unclaimed,gym-630,Joy in Movement (Dee Why),dee why,NSW,2099,unclaimed
+LOCATION,100,5aaee738-f3c1-4de3-adfe-09bdf142267a,FIT600,craigieburn,VIC,3064,unclaimed,ea8d5ca9-2924-480c-8bec-619b8ba18cb5,Anytime Fitness Craigieburn,craigieburn,VIC,3064,unclaimed
+LOCATION,100,gym-252,Grounded Fitness,balcatta,WA,6021,owner-3,gym-247,Prime Bodies,balcatta,WA,6021,owner-3
+LOCATION,100,gym-252,Grounded Fitness,balcatta,WA,6021,owner-3,gym-240,Anytime Fitness,balcatta,WA,6021,owner-3
+LOCATION,100,23208286-47a1-4bde-93b9-ee7a1ba48d14,Knox Gymnastics,wantirna south,VIC,3152,unclaimed,d73ea839-9024-49a2-8d71-8852e575ab40,Knox Regional Sports Park,wantirna south,VIC,3152,unclaimed
+LOCATION,100,0c89858d-6e58-4eb2-99ef-fa6081050603,Pivot Sports Performance Bundoora | Strength & Conditioning Gym And Sports Physiotherapy,bundoora,VIC,3083,unclaimed,937083e1-e4f2-401c-9d0a-ddbcca9150d1,BFT Watsonia,bundoora,VIC,3083,unclaimed
+LOCATION,100,gym-443,The Bunker Gym,surry hills,NSW,2010,unclaimed,gym-444,Anytime Fitness Surry Hills,surry hills,NSW,2010,unclaimed
+LOCATION,100,gym-235,Boxing for Fitness,victoria park,WA,6100,owner-3,9990dc13-49e3-42d2-b542-c5e7d061be8a,Sagitta CrossFit - East Victoria Park,east victoria park,WA,6101,unclaimed
+LOCATION,100,gym-1089,Beyond Base,geelong west,VIC,3218,unclaimed,f4ecc763-a87d-4208-a434-282b8d1b562d,The Fitness State,geelong west,VIC,3218,unclaimed
+LOCATION,100,b80929c6-99dd-4b36-8776-88d1bedf1d92,The PT Centre Kotara,kotara,NSW,2289,unclaimed,61b05ae6-fbdf-42fe-8f11-c40bc7d018e1,Club 94,kotara,NSW,2289,unclaimed
+LOCATION,100,337e444c-4781-48b6-b8ab-02f4114743b7,LA Fit Highgate,perth,WA,6000,unclaimed,gym-219,Chris Wilson Fitness Studio,northbridge,WA,6000,owner-3
+LOCATION,100,897b19a8-5c37-456b-8d0a-5fe1fb2681a7,Restart Exercise Physiology,norman park,QLD,4170,unclaimed,53353f4d-d966-4975-8f41-03697a614e2c,Bolt-On Health & Fitness,norman park,QLD,4170,unclaimed
+LOCATION,100,897b19a8-5c37-456b-8d0a-5fe1fb2681a7,Restart Exercise Physiology,norman park,QLD,4170,unclaimed,1e1ec197-7739-4cb3-aa6e-e4c19bcf329e,Unlocked Performance,norman park,QLD,4170,unclaimed
+LOCATION,100,gym-1853,Exercise classes - fitness workouts,burnie,TAS,7320,unclaimed,gym-1851,Personal Trainer Burnie - More Than Fitness -Shen Academy,burnie,TAS,7320,unclaimed
+LOCATION,100,882faf50-efe3-4d46-8f86-e31f70a4d85d,Valhalla MMA Geraldton,webberton,WA,6530,unclaimed,83fef6ad-9c06-4dc6-9e64-c967db6149bd,Cobra Fitness Centre Geraldton,webberton,WA,6530,unclaimed
+LOCATION,100,gym-1657,Westcare Health and Fitness,port adelaide,SA,5015,unclaimed,e7cc7852-1520-4690-ae8d-2da46af3be21,Gym,port adelaide,SA,5015,unclaimed
+LOCATION,100,gym-1313,Arena Fitness MMA,browns plains,QLD,4118,unclaimed,gym-1311,Goodlife Health Clubs Browns Plains,browns plains,QLD,4118,unclaimed
+LOCATION,100,2355f9a7-e210-48be-b24b-1ac96791d48d,Gracie Balmain,balmain,NSW,2041,unclaimed,a002c103-db64-4032-b12c-1008a150e08e,PCYC Balmain,balmain,NSW,2041,unclaimed
+LOCATION,100,ead482d2-fd14-4d18-8aa6-296190fb2948,Body Transformation Specialists (BTS),bundoora,VIC,3083,unclaimed,6c0fabf1-0ba1-4724-b216-e1897aeb47a2,Thrive Fitness Club,bundoora,VIC,3083,unclaimed
+LOCATION,100,c4432f56-b018-47cd-aa4d-a278a8c2adf0,Fit Tone Femme,heidelberg,VIC,3084,unclaimed,e4e2caf6-f5a6-44a5-9f61-c3761b1ac2cb,Strong Pilates Heidelberg,heidelberg,VIC,3084,unclaimed
+LOCATION,100,1f202399-45c4-49b4-a0c5-9bd2154e4a04,Barbell Palace,brendale,QLD,4500,unclaimed,gym-1283,XO Fitness Centre,brendale,QLD,4500,unclaimed
+LOCATION,100,bf274498-096d-4bb5-8dde-2bb916de5d3f,Strength Senpai,ashfield,NSW,2131,unclaimed,337a3d2e-ad6c-401a-a6e3-c41f527f8b4b,Alpha Athletes,ashfield,NSW,2131,unclaimed
+LOCATION,100,gym-634,Ability Fit Co,dee why,NSW,2099,unclaimed,gym-625,BUMP Dee Why,dee why,NSW,2099,unclaimed
+LOCATION,100,gym-833,The Strong Zone,collingwood,VIC,3066,unclaimed,gym-836,Saint Haven Collingwood,collingwood,VIC,3066,unclaimed
+LOCATION,100,47239db7-3d74-4742-9ec0-c96e22dd6081,BFT Forest Lake,forest lake,QLD,4078,unclaimed,d6c9e130-df53-40a3-bbd7-8d1a06979906,Snap Fitness 24/7 Forest Lake,forest lake,QLD,4078,unclaimed
+LOCATION,100,47239db7-3d74-4742-9ec0-c96e22dd6081,BFT Forest Lake,forest lake,QLD,4078,unclaimed,f2874db5-22ec-4881-9754-1b3309acf5a3,CF FIT,forest lake,QLD,4078,unclaimed
+LOCATION,100,f8fd8714-fcd8-48e3-b080-3460aef33df0,Loco HQ 2.0,bundall,QLD,4217,unclaimed,50e6e82a-6c92-48b1-9cfb-d7e0b4684214,C3 Training Bundall,bundall,QLD,4217,unclaimed
+LOCATION,100,243e56cb-3276-458a-b428-5e80968036f2,1 Million Strong Mount Louisa,mount louisa,QLD,4814,unclaimed,ea3690f4-060c-4c84-a86f-b38162a2ed22,Body Flow Fitness,mount louisa,QLD,4814,unclaimed
+LOCATION,100,gym-741,Vision Personal Training Shellharbour,shellharbour city centre,NSW,2529,unclaimed,0b0d49ee-aa75-419d-af35-4fed9ea1959c,inLIFE Wellness Shellharbour,shellharbour city centre,NSW,2529,unclaimed
+LOCATION,100,gym-278,Union Ellenbrook - CrossFit & HYROX,ellenbrook,WA,6069,owner-3,gym-283,Infused CrossFit,ellenbrook,WA,6069,owner-3
+LOCATION,100,c53d286e-ff81-4129-b1eb-5c2635c64790,Plus Fitness 24/7 Waterloo,waterloo,NSW,2017,unclaimed,ffc2bb95-356a-4868-adcf-7dbb39bcf306,Kaizen,waterloo,NSW,2017,unclaimed
+LOCATION,100,gym-1532,Think Fitness,cairns north,QLD,4870,unclaimed,66c2fe6d-5914-4137-87ac-2f9ab542a26a,Total Fitness Management,cairns north,QLD,4870,unclaimed
+LOCATION,100,gym-808,UBX Richmond,richmond,VIC,3121,unclaimed,gym-804,The Bones Fitness,richmond,VIC,3121,unclaimed
+LOCATION,100,53353f4d-d966-4975-8f41-03697a614e2c,Bolt-On Health & Fitness,norman park,QLD,4170,unclaimed,1e1ec197-7739-4cb3-aa6e-e4c19bcf329e,Unlocked Performance,norman park,QLD,4170,unclaimed
+LOCATION,100,6aef43c6-c46d-4228-a33d-ea6301e97227,The Zoo Health & Fitness,hermit park,QLD,4812,unclaimed,82b0aac5-c056-4e74-bca3-95e0fbe3c6fd,Optibods - for Women,hermit park,QLD,4812,unclaimed
+LOCATION,100,13b97156-6603-4b04-9cf2-33cc0a7626cf,Muscle & Fitness,kirwan,QLD,4817,unclaimed,9fa37007-0310-4469-8f95-d5a22dcf07af,Rhonda's Fitness for Ladies,kirwan,QLD,4817,unclaimed
+LOCATION,100,gym-483,Freeman's Fitness Training Studio - Hornsby,hornsby,NSW,2077,unclaimed,gym-486,Eternally Fit,hornsby,NSW,2077,unclaimed
+LOCATION,100,78bf3ef7-3559-4a07-bd3a-268956f33046,Athletica Strength & Conditioning,karrinyup,WA,6018,unclaimed,gym-268,Goodlife Health Clubs Karrinyup,karrinyup,WA,6018,owner-3
+LOCATION,100,f68872ca-0f4e-4e20-bfc3-f5426110e061,Team8 Physio,dee why,NSW,2099,unclaimed,f195623f-942c-43b3-a47e-e27362ee6a0e,Team8 Active,dee why,NSW,2099,unclaimed
+LOCATION,100,gym-364,Limitless Gym,penrith,NSW,2750,unclaimed,gym-365,Plus Fitness,penrith,NSW,2750,unclaimed
+LOCATION,100,88a17c05-e75a-4223-b04c-6f54c2f65c39,Noarlunga Recreation Centre,noarlunga centre,SA,5168,unclaimed,6f538c80-868d-4b17-89e2-f6ae9f1d76f1,Jones Boxing Gym,noarlunga centre,SA,5168,unclaimed
+LOCATION,100,gym-1364,Precision Fitness 24/7,tingalpa,QLD,4173,unclaimed,d8c4136d-e76c-4f92-a4b1-f3b9663fc0b0,Kai Woods Personal Training,tingalpa,QLD,4173,unclaimed
+LOCATION,100,gym-1364,Precision Fitness 24/7,tingalpa,QLD,4173,unclaimed,831dc56b-ff35-4b02-80c1-459a7070f334,Built By Brandon,tingalpa,QLD,4173,unclaimed
+LOCATION,100,gym-839,Beyond Best Personal Training,collingwood,VIC,3066,unclaimed,gym-835,REVL Training Collingwood,collingwood,VIC,3066,unclaimed
+LOCATION,100,8ec3a09a-1174-4218-aebb-bbd51a4f895a,Pursuit Muay Thai Lilydale - Home of The Eagles,lilydale,VIC,3140,unclaimed,55bd7fbd-0778-46b5-9929-0f5e1986c04b,Coaching Zone Lilydale,lilydale,VIC,3140,unclaimed
+LOCATION,100,87a0940c-f765-4cd8-a588-ede2e08fd3fd,Jetts Mooloolaba,mooloolaba,QLD,4557,unclaimed,8478db6e-119f-44cc-bbfc-4829baf27ccf,Bulletproof Training Method,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,87a0940c-f765-4cd8-a588-ede2e08fd3fd,Jetts Mooloolaba,mooloolaba,QLD,4557,unclaimed,f699ad62-1bf3-4291-a1ef-1e526c65fc75,Radiant Strength - Rachel,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,gym-1217,F45 Training Chermside,chermside,QLD,4032,unclaimed,gym-1218,FS8 Chermside,chermside,QLD,4032,unclaimed
+LOCATION,100,gym-1377,Your Fit Nutrition & Fitness Professionals,nundah,QLD,4012,unclaimed,gym-1374,ATÓRA Training Nundah,nundah,QLD,4012,unclaimed
+LOCATION,100,d7b67e8b-bf23-437c-966c-29c8dd979a3c,Xpeed Fitness,pooraka,SA,5095,unclaimed,a3636181-c9d0-4aec-b130-0105bceb3891,The Gym & Treadmill Surgeon,pooraka,SA,5095,unclaimed
+LOCATION,100,d7b67e8b-bf23-437c-966c-29c8dd979a3c,Xpeed Fitness,pooraka,SA,5095,unclaimed,9492b59f-f260-4ba6-801a-d164529d4b61,Fitness Warehouse Commercial,pooraka,SA,5095,unclaimed
+LOCATION,100,gym-247,Prime Bodies,balcatta,WA,6021,owner-3,gym-240,Anytime Fitness,balcatta,WA,6021,owner-3
+LOCATION,100,gym-1820,Hi-Per Centre,invermay,TAS,7248,unclaimed,ce5ad35a-d495-4d94-b30e-fe651d8a7a60,HI-PEREVIVE,invermay,TAS,7248,unclaimed
+LOCATION,100,051b3a28-6b5f-4c1c-8b70-dd5db56e302f,Kieser Northcote,northcote,VIC,3070,unclaimed,gym-998,Revive Thrive Northcote,northcote,VIC,3070,unclaimed
+LOCATION,100,e142a50a-b355-4c71-b478-667a37635b5e,"Crew Fitness, bootcamp classes",lindisfarne,TAS,7015,unclaimed,01e37f7d-d478-48cd-b99d-3a98f0ff8e1e,STRONGWOMEN,lindisfarne,TAS,7015,unclaimed
+LOCATION,100,gym-295,CrossFit Bunbury,bunbury,WA,6230,owner-3,gym-303,CM Strength Studio,bunbury,WA,6230,owner-3
+LOCATION,100,gym-871,Bennetts boxing gym,prahran,VIC,3181,unclaimed,gym-869,BFT Prahran,prahran,VIC,3181,unclaimed
+LOCATION,100,0325ae7e-e8e4-4ae3-965c-448a648155d2,BlueFit Swimming - Melton,melton,VIC,3337,unclaimed,982fee3d-6314-4fa0-9d09-c97aa2ff9849,Melton Waves,melton,VIC,3337,unclaimed
+LOCATION,100,0325ae7e-e8e4-4ae3-965c-448a648155d2,BlueFit Swimming - Melton,melton,VIC,3337,unclaimed,01b9c7f1-3c29-4b68-84cc-87b3f3bdc36d,Healthstin Melton,melton,VIC,3337,unclaimed
+LOCATION,100,5f94de87-6e43-45da-96b0-e2258696b36d,FIT College - Fortitude Valley Campus,fortitude valley,QLD,4006,unclaimed,gym-1155,PCYC Fortitude Valley,fortitude valley,QLD,4006,unclaimed
+LOCATION,100,bf3f22d1-5c07-45a2-90b7-948a73c8701e,Body By Hewida Leichhardt,leichhardt,NSW,2040,unclaimed,5364b733-2d34-4a95-a693-83bf8782b78d,Bodyline Fitness,leichhardt,NSW,2040,unclaimed
+LOCATION,100,d8c4136d-e76c-4f92-a4b1-f3b9663fc0b0,Kai Woods Personal Training,tingalpa,QLD,4173,unclaimed,831dc56b-ff35-4b02-80c1-459a7070f334,Built By Brandon,tingalpa,QLD,4173,unclaimed
+LOCATION,100,169ccca0-3099-4e8d-b4a6-8a5908a5538f,KX Pilates Kirwan,thuringowa central,QLD,4817,unclaimed,6cb02eec-ca1b-4944-8355-c38a6093c5bd,Anytime Fitness Kirwan,thuringowa central,QLD,4817,unclaimed
+LOCATION,100,gym-233,BOLT Health and Fitness,victoria park,WA,6100,owner-3,gym-230,20FIT Victoria Park,victoria park,WA,6100,owner-3
+LOCATION,100,gym-233,BOLT Health and Fitness,victoria park,WA,6100,owner-3,gym-227,Females over 45 Fitness,victoria park,WA,6100,owner-3
+LOCATION,100,5670922e-b8f4-477f-a0e2-5541e3369024,Reformer Republic Pilates Bendigo,golden square,VIC,3550,unclaimed,gym-1112,FIT REPUBLIC,golden square,VIC,3550,unclaimed
+LOCATION,100,gym-1795,Evolve Personal Training & Fitness,moonah,TAS,7009,unclaimed,2d5b737f-a284-407f-b1ef-065a20160f4c,National Fitness Southern Recreation Association,moonah,TAS,7009,unclaimed
+LOCATION,100,8478db6e-119f-44cc-bbfc-4829baf27ccf,Bulletproof Training Method,mooloolaba,QLD,4557,unclaimed,f699ad62-1bf3-4291-a1ef-1e526c65fc75,Radiant Strength - Rachel,mooloolaba,QLD,4557,unclaimed
+LOCATION,100,gym-451,LagreeFIT,surry hills,NSW,2010,unclaimed,eff20e87-ef26-4adc-9fbf-2666d64e6d9c,Rare Studios AU (Surry),surry hills,NSW,2010,unclaimed
+LOCATION,100,24cae70d-8554-48fb-9493-2a496454662c,AlphaFit Supplements,molendinar,QLD,4214,unclaimed,0419ec2b-4874-474a-9060-e93a91f9323e,AlphaFit Equipment & Flooring,molendinar,QLD,4214,unclaimed
+LOCATION,100,gym-294,The Rehab Gym,bunbury,WA,6230,owner-3,735cc1f5-d82a-4b7a-a4cd-5f6f3345bab3,Pro Fitness,bunbury,WA,6230,unclaimed
+LOCATION,100,ef98e6b2-9773-450f-822c-71639aaab13e,Shindo - Studio B MMA,molendinar,QLD,4214,unclaimed,c2055f98-22bc-4f7b-9d60-49749df4257f,SHINDO NEW BREED MMA,molendinar,QLD,4214,unclaimed
+LOCATION,100,gym-597,Combine Air The Shire,woolooware,NSW,2230,unclaimed,gym-590,UFC GYM Woolooware,woolooware,NSW,2230,unclaimed
+LOCATION,100,d4977a99-20bd-4cf5-96cd-859c619ba7d5,Jareth Young Fitness,reservoir,VIC,3073,unclaimed,c9c00be4-c81f-479e-a698-29a3bb6a57a1,Zap Fitness 24/7 Reservoir,reservoir,VIC,3073,unclaimed
+LOCATION,100,bcc58cf5-d918-45c8-a9d2-f1b70531f220,Flow Well Studio,hornsby,NSW,2077,unclaimed,gym-474,Anytime Fitness Hornsby,hornsby,NSW,2077,unclaimed
+LOCATION,100,f9bf4a60-d399-4fad-926b-d314fd26ec31,The Emerge Method,canning vale,WA,6155,unclaimed,75ec3c5b-b4aa-4a82-bf09-4721dc3afe7d,RFX Athletic,canning vale,WA,6155,unclaimed
+LOCATION,100,gym-658,Strength Republic,hamilton north,NSW,2292,unclaimed,053c3095-f60f-44f5-8b4c-641b231adaf3,Hunter Fitness,hamilton north,NSW,2292,unclaimed
+LOCATION,100,7e69f2d7-5588-4f85-a93d-d2e5b763a4fb,Next Level Performance S&C,bayswater,WA,6053,unclaimed,9f264812-0512-4bec-92e0-0efc9a98daac,Studio Seven Recovery,bayswater,WA,6053,unclaimed
+LOCATION,100,f118d6ef-07bb-40c8-8e03-26184990c558,Acacia Ridge Leisure Centre,acacia ridge,QLD,4110,unclaimed,b9235ddb-063d-4c80-aeaf-ab94174a3189,YMCA Gymnastics Acacia Ridge,acacia ridge,QLD,4110,unclaimed
+LOCATION,100,e2a781cc-2e9f-42a8-8427-1470c2f46ce7,F45 Training Forest Lake,forest lake,QLD,4078,unclaimed,0b22c925-a9bd-4407-8b66-bcff142f1baf,Studio Pilates International Forest Lake,forest lake,QLD,4078,unclaimed
+LOCATION,100,982fee3d-6314-4fa0-9d09-c97aa2ff9849,Melton Waves,melton,VIC,3337,unclaimed,01b9c7f1-3c29-4b68-84cc-87b3f3bdc36d,Healthstin Melton,melton,VIC,3337,unclaimed
+LOCATION,100,5592ae55-2569-4ec6-a1ed-1e859024ab1f,Challenge Martial Arts & Fitness Oakleigh,oakleigh,VIC,3166,unclaimed,51a7bba8-2c07-410c-a6a0-38df34d3fb46,Challenge Fitness 24/7 Oakleigh,oakleigh,VIC,3166,unclaimed
+LOCATION,100,35a315b7-0b13-4852-9c60-52a8595fbdf6,Flip Out Box Hill,box hill south,VIC,3128,unclaimed,gym-969,Goodlife Health Clubs Box Hill,box hill south,VIC,3128,unclaimed
+LOCATION,100,gym-542,Fitness Hero - MegaStore,bankstown,NSW,2200,unclaimed,gym-540,HIIT Nation,bankstown,NSW,2200,unclaimed
+LOCATION,100,ee0c556e-6376-40f2-be3f-9d81e0f6499b,Virgin Active Zetland Gym,zetland,NSW,2017,unclaimed,891d6a7f-81f3-4680-a699-830c07d0d7cf,Elite Supplements Zetland,zetland,NSW,2017,unclaimed
+LOCATION,100,645bdd41-6f78-49be-829c-3b33f7cea357,Perform Well,toowong,QLD,4066,unclaimed,gym-1199,Active Matters Exercise Physiology,toowong,QLD,4066,unclaimed
+LOCATION,100,cf2922b2-bbe2-4e1c-bfb7-9ce3919c24ca,Fight Club Jiu-Jitsu Townsville,kirwan,QLD,4817,unclaimed,9e539ab9-ee73-4443-88e6-d3648a528282,F45 Training Thuringowa,kirwan,QLD,4817,unclaimed
+LOCATION,100,cfa8a350-6f12-475d-8ce6-a9e75d1622c1,Fitstop Everton Park,everton park,QLD,4053,unclaimed,644bc2bf-f771-441c-8125-5d91dd8cb1a6,Snap Fitness 24/7 Everton Park,everton park,QLD,4053,unclaimed
+LOCATION,100,a3636181-c9d0-4aec-b130-0105bceb3891,The Gym & Treadmill Surgeon,pooraka,SA,5095,unclaimed,9492b59f-f260-4ba6-801a-d164529d4b61,Fitness Warehouse Commercial,pooraka,SA,5095,unclaimed
+LOCATION,100,219b1857-5056-4fe6-a04d-e118e1eb15eb,Project Health and Fitness,hawthorne,QLD,4171,unclaimed,fce3064c-48fa-4884-8423-5fb5eb7403d7,My First Gym Hawthorne,hawthorne,QLD,4171,unclaimed
+LOCATION,100,52e74c64-578b-4d18-bd9b-4bd6796057e9,KX Pilates Balmain,balmain,NSW,2041,unclaimed,c42086a3-b75a-4896-bcf1-188202c0dc57,New Level Fitness Training,balmain,NSW,2041,unclaimed
+LOCATION,100,gym-1502,World Fitness Noosa,noosa heads,QLD,4567,unclaimed,gym-1497,Franks Gym,noosa heads,QLD,4567,unclaimed
+LOCATION,100,2bf6d555-c23d-48d8-bc92-0b1d1f74c5b1,Max Performance Fitness,croydon,VIC,3136,unclaimed,52efcefa-e4fa-452e-82b1-c8f9aca344c3,Precision MMA,croydon,VIC,3136,unclaimed
+LOCATION,100,5f687827-ff8b-437c-8697-ff9ab663dfcf,MVMNT Training,charlestown,NSW,8042,unclaimed,ea2e2786-048b-4b52-961a-f5901c8cd368,Charlestown Square,charlestown,NSW,2290,unclaimed
+LOCATION,100,e113fb92-33a5-413b-99a9-da550f9a0bc0,STRONG Pilates Miranda,miranda,NSW,2228,unclaimed,8d13d448-77f4-497e-8034-9ddbba5df1d2,BFT Miranda,miranda,NSW,2228,unclaimed
+LOCATION,100,gym-185,Sista Fitness 24/7 Morley,morley,WA,6062,owner-3,gym-177,Genesis Health & Fitness Morley,morley,WA,6062,owner-3
+LOCATION,100,gym-1814,LAfit - Launceston Leisure & Aquatic Centre,launceston,TAS,7250,unclaimed,gym-1826,Launceston Leisure & Aquatic Centre,launceston,TAS,7250,unclaimed
+LOCATION,100,4e4302e5-5772-4d4b-8d5f-89525e74f0ee,Peek Fitness Glebe,glebe,NSW,2037,unclaimed,765f29d9-5be7-419d-81d8-ced3fe88734c,Plus Fitness 24/7 Glebe,glebe,NSW,2037,unclaimed
+LOCATION,100,7f1d6b2c-ef29-4410-abce-21ca9056b35d,Reset Movement,ellenbrook,WA,6069,unclaimed,gym-276,Ignite30 Ellenbrook,ellenbrook,WA,6069,owner-3
+LOCATION,100,gym-467,"ACU Active, North Sydney",north sydney,NSW,2060,unclaimed,64250c30-e791-4742-b5cd-dcc6366f1a2f,Combine Air North Sydney,north sydney,NSW,2060,unclaimed
+LOCATION,100,b6115f47-a7a3-48d7-90f7-397553c827e0,Anytime Fitness Rockdale,rockdale,NSW,2216,unclaimed,5e101eca-131d-435f-9e7c-345c7eaf2984,Tracey Lunam Fitness,rockdale,NSW,2216,unclaimed
+LOCATION,100,0bb282ed-55dd-41e0-b046-4ea8f278d118,Robinson Park outdoor public gym,tingalpa,QLD,4173,unclaimed,448d2463-1e29-4616-aabb-4b67a266bac9,Robinson Park,tingalpa,QLD,4173,unclaimed
+LOCATION,100,612c93fa-d2fb-447a-b96f-95556f9a4879,Olympus Training Centre,strathfield,NSW,2135,unclaimed,b3cf7657-1d7c-4d51-a54b-0b0971f3b721,Deepwater Performance,strathfield,NSW,2135,unclaimed
+LOCATION,100,612c93fa-d2fb-447a-b96f-95556f9a4879,Olympus Training Centre,strathfield,NSW,2135,unclaimed,e2c05424-8066-41b5-8833-d87a8dd89c50,Alpha Team Fitness,strathfield,NSW,2135,unclaimed
+LOCATION,100,c7c8de6b-b04f-4c59-94a3-26a6594355e9,Strive Wellness Marrickville,marrickville,NSW,2204,unclaimed,0fa3f878-0bd1-406d-b09a-0f0945945107,Strive Fitness Marrickville,marrickville,NSW,2204,unclaimed
+LOCATION,100,d6c9e130-df53-40a3-bbd7-8d1a06979906,Snap Fitness 24/7 Forest Lake,forest lake,QLD,4078,unclaimed,f2874db5-22ec-4881-9754-1b3309acf5a3,CF FIT,forest lake,QLD,4078,unclaimed
+LOCATION,100,185bb72c-26dc-4b26-8047-4593560ad712,Think FIT with Deb,helensvale,QLD,4212,unclaimed,e82a6ce0-e3b1-4a54-b849-c2d71ddd31a8,Helensvale Community Centre,helensvale,QLD,4212,unclaimed
+LOCATION,100,066b8fa9-394e-4d04-b970-f40525be1938,AWAKE GYM + WELLNESS,preston,VIC,3072,unclaimed,c4dc6866-2aa8-4b47-834f-232005db6092,The Wellness Room Preston,preston,VIC,3072,unclaimed
+LOCATION,100,0e4e385d-37a0-44ce-a620-584ddd50d852,Bodyworx Gym 24/7,heidelberg west,VIC,3081,unclaimed,427345f8-771a-4cad-a58b-13fca06cff41,Cera MMA,heidelberg,VIC,3074,unclaimed
+LOCATION,100,gym-962,Prime Fitness,ringwood,VIC,3134,unclaimed,gym-950,Fitness Room - Group Training and 24/7 Gym,ringwood,VIC,3134,unclaimed
+LOCATION,100,b3cf7657-1d7c-4d51-a54b-0b0971f3b721,Deepwater Performance,strathfield,NSW,2135,unclaimed,e2c05424-8066-41b5-8833-d87a8dd89c50,Alpha Team Fitness,strathfield,NSW,2135,unclaimed
+LOCATION,100,fb1342c1-552e-4695-a561-c8f241106e23,Holistic Pro Health Performance Studio,coolangatta,QLD,4225,unclaimed,8d498619-3a24-47b9-8747-368a8e9e2a43,Eleven Eleven Boxing,coolangatta,QLD,4225,unclaimed
+LOCATION,100,gym-230,20FIT Victoria Park,victoria park,WA,6100,owner-3,gym-227,Females over 45 Fitness,victoria park,WA,6100,owner-3
+LOCATION,100,gym-231,Hybrid House,victoria park,WA,6100,owner-3,gym-221,XS Fitness Vic Park Gym,victoria park,WA,6100,owner-3
+LOCATION,100,7f78bab8-2a6e-4f1f-869e-642af214f9e1,Vision Personal Training Balmain,balmain,NSW,2041,unclaimed,0211e306-cf88-4c6b-a35a-d7a39885ca02,Wellness on Darling,balmain,NSW,2041,unclaimed
+LOCATION,100,f8a23210-e10a-418d-b6f9-c5c6fb383cd6,CorePlus Prahran,prahran,VIC,3181,unclaimed,gym-873,REVL Training Prahran,prahran,VIC,3181,unclaimed
+LOCATION,100,c856ffc1-af7f-418d-a1f5-ae5c4ce38b73,J body balance The Glen,glen waverley,VIC,3150,unclaimed,219e57e4-16f4-460b-af1e-b344f66cba15,Integrated Health - Glen Waverley,glen waverley,VIC,3150,unclaimed
+LOCATION,100,43fcc539-0677-4da6-82e6-c198b3f62dd0,"Courage Training Centre (MMA, BJJ, Muay Thai and Boxing)",aitkenvale,QLD,4814,unclaimed,6f808a1e-8fed-4712-896e-a6f14729d194,Enhanced Health and Fitness,aitkenvale,QLD,4814,unclaimed
+LOCATION,100,gym-1471,S30 Training Maroochydore,maroochydore,QLD,4555,unclaimed,gym-1466,Jetts Maroochydore,maroochydore,QLD,4558,unclaimed
+LOCATION,100,894bd408-d11e-4fdf-9883-f110474203f9,PCYC St George,rockdale,NSW,2216,unclaimed,16a7ae3e-4f90-4ddd-b41b-7b92a1d2a8c4,Tszyu Fight Club,rockdale,NSW,2216,unclaimed
+FUZZY,100,gym-117,Anytime Fitness,stirling,WA,6021,owner-3,gym-240,Anytime Fitness,balcatta,WA,6021,owner-3
+FUZZY,97,6ab576cc-6f18-4a08-baec-d258ba6c7cda,Matthews Hill Reserve Outdoor gym 3,sunshine,VIC,3020,unclaimed,1baefd07-ceec-4adb-92a5-d18fde874709,Matthews hill reserve outdoor gym 1,sunshine,VIC,3020,unclaimed
+FUZZY,93,04066c27-2a01-4e35-bc7a-343a05ba320e,Anytime Fitness Fairfield West,fairfield west,NSW,2165,unclaimed,9a0cd539-7a82-4bd0-a43f-fe2b20a22766,Anytime Fitness Fairfield East,fairfield east,NSW,2165,unclaimed
+FUZZY,92,a46af742-cb08-4070-b4d0-e5a0250b0647,Snap Fitness 24/7 Craigieburn,craigieburn,VIC,3064,unclaimed,4524de66-5d2c-4db6-8e69-5c6e92a350fd,Zap Fitness 24/7 Craigieburn,craigieburn,VIC,3064,unclaimed
+FUZZY,89,gym-315,Fitness First Park St Platinum,sydney,NSW,2000,unclaimed,gym-320,Fitness First Market St Platinum,sydney,NSW,2000,unclaimed
+FUZZY,89,18b1ac0c-efad-446c-9750-94ce518292c3,Devonport Recreation & Function Centre,devonport,TAS,7310,unclaimed,546143a0-9043-4949-9d0d-b480c844b5a8,East Devonport Recreation & Function Centre,east devonport,TAS,7310,unclaimed
+FUZZY,88,gym-315,Fitness First Park St Platinum,sydney,NSW,2000,unclaimed,gym-319,Fitness First Pitt St Platinum,sydney,NSW,2000,unclaimed
+FUZZY,88,e23790df-0573-4779-9762-fd176aa019ee,Orbit Fitness Equipment - Osborne Park,osborne park,WA,6017,unclaimed,gym-174,Elite Fitness Equipment Osborne Park,osborne park,WA,6017,owner-3
+FUZZY,88,gym-174,Elite Fitness Equipment Osborne Park,osborne park,WA,6017,owner-3,gym-170,Flex Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3
+FUZZY,87,gym-1756,Zap Fitness 24/7 Hobart City,hobart,TAS,7000,unclaimed,gym-1760,Zap Fitness 24/7 Hobart CBD,hobart,TAS,7000,unclaimed
+FUZZY,87,gym-572,Anytime Fitness Campbelltown West,campbelltown,NSW,2560,unclaimed,gym-566,Anytime Fitness Campbelltown,campbelltown,NSW,2560,unclaimed
+FUZZY,86,gym-929,Core24 Frankston Health Fitness Gym,frankston,VIC,3199,unclaimed,gym-935,Core24 Frankston South Health & Fitness Gym,frankston south,VIC,3199,unclaimed
+FUZZY,86,gym-074,Revo Fitness - Rockingham,rockingham,WA,6168,owner-3,gym-083,RARE Fitness Rockingham,rockingham,WA,6168,owner-3
+FUZZY,86,943283a3-b480-4f0b-b1fc-d36e83791522,Anytime Fitness Cabramatta,cabramatta,NSW,2166,unclaimed,66ce94c6-e1f5-41a7-9523-c62b461f93f4,Anytime Fitness Cabramatta City,cabramatta,NSW,2166,unclaimed
+FUZZY,85,04066c27-2a01-4e35-bc7a-343a05ba320e,Anytime Fitness Fairfield West,fairfield west,NSW,2165,unclaimed,5e90f223-7c18-4ed9-a8c0-77c97eba337c,Anytime Fitness Fairfield,fairfield,NSW,2165,unclaimed
+FUZZY,85,5e90f223-7c18-4ed9-a8c0-77c97eba337c,Anytime Fitness Fairfield,fairfield,NSW,2165,unclaimed,9a0cd539-7a82-4bd0-a43f-fe2b20a22766,Anytime Fitness Fairfield East,fairfield east,NSW,2165,unclaimed
+FUZZY,85,gym-400,Anytime Fitness Chatswood East,chatswood,NSW,2067,unclaimed,gym-401,Anytime Fitness Chatswood,chatswood,NSW,2067,unclaimed
+FUZZY,85,gym-315,Fitness First Park St Platinum,sydney,NSW,2000,unclaimed,gym-310,Fitness First Bond St Platinum,sydney,NSW,2000,unclaimed
+FUZZY,85,gym-319,Fitness First Pitt St Platinum,sydney,NSW,2000,unclaimed,gym-310,Fitness First Bond St Platinum,sydney,NSW,2000,unclaimed
+FUZZY,85,gym-571,Snap Fitness 24/7 Campbelltown,campbelltown,NSW,2560,unclaimed,gym-564,Plus Fitness 24/7 Campbelltown,campbelltown,NSW,2560,unclaimed
+FUZZY,84,e23790df-0573-4779-9762-fd176aa019ee,Orbit Fitness Equipment - Osborne Park,osborne park,WA,6017,unclaimed,gym-170,Flex Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3
+FUZZY,84,644bc2bf-f771-441c-8125-5d91dd8cb1a6,Snap Fitness 24/7 Everton Park,everton park,QLD,4053,unclaimed,5728e997-5bce-4a22-baab-b87ae0939bd3,Plus Fitness 24/7 Everton Park,everton park,QLD,4053,unclaimed
+FUZZY,83,gym-550,Snap Fitness 24/7 Castle Hill,castle hill,NSW,2154,unclaimed,gym-549,Plus Fitness 24/7 Castle Hill,castle hill,NSW,2154,unclaimed
+FUZZY,83,85776482-6d04-42c3-aa56-ef54a93733aa,BFT Hoppers Crossing,hoppers crossing,VIC,3029,unclaimed,044939e7-c31b-4089-8807-5aa564481830,UBX Hoppers Crossing,hoppers crossing,VIC,3029,unclaimed
+FUZZY,83,06efa87f-d3d8-4f97-997d-f8feee30dc3d,Snap Fitness 24/7 Craigieburn North,craigieburn,VIC,3064,unclaimed,a46af742-cb08-4070-b4d0-e5a0250b0647,Snap Fitness 24/7 Craigieburn,craigieburn,VIC,3064,unclaimed
+FUZZY,83,40eb884a-0c99-4ce1-9158-c450368c13d2,Orbit Fitness Equipment - Mandurah,halls head,WA,6210,unclaimed,gym-108,Flex Fitness Equipment Mandurah,mandurah,WA,6210,owner-3
+FUZZY,83,9442f8cb-7c9e-4643-8b7b-b744c34cffeb,KX Pilates Glen Waverley,glen waverley,VIC,3150,unclaimed,7f9d99dd-9a83-4b95-a228-869723d5f64f,Club Pilates Glen Waverley,glen waverley,VIC,3150,unclaimed
+FUZZY,83,gym-074,Revo Fitness - Rockingham,rockingham,WA,6168,owner-3,gym-078,Bemore Fitness Rockingham,rockingham,WA,6168,owner-3
+FUZZY,83,gym-078,Bemore Fitness Rockingham,rockingham,WA,6168,owner-3,gym-083,RARE Fitness Rockingham,rockingham,WA,6168,owner-3
+FUZZY,83,gym-887,Plus Fitness 24/7 Footscray,footscray,VIC,3011,unclaimed,gym-889,Snap Fitness 24/7 Footscray,footscray,VIC,3011,unclaimed
+FUZZY,83,gym-383,Plus Fitness 24/7 Blacktown,blacktown,NSW,2148,unclaimed,gym-381,Snap Fitness 24/7 Blacktown,blacktown,NSW,2148,unclaimed
+FUZZY,83,gym-344,Plus Fitness 24/7 Liverpool,liverpool,NSW,2170,unclaimed,gym-343,Snap Fitness 24/7 Liverpool,liverpool,NSW,2170,unclaimed
+FUZZY,82,gym-1730,24fit Mount Gambier,mount gambier,SA,5290,unclaimed,gym-1733,BFT Mount Gambier,mount gambier,SA,5290,unclaimed
+FUZZY,82,gym-319,Fitness First Pitt St Platinum,sydney,NSW,2000,unclaimed,gym-320,Fitness First Market St Platinum,sydney,NSW,2000,unclaimed
+FUZZY,82,gym-074,Revo Fitness - Rockingham,rockingham,WA,6168,owner-3,gym-081,Jetts Fitness Rockingham,rockingham,WA,6168,owner-3
+FUZZY,82,e23790df-0573-4779-9762-fd176aa019ee,Orbit Fitness Equipment - Osborne Park,osborne park,WA,6017,unclaimed,gym-168,Dynamo Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3
+FUZZY,82,gym-174,Elite Fitness Equipment Osborne Park,osborne park,WA,6017,owner-3,gym-168,Dynamo Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3
+FUZZY,82,gym-168,Dynamo Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3,gym-170,Flex Fitness Equipment - Osborne Park,osborne park,WA,6017,owner-3
+FUZZY,82,gym-058,Snap Fitness 24/7 Midland,midland,WA,6056,owner-3,gym-059,Sista Fitness 24/7 Midland,midland,WA,6056,owner-3
+FUZZY,82,c5b3cf50-cf5e-4d78-aafa-f7e00fc2891c,Calisthenics Gym Southport - Brighton Parade,southport,QLD,4215,unclaimed,d77b9a18-e73e-4729-a656-35c5c8b20337,Calisthenics Gym Southport - Marine Parade,southport,QLD,4215,unclaimed
+FUZZY,81,b5777fa2-7106-41d4-aa6c-78f97b659a27,Anytime Fitness Wantirna,wantirna,VIC,3152,unclaimed,4694511e-a3c3-400b-8fee-6bd723aeefc0,Anytime Fitness Wantirna South,wantirna south,VIC,3152,unclaimed
+FUZZY,81,54883562-6508-466d-8e86-eca432e94436,Murdoch Active,murdoch,WA,6150,unclaimed,47f13d9d-f655-4c87-be5b-b9c527828ee4,Murdoch Active Gym,murdoch,WA,6150,unclaimed
+FUZZY,81,gym-181,Snap Fitness 24/7 Morley,morley,WA,6062,owner-3,gym-185,Sista Fitness 24/7 Morley,morley,WA,6062,owner-3
+FUZZY,81,gym-814,Plus Fitness 24/7 Fitzroy,fitzroy,VIC,3065,unclaimed,gym-816,Snap Fitness 24/7 Fitzroy,fitzroy,VIC,3065,unclaimed
+FUZZY,81,4ed60615-6453-49fa-bb35-8cb981e201ae,Hitfit Hoppers Crossing,hoppers crossing,VIC,3029,unclaimed,85776482-6d04-42c3-aa56-ef54a93733aa,BFT Hoppers Crossing,hoppers crossing,VIC,3029,unclaimed
+FUZZY,81,gym-123,Revo Fitness - Cannington,cannington,WA,6107,owner-3,gym-132,DPI Fitness-Cannington,cannington,WA,6107,owner-3
+FUZZY,81,b491fa2e-610b-458f-938f-e79a67cdda73,Anytime Fitness Marrickville,marrickville,NSW,2204,unclaimed,0fa3f878-0bd1-406d-b09a-0f0945945107,Strive Fitness Marrickville,marrickville,NSW,2204,unclaimed
+FUZZY,81,gym-1756,Zap Fitness 24/7 Hobart City,hobart,TAS,7000,unclaimed,gym-1757,Zap Fitness 24/7 Hobart Central,hobart,TAS,7000,unclaimed
+FUZZY,81,gym-1134,Zap Fitness 24/7 Brisbane CBD,brisbane city,QLD,4000,unclaimed,gym-1137,Snap Fitness 24/7 Brisbane City,brisbane city,QLD,4000,unclaimed
+FUZZY,81,gym-326,Anytime Fitness Parramatta Central,parramatta,NSW,2150,unclaimed,gym-330,Anytime Fitness Parramatta South,parramatta,NSW,2150,unclaimed
+FUZZY,81,gym-1135,Goodlife Health Clubs Queen Street,brisbane city,QLD,4000,unclaimed,gym-1144,Goodlife Health Clubs Edward Street,brisbane city,QLD,4000,unclaimed
+FUZZY,80,52f7ebaf-ea5c-4c3d-86c4-4158d4669210,The Gym. Burleigh,burleigh heads,QLD,4220,unclaimed,1dfc94cc-1cdf-498c-b403-335b9ca4f1b2,ZONE Gym Burleigh,burleigh heads,QLD,4220,unclaimed
+FUZZY,80,gym-1737,LPC Mount Gambier,mount gambier,SA,5290,unclaimed,gym-1733,BFT Mount Gambier,mount gambier,SA,5290,unclaimed
+FUZZY,80,gym-541,BroFit Bankstown,condell park,NSW,2200,unclaimed,gym-530,BFT Bankstown,bankstown,NSW,2200,unclaimed
+FUZZY,80,05c583ad-efa3-48f0-afdb-05e308176a4d,Pronto Pilates - Miranda,miranda,NSW,2228,unclaimed,e113fb92-33a5-413b-99a9-da550f9a0bc0,STRONG Pilates Miranda,miranda,NSW,2228,unclaimed
+FUZZY,80,gym-545,Club Active Castle Hill,castle hill,NSW,2154,unclaimed,gym-557,Club Lime Castle Hill,castle hill,NSW,2154,unclaimed
+FUZZY,80,gym-181,Snap Fitness 24/7 Morley,morley,WA,6062,owner-3,gym-178,Plus Fitness 24/7 Morley,morley,WA,6062,owner-3
+FUZZY,80,704ce4ad-d91e-4eb5-8869-8a1c02f955c9,Anytime Fitness Epping,epping,VIC,3076,unclaimed,85f33c11-afcd-4127-a06d-857200088d21,Anytime Fitness Epping North,epping,VIC,3076,unclaimed

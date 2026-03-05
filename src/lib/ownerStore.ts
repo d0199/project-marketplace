@@ -149,7 +149,18 @@ export const ownerStore = {
 
   async update(gym: Gym): Promise<void> {
     if (!isAmplifyConfigured()) return; // no-op until backend is live
-    await dataClient.models.Gym.update(fromGym(gym));
+    const { data, errors } = await dataClient.models.Gym.update(fromGym(gym));
+    if (errors?.length) console.error("[ownerStore.update] errors:", JSON.stringify(errors));
+    if (!data) console.error("[ownerStore.update] no data returned");
+  },
+
+  // Targeted billing update — only touches fields that exist in the deployed schema.
+  // stripeSubscriptionId / stripePlan are not yet deployed so must be excluded until
+  // the Amplify backend is redeployed with the updated schema.
+  async updateBilling(id: string, patch: { isPaid: boolean; isFeatured: boolean }): Promise<void> {
+    if (!isAmplifyConfigured()) return;
+    const { errors } = await dataClient.models.Gym.update({ id, ...patch });
+    if (errors?.length) console.error("[ownerStore.updateBilling] errors:", JSON.stringify(errors));
   },
 
   async create(gym: Omit<Gym, "id">): Promise<Gym> {

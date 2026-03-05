@@ -38,53 +38,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const { gymId, plan } = session.metadata ?? {};
-      const subscriptionId = session.subscription as string;
+      const subscriptionId = typeof session.subscription === "string"
+        ? session.subscription
+        : session.subscription?.id ?? null;
       if (!gymId || !plan || !subscriptionId) break;
 
       const gym = await ownerStore.getById(gymId);
       if (!gym) break;
 
-      await ownerStore.update({
-        ...gym,
+      await ownerStore.updateBilling(gymId, {
         isPaid: true,
         isFeatured: plan === "featured",
-        stripeSubscriptionId: subscriptionId,
-        stripePlan: plan as "paid" | "featured",
       });
       break;
     }
 
     case "customer.subscription.deleted": {
+      // Find gym by looking up the customer's metadata via Stripe
       const sub = event.data.object as Stripe.Subscription;
-      const all = await ownerStore.getAll();
-      const gym = all.find((g) => g.stripeSubscriptionId === sub.id);
-      if (!gym) break;
-
-      await ownerStore.update({
-        ...gym,
-        isPaid: false,
-        isFeatured: false,
-        stripeSubscriptionId: undefined,
-        stripePlan: undefined,
+      const sessions = await stripe.checkout.sessions.list({
+        subscription: sub.id,
+        limit: 1,
       });
+      const gymId = sessions.data[0]?.metadata?.gymId;
+      if (!gymId) break;
+
+      await ownerStore.updateBilling(gymId, { isPaid: false, isFeatured: false });
       break;
     }
 
     case "customer.subscription.updated": {
       const sub = event.data.object as Stripe.Subscription;
-      const all = await ownerStore.getAll();
-      const gym = all.find((g) => g.stripeSubscriptionId === sub.id);
-      if (!gym) break;
+      const sessions = await stripe.checkout.sessions.list({
+        subscription: sub.id,
+        limit: 1,
+      });
+      const gymId = sessions.data[0]?.metadata?.gymId;
+      if (!gymId) break;
 
       const priceId = sub.items.data[0]?.price.id ?? "";
       const newPlan = PRICE_TO_PLAN[priceId];
       if (!newPlan) break;
 
-      await ownerStore.update({
-        ...gym,
+      await ownerStore.updateBilling(gymId, {
         isPaid: true,
         isFeatured: newPlan === "featured",
-        stripePlan: newPlan,
       });
       break;
     }

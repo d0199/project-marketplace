@@ -27,7 +27,8 @@
       "Bash(python:*)",
       "Bash(ls:*)",
       "Bash(mkdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(cp:*)"
     ]
   }
 }

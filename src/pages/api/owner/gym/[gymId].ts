@@ -13,6 +13,7 @@ export default async function handler(
   if (req.method === "GET") {
     const gym = await ownerStore.getById(id);
     if (!gym) return res.status(404).json({ error: "Not found" });
+    res.setHeader("Cache-Control", "no-store");
     return res.status(200).json(gym);
   }
 
