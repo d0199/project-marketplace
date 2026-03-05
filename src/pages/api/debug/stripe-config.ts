@@ -17,7 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const results: Record<string, unknown> = {
     env: { AWS_APP_ID: appId, AWS_BRANCH: branch, AWS_REGION: region },
-    allEnvKeys: Object.keys(process.env).sort(),
+    probe: {
+      AWS_LAMBDA_FUNCTION_NAME: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      AWS_AMPLIFY_DEPLOYMENT_ID: process.env.AWS_AMPLIFY_DEPLOYMENT_ID,
+      AMPLIFY_APP_ID: process.env.AMPLIFY_APP_ID,
+      AMPLIFY_BRANCH: process.env.AMPLIFY_BRANCH,
+    },
     branchPaths,
     sharedPaths,
   };
