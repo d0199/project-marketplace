@@ -1,7 +1,8 @@
 /**
  * scripts/seedGymsCSV_eastern.ts
  * Fetches gym listings from Google Places API for NSW, VIC, QLD, SA & TAS.
- * Outputs: data/gyms_eastern.csv
+ * Runs TWO queries per location ("gym" + "fitness centre") to maximise results
+ * past the 20-result API cap. Outputs: data/gyms_eastern.csv
  *
  * Run:  npx tsx scripts/seedGymsCSV_eastern.ts
  * Requires GOOGLE_PLACES_API_KEY in .env.local
@@ -31,7 +32,9 @@ const FIELD_MASK = [
   "places.websiteUri",
 ].join(",");
 
-// State centres used as location bias — keeps results within each state
+// Two search terms per location to push past the 20-result cap
+const SEARCH_TERMS = ["gym", "fitness centre"];
+
 const STATE_CONFIGS: Record<string, {
   center: { latitude: number; longitude: number };
   radius: number;
@@ -45,20 +48,32 @@ const STATE_CONFIGS: Record<string, {
       "Chatswood", "Bondi", "Newtown", "Surry Hills", "North Sydney",
       "Hornsby", "Ryde", "Hurstville", "Bankstown", "Castle Hill",
       "Campbelltown", "Cronulla", "Manly", "Dee Why", "Pymble",
+      "Strathfield", "Burwood", "Auburn", "Fairfield", "Cabramatta",
+      "Kogarah", "Rockdale", "Sutherland", "Miranda", "Caringbah",
+      "Mascot", "Zetland", "Waterloo", "Redfern", "Glebe",
+      "Balmain", "Leichhardt", "Marrickville", "Ashfield", "Homebush",
     ],
   },
   NSW_REGIONAL: {
     center: { latitude: -32.9283, longitude: 151.7817 },
     radius: 50000,
     locations: [
-      "Newcastle", "Maitland", "Lake Macquarie",
+      "Newcastle", "Maitland", "Lake Macquarie", "Cessnock",
+      "Charlestown", "Glendale", "Kotara", "Hamilton",
     ],
   },
   NSW_SOUTH: {
     center: { latitude: -34.4278, longitude: 150.8931 },
     radius: 30000,
     locations: [
-      "Wollongong", "Shellharbour", "Kiama",
+      "Wollongong", "Shellharbour", "Kiama", "Figtree", "Warrawong",
+    ],
+  },
+  NSW_CENTRAL: {
+    center: { latitude: -33.4169, longitude: 151.3424 },
+    radius: 30000,
+    locations: [
+      "Gosford", "Wyong", "Tuggerah", "Terrigal",
     ],
   },
   VIC: {
@@ -69,13 +84,19 @@ const STATE_CONFIGS: Record<string, {
       "South Yarra", "Prahran", "Carlton", "Footscray", "Sunshine",
       "Dandenong", "Frankston", "Ringwood", "Box Hill", "Hawthorn",
       "Northcote", "Brunswick", "Doncaster", "Werribee", "Cranbourne",
+      "Coburg", "Preston", "Reservoir", "Heidelberg", "Bundoora",
+      "Epping", "Craigieburn", "Melton", "Hoppers Crossing", "Point Cook",
+      "Moorabbin", "Bentleigh", "Oakleigh", "Chadstone", "Glen Waverley",
+      "Knox", "Boronia", "Lilydale", "Croydon", "Springvale",
     ],
   },
   VIC_REGIONAL: {
     center: { latitude: -38.1499, longitude: 144.3617 },
     radius: 30000,
     locations: [
-      "Geelong", "Ballarat", "Bendigo",
+      "Geelong", "Geelong West", "Norlane", "Corio",
+      "Ballarat", "Wendouree",
+      "Bendigo", "Kangaroo Flat",
     ],
   },
   QLD: {
@@ -86,28 +107,36 @@ const STATE_CONFIGS: Record<string, {
       "Indooroopilly", "Chermside", "Carindale", "Ipswich", "Redcliffe",
       "Strathpine", "Eight Mile Plains", "Springwood", "Browns Plains",
       "Woolloongabba", "Coorparoo", "Wynnum", "Nundah", "Aspley",
+      "Stafford", "Everton Park", "Mitchelton", "Keperra", "Ferny Grove",
+      "Inala", "Richlands", "Forest Lake", "Sunnybank", "Runcorn",
+      "Acacia Ridge", "Moorooka", "Yeronga", "Annerley", "Greenslopes",
+      "Norman Park", "Bulimba", "Hawthorne", "Tingalpa", "Capalaba",
     ],
   },
   QLD_GOLDCOAST: {
     center: { latitude: -28.0167, longitude: 153.4000 },
-    radius: 40000,
+    radius: 50000,
     locations: [
       "Gold Coast", "Southport", "Robina", "Helensvale",
-      "Surfers Paradise", "Nerang", "Coomera",
+      "Surfers Paradise", "Nerang", "Coomera", "Labrador",
+      "Bundall", "Ashmore", "Molendinar", "Arundel",
+      "Burleigh Heads", "Tugun", "Coolangatta",
     ],
   },
   QLD_SUNSHINE: {
     center: { latitude: -26.6500, longitude: 153.0667 },
-    radius: 40000,
+    radius: 50000,
     locations: [
       "Sunshine Coast", "Maroochydore", "Caloundra", "Noosa", "Nambour",
+      "Kawana", "Mooloolaba", "Buderim", "Sippy Downs",
     ],
   },
   QLD_NORTH: {
     center: { latitude: -19.2590, longitude: 146.8169 },
     radius: 50000,
     locations: [
-      "Townsville", "Cairns",
+      "Townsville", "Aitkenvale", "Kirwan", "Mount Louisa",
+      "Cairns", "Manunda", "Earlville", "Smithfield",
     ],
   },
   SA: {
@@ -117,14 +146,16 @@ const STATE_CONFIGS: Record<string, {
       "Adelaide CBD", "Glenelg", "Salisbury", "Elizabeth", "Marion",
       "Norwood", "Unley", "Mitcham", "Port Adelaide", "Morphett Vale",
       "Tea Tree Gully", "Modbury", "Golden Grove", "Mawson Lakes",
-      "Christies Beach", "Noarlunga",
+      "Christies Beach", "Noarlunga", "Hallett Cove", "Reynella",
+      "Parafield Gardens", "Pooraka", "Prospect", "Enfield",
+      "Campbelltown SA", "Newton SA", "Burnside SA",
     ],
   },
   SA_REGIONAL: {
-    center: { latitude: -37.8300, longitude: 140.7833 },
-    radius: 20000,
+    center: { latitude: -33.7000, longitude: 136.0000 },
+    radius: 50000,
     locations: [
-      "Mount Gambier", "Whyalla",
+      "Mount Gambier", "Whyalla", "Port Augusta", "Port Pirie",
     ],
   },
   TAS: {
@@ -132,20 +163,21 @@ const STATE_CONFIGS: Record<string, {
     radius: 40000,
     locations: [
       "Hobart", "Sandy Bay", "Glenorchy", "Moonah", "Kingston",
+      "Bellerive", "Rosny", "Lindisfarne",
     ],
   },
   TAS_NORTH: {
-    center: { latitude: -41.4332, longitude: 147.1441 },
-    radius: 40000,
+    center: { latitude: -41.2000, longitude: 146.8000 },
+    radius: 50000,
     locations: [
-      "Launceston", "Devonport", "Burnie", "Ulverstone",
+      "Launceston", "Invermay", "Newnham", "Kings Meadows",
+      "Devonport", "Burnie", "Ulverstone",
     ],
   },
 };
 
-// Maps config group keys back to a canonical state code for the CSV
 const STATE_CODE: Record<string, string> = {
-  NSW: "NSW", NSW_REGIONAL: "NSW", NSW_SOUTH: "NSW",
+  NSW: "NSW", NSW_REGIONAL: "NSW", NSW_SOUTH: "NSW", NSW_CENTRAL: "NSW",
   VIC: "VIC", VIC_REGIONAL: "VIC",
   QLD: "QLD", QLD_GOLDCOAST: "QLD", QLD_SUNSHINE: "QLD", QLD_NORTH: "QLD",
   SA: "SA", SA_REGIONAL: "SA",
@@ -167,14 +199,12 @@ interface Gym {
   country: string;
 }
 
-async function searchGymsInArea(
-  location: string,
+async function searchGyms(
+  query: string,
   state: string,
   center: { latitude: number; longitude: number },
   radius: number,
 ): Promise<Gym[]> {
-  console.log(`  Searching: ${location}, ${state}...`);
-
   const response = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
     {
@@ -185,11 +215,9 @@ async function searchGymsInArea(
         "X-Goog-FieldMask": FIELD_MASK,
       },
       body: JSON.stringify({
-        textQuery: `gym fitness centre ${location} ${state} Australia`,
+        textQuery: query,
         maxResultCount: 20,
-        locationBias: {
-          circle: { center, radius },
-        },
+        locationBias: { circle: { center, radius } },
       }),
     }
   );
@@ -197,22 +225,15 @@ async function searchGymsInArea(
   const data = await response.json() as any;
 
   if (data.error) {
-    console.error(`  API error for ${location}:`, data.error.message);
+    console.error(`  API error: ${data.error.message}`);
     return [];
   }
 
-  if (!data.places || data.places.length === 0) {
-    console.log(`  No results for ${location}`);
-    return [];
-  }
-
-  console.log(`  Found ${data.places.length} gyms in ${location}`);
-
-  return data.places.map((place: any) => ({
+  return (data.places ?? []).map((place: any) => ({
     id: place.id ?? "",
     name: place.displayName?.text ?? "",
     address: place.formattedAddress ?? "",
-    suburb: location,
+    suburb: "",
     lat: place.location?.latitude ?? "",
     lng: place.location?.longitude ?? "",
     rating: place.rating ?? "",
@@ -229,7 +250,6 @@ function toCSV(gyms: Gym[]): string {
     "id", "name", "address", "suburb", "lat", "lng",
     "rating", "totalRatings", "phone", "website", "state", "country",
   ];
-
   const rows = gyms.map((gym) =>
     headers.map((h) => {
       const value = String((gym as any)[h] ?? "");
@@ -238,12 +258,12 @@ function toCSV(gyms: Gym[]): string {
         : value;
     }).join(",")
   );
-
   return [headers.join(","), ...rows].join("\n");
 }
 
 async function run() {
   console.log("\nStarting Eastern States Gym Seed to CSV...\n");
+  console.log("Running 2 queries per location (gym + fitness centre)\n");
 
   const allGyms: Gym[] = [];
   const seen = new Set<string>();
@@ -254,16 +274,27 @@ async function run() {
     console.log(`\n--- ${stateCode} (${groupKey}) ---`);
 
     for (const location of config.locations) {
-      const gyms = await searchGymsInArea(location, stateCode, config.center, config.radius);
-      for (const gym of gyms) {
-        if (gym.id && !seen.has(gym.id)) {
-          seen.add(gym.id);
-          allGyms.push(gym);
+      let locationNew = 0;
+
+      for (const term of SEARCH_TERMS) {
+        const query = `${term} ${location} ${stateCode} Australia`;
+        const gyms = await searchGyms(query, stateCode, config.center, config.radius);
+        totalCalls++;
+
+        for (const gym of gyms) {
+          if (gym.id && !seen.has(gym.id)) {
+            seen.add(gym.id);
+            gym.suburb = location;
+            allGyms.push(gym);
+            locationNew++;
+          }
         }
+
+        // Respect rate limits
+        await new Promise((r) => setTimeout(r, 1100));
       }
-      totalCalls++;
-      // Respect rate limits — 1 request/second
-      await new Promise((r) => setTimeout(r, 1100));
+
+      console.log(`  ${location}: +${locationNew} unique (total: ${allGyms.length})`);
     }
   }
 
