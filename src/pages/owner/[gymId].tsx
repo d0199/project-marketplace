@@ -105,10 +105,18 @@ export default function EditGymPage() {
         </nav>
 
         <div className="max-w-2xl">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            Edit Gym Profile
-          </h1>
-          <OwnerGymForm gym={gym} onSave={handleSave} />
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Edit Gym Profile</h1>
+            <Link
+              href={`/gym/${gym.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"
+            >
+              View Page ↗
+            </Link>
+          </div>
+          <OwnerGymForm gym={gym} onSave={handleSave} gymId={gym.id} />
         </div>
       </Layout>
     </>

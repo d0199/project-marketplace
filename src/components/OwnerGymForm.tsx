@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, POSTCODE_COORDS } from "@/lib/utils";
 
 interface Props {
   gym: Gym;
+  gymId?: string;
   onSave: (updated: Gym) => Promise<string | undefined | void> | string | undefined | void;
 }
 
@@ -18,7 +20,7 @@ const DAYS: (keyof OpeningHours)[] = [
   "sunday",
 ];
 
-export default function OwnerGymForm({ gym, onSave }: Props) {
+export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
   const [form, setForm] = useState<Gym>({ ...gym });
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -467,7 +469,17 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         )}
       </section>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        {gymId ? (
+          <Link
+            href={`/gym/${gymId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"
+          >
+            View Page ↗
+          </Link>
+        ) : <span />}
         <button
           type="submit"
           className="px-8 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors"
