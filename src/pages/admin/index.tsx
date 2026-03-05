@@ -473,6 +473,62 @@ function computeDiff(current: Gym, proposed: Gym) {
   });
 }
 
+function BulkBar({ filtered, selected, setSelected, busy, bulkAction }: {
+  filtered: GymEdit[];
+  selected: Set<string>;
+  setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
+  busy: string | null;
+  bulkAction: (act: "approve" | "reject") => void;
+}) {
+  const pendingIds = filtered.filter((e) => e.status === "pending").map((e) => e.id);
+  if (pendingIds.length === 0) return null;
+  const allSelected = pendingIds.every((id) => selected.has(id));
+  return (
+    <div className="flex items-center gap-3 mb-4 px-3 py-2 bg-gray-50 border rounded-lg">
+      <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 shrink-0">
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={() => {
+            if (allSelected) {
+              setSelected((s) => { const n = new Set(s); pendingIds.forEach((id) => n.delete(id)); return n; });
+            } else {
+              setSelected((s) => new Set([...s, ...pendingIds]));
+            }
+          }}
+          className="w-4 h-4 accent-brand-orange"
+        />
+        Select all pending
+      </label>
+      {selected.size > 0 && (
+        <>
+          <span className="text-xs text-gray-500">{selected.size} selected</span>
+          <button
+            onClick={() => bulkAction("approve")}
+            disabled={busy !== null}
+            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+          >
+            {busy === "bulk" ? "Processing…" : "Approve selected"}
+          </button>
+          <button
+            onClick={() => bulkAction("reject")}
+            disabled={busy !== null}
+            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+          >
+            Reject selected
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="text-xs text-gray-400 hover:text-gray-600 ml-auto"
+          >
+            Clear
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) {
   const [edits, setEdits] = useState<GymEdit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -481,6 +537,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -515,6 +572,32 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
       showToast(`Error: ${body.error ?? r.statusText}`, false);
     }
     setBusy(null);
+  }
+
+  async function bulkAction(act: "approve" | "reject") {
+    const ids = [...selected];
+    setBusy("bulk");
+    let ok = 0;
+    for (const id of ids) {
+      const r = await fetch(`/api/admin/moderation?action=${act}&id=${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: "" }),
+      });
+      if (r.ok) ok++;
+    }
+    setSelected(new Set());
+    showToast(`${act === "approve" ? "Approved" : "Rejected"} ${ok} of ${ids.length} request${ids.length !== 1 ? "s" : ""}.`, ok > 0);
+    await load();
+    setBusy(null);
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
   }
 
   const filtered = edits.filter((e) => {
@@ -556,6 +639,9 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
         </select>
       </div>
 
+      {/* Bulk action bar */}
+      {BulkBar({ filtered, selected, setSelected, busy, bulkAction })}
+
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : filtered.length === 0 ? (
@@ -570,13 +656,23 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
             return (
               <div
                 key={e.id}
-                className={`bg-white rounded-lg border p-4 ${e.status !== "pending" ? "opacity-60" : ""}`}
+                className={`bg-white rounded-lg border p-4 ${e.status !== "pending" ? "opacity-60" : ""} ${selected.has(e.id) ? "ring-2 ring-brand-orange border-brand-orange" : ""}`}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <p className="font-semibold text-gray-900">{e.gymName || e.gymId}</p>
-                    <p className="text-xs text-gray-400">ID: {e.gymId}</p>
+                  <div className="flex items-start gap-3">
+                    {e.status === "pending" && (
+                      <input
+                        type="checkbox"
+                        checked={selected.has(e.id)}
+                        onChange={() => toggleSelect(e.id)}
+                        className="mt-1 w-4 h-4 accent-brand-orange shrink-0"
+                      />
+                    )}
+                    <div>
+                      <p className="font-semibold text-gray-900">{e.gymName || e.gymId}</p>
+                      <p className="text-xs text-gray-400">ID: {e.gymId}</p>
+                    </div>
                   </div>
                   <Badge status={e.status} />
                 </div>
