@@ -38,6 +38,7 @@ export interface Gym {
   hoursComment?: string;
   memberOffers?: string[];
   memberOffersNotes?: string;
+  memberOffersScroll?: boolean;
   memberOffersTnC?: string;
   pricePerWeek: number;
   images: string[];

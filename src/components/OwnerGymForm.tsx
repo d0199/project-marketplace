@@ -287,9 +287,20 @@ export default function OwnerGymForm({ gym, onSave }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Benefits / affiliations
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Benefits / affiliations
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.memberOffersScroll ?? false}
+                  onChange={(e) => setField("memberOffersScroll", e.target.checked)}
+                  className="w-4 h-4 accent-brand-orange"
+                />
+                <span className="text-xs text-gray-500">Scroll on card</span>
+              </label>
+            </div>
             <textarea
               rows={3}
               value={form.memberOffersNotes ?? ""}

@@ -36,6 +36,13 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
               : `${gym.distanceKm.toFixed(1)} km`}
           </span>
         )}
+        {gym.isPaid && gym.memberOffersScroll && gym.memberOffersNotes && (
+          <div className="absolute bottom-0 left-0 right-0 bg-brand-black/75 overflow-hidden py-1.5">
+            <span className="marquee-text text-white text-xs font-medium px-2">
+              {gym.memberOffersNotes}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="p-4 flex flex-col flex-1">

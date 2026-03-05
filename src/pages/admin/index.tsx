@@ -1252,6 +1252,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
                         const gym = { ...p.gym, isPaid };
                         if (!isPaid) {
                           gym.memberOffers = [];
+                          gym.memberOffersScroll = false;
                           delete gym.memberOffersNotes;
                           delete gym.memberOffersTnC;
                         }
