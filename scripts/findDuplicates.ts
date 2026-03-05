@@ -10,6 +10,8 @@
  *   npx tsx scripts/findDuplicates.ts --threshold 0.7   # lower similarity bar
  */
 
+import * as fs from "fs";
+import * as path from "path";
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
 import { createRequire } from "module";
@@ -198,15 +200,14 @@ async function run() {
     return (b.score ?? 1) - (a.score ?? 1);
   });
 
+  // Console summary
   console.log(`Found ${duplicates.length} potential duplicate pair${duplicates.length !== 1 ? "s" : ""}:\n`);
   console.log("─".repeat(90));
-
   for (const dup of duplicates) {
     console.log(`\n⚠  ${dup.reason}`);
     console.log(`   A: [${dup.a.id}]  ${dup.a.name}  (${dup.a.suburb}, ${dup.a.state} ${dup.a.postcode})  owner: ${dup.a.ownerId}`);
     console.log(`   B: [${dup.b.id}]  ${dup.b.name}  (${dup.b.suburb}, ${dup.b.state} ${dup.b.postcode})  owner: ${dup.b.ownerId}`);
   }
-
   console.log("\n" + "─".repeat(90));
   const exact = duplicates.filter((d) => d.reason.startsWith("EXACT")).length;
   const location = duplicates.filter((d) => d.reason.startsWith("LOCATION")).length;
@@ -215,6 +216,37 @@ async function run() {
   console.log(`  LOCATION (≤50m apart) : ${location}`);
   console.log(`  FUZZY (≥${Math.round(THRESHOLD * 100)}% name)    : ${fuzzy}`);
   console.log(`  Total pairs           : ${duplicates.length}\n`);
+
+  // CSV output
+  function csvField(v: string): string {
+    return v.includes(",") || v.includes('"') || v.includes("\n")
+      ? `"${v.replace(/"/g, '""')}"`
+      : v;
+  }
+
+  const headers = [
+    "match_type", "similarity_pct",
+    "a_id", "a_name", "a_suburb", "a_state", "a_postcode", "a_owner",
+    "b_id", "b_name", "b_suburb", "b_state", "b_postcode", "b_owner",
+  ];
+
+  const csvRows = duplicates.map((dup) => {
+    const matchType = dup.reason.startsWith("EXACT") ? "EXACT"
+      : dup.reason.startsWith("LOCATION") ? "LOCATION"
+      : "FUZZY";
+    const simPct = dup.score != null ? Math.round(dup.score * 100).toString() : "100";
+    return [
+      matchType, simPct,
+      dup.a.id, dup.a.name, dup.a.suburb, dup.a.state, dup.a.postcode, dup.a.ownerId,
+      dup.b.id, dup.b.name, dup.b.suburb, dup.b.state, dup.b.postcode, dup.b.ownerId,
+    ].map(csvField).join(",");
+  });
+
+  const csvContent = [headers.join(","), ...csvRows].join("\n");
+  const outPath = path.join(process.cwd(), "data", "duplicates.csv");
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, csvContent, "utf8");
+  console.log(`CSV saved to: data/duplicates.csv\n`);
 }
 
 run().catch((err) => {
