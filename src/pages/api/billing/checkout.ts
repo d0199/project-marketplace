@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
 
@@ -55,10 +55,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Find or create Stripe Customer
-  const existing = await stripe.customers.list({ email, limit: 1 });
+  const existing = await getStripe().customers.list({ email, limit: 1 });
   const customer = existing.data.length > 0
     ? existing.data[0]
-    : await stripe.customers.create({ email });
+    : await getStripe().customers.create({ email });
 
   const priceId = getPriceMap()[plan]?.[interval];
   if (!priceId) {
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: "subscription",
     customer: customer.id,
     line_items: [{ price: priceId, quantity: 1 }],
