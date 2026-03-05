@@ -39,7 +39,7 @@ const STATE_CONFIGS: Record<string, {
 }> = {
   NSW: {
     center: { latitude: -33.8688, longitude: 151.2093 },
-    radius: 80000,
+    radius: 50000,
     locations: [
       "Sydney CBD", "Parramatta", "Liverpool", "Penrith", "Blacktown",
       "Chatswood", "Bondi", "Newtown", "Surry Hills", "North Sydney",
@@ -49,7 +49,7 @@ const STATE_CONFIGS: Record<string, {
   },
   NSW_REGIONAL: {
     center: { latitude: -32.9283, longitude: 151.7817 },
-    radius: 60000,
+    radius: 50000,
     locations: [
       "Newcastle", "Maitland", "Lake Macquarie",
     ],
@@ -63,7 +63,7 @@ const STATE_CONFIGS: Record<string, {
   },
   VIC: {
     center: { latitude: -37.8136, longitude: 144.9631 },
-    radius: 80000,
+    radius: 50000,
     locations: [
       "Melbourne CBD", "St Kilda", "Richmond", "Fitzroy", "Collingwood",
       "South Yarra", "Prahran", "Carlton", "Footscray", "Sunshine",
@@ -80,7 +80,7 @@ const STATE_CONFIGS: Record<string, {
   },
   QLD: {
     center: { latitude: -27.4698, longitude: 153.0251 },
-    radius: 60000,
+    radius: 50000,
     locations: [
       "Brisbane CBD", "Fortitude Valley", "South Brisbane", "Toowong",
       "Indooroopilly", "Chermside", "Carindale", "Ipswich", "Redcliffe",
@@ -112,7 +112,7 @@ const STATE_CONFIGS: Record<string, {
   },
   SA: {
     center: { latitude: -34.9285, longitude: 138.6007 },
-    radius: 60000,
+    radius: 50000,
     locations: [
       "Adelaide CBD", "Glenelg", "Salisbury", "Elizabeth", "Marion",
       "Norwood", "Unley", "Mitcham", "Port Adelaide", "Morphett Vale",
