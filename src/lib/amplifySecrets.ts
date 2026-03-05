@@ -1,25 +1,22 @@
 /**
  * Fetch Amplify Gen 2 secrets from SSM Parameter Store at Lambda runtime.
  *
- * Gen 2 secrets set via the Amplify console Secret management are stored in
- * SSM and are NOT automatically injected into the SSR hosting Lambda's
- * process.env. We fetch them explicitly using the compute role's IAM credentials.
+ * Amplify stores secrets at: /amplify/shared/{appId}/{name}
+ * The appId comes from AMPLIFY_APP_ID env var (set in Amplify Console →
+ * Hosting → Environment variables).
  *
- * SSM paths tried (in order):
- *   /amplify/{appId}/{branch}/{name}   — branch-specific
- *   /amplify/{appId}/shared/{name}     — shared across branches
- *
- * Results are cached in Lambda memory for the lifetime of the instance.
- *
- * IAM requirement on amplify-ssr-compute-role:
- *   ssm:GetParameters on arn:aws:ssm:*:*:parameter/amplify/*
+ * Results are cached for the lifetime of the Lambda instance.
+ * IAM requirement: ssm:GetParameters on arn:aws:ssm:*:*:parameter/amplify/*
  */
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 
-// Only truly sensitive values — price IDs are non-sensitive and come from process.env
 const STRIPE_KEYS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_PRICE_PAID_MONTHLY",
+  "STRIPE_PRICE_PAID_ANNUAL",
+  "STRIPE_PRICE_FEATURED_MONTHLY",
+  "STRIPE_PRICE_FEATURED_ANNUAL",
 ] as const;
 
 const cache: Record<string, string> = {};
@@ -28,39 +25,32 @@ let loadPromise: Promise<void> | null = null;
 export async function loadStripeSecrets(): Promise<void> {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
-    const appId  = process.env.AWS_APP_ID;
-    const branch = process.env.AWS_BRANCH;
-    const region = process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? "ap-southeast-2";
+    const appId  = process.env.AMPLIFY_APP_ID;
+    const region = process.env.AWS_REGION ?? "ap-southeast-2";
 
-    // Local dev: no AWS_APP_ID, fall back to process.env
-    if (!appId || !branch) {
+    // Local dev: no appId, fall back to process.env
+    if (!appId) {
       for (const key of STRIPE_KEYS) cache[key] = process.env[key] ?? "";
       return;
     }
 
     const client = new SSMClient({ region });
+    const paths  = STRIPE_KEYS.map(k => `/amplify/shared/${appId}/${k}`);
 
-    // Fetch branch-specific and shared paths in two separate calls
-    // (SSM GetParameters is capped at 10 names per request)
-    const branchPaths = STRIPE_KEYS.map(k => `/amplify/${appId}/${branch}/${k}`);
-    const sharedPaths = STRIPE_KEYS.map(k => `/amplify/${appId}/shared/${k}`);
-
-    for (const paths of [branchPaths, sharedPaths]) {
-      try {
-        const result = await client.send(
-          new GetParametersCommand({ Names: paths, WithDecryption: true })
-        );
-        for (const param of result.Parameters ?? []) {
-          if (!param.Name || !param.Value) continue;
-          const key = param.Name.split("/").pop()!;
-          if (!cache[key]) cache[key] = param.Value; // branch wins over shared
-        }
-      } catch (err) {
-        console.error("[amplifySecrets] SSM fetch failed:", err);
+    try {
+      const result = await client.send(
+        new GetParametersCommand({ Names: paths, WithDecryption: true })
+      );
+      for (const param of result.Parameters ?? []) {
+        if (!param.Name || !param.Value) continue;
+        const key = param.Name.split("/").pop()!;
+        cache[key] = param.Value;
       }
+    } catch (err) {
+      console.error("[amplifySecrets] SSM fetch failed:", err);
     }
 
-    // Final fallback: process.env (works in local dev / older Amplify setups)
+    // Fallback: process.env for any keys not found in SSM
     for (const key of STRIPE_KEYS) {
       if (!cache[key]) cache[key] = process.env[key] ?? "";
     }

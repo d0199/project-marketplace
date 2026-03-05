@@ -28,7 +28,9 @@
       "Bash(ls:*)",
       "Bash(mkdir:*)",
       "Bash(cat:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebFetch(domain:docs.amplify.aws)",
+      "Bash(rm:*)"
     ]
   }
 }
