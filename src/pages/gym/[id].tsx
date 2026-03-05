@@ -185,7 +185,10 @@ export default function GymProfilePage({ gym }: Props) {
                   </ul>
                 )}
                 {gym.memberOffersTnC && (
-                  <p className="text-xs text-gray-400 mt-2">{gym.memberOffersTnC}</p>
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Terms &amp; Conditions</p>
+                    <p className="text-xs text-gray-400">{gym.memberOffersTnC}</p>
+                  </div>
                 )}
               </section>
             )}
