@@ -1,5 +1,6 @@
 import type { Gym } from "@/types";
 import { WA_POSTCODE_COORDS } from "@/data/waPostcodes";
+import { EASTERN_POSTCODE_COORDS } from "@/data/easternPostcodes";
 
 // Haversine distance in kilometres
 export function haversineKm(
@@ -19,8 +20,11 @@ export function haversineKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Full WA postcode → [lat, lng] map (501 postcodes, sourced from matthewproctor/australianpostcodes)
-export const POSTCODE_COORDS: Record<string, [number, number]> = WA_POSTCODE_COORDS;
+// All Australian postcodes → [lat, lng] (WA + NSW/VIC/QLD/SA/TAS)
+export const POSTCODE_COORDS: Record<string, [number, number]> = {
+  ...WA_POSTCODE_COORDS,
+  ...EASTERN_POSTCODE_COORDS,
+};
 
 // Suburb metadata for SEO landing pages — one entry per searchable postcode
 export const POSTCODE_META: Record<string, { name: string; slug: string }> = {

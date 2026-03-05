@@ -6,7 +6,7 @@ import {
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
-import { WA_POSTCODE_COORDS } from "@/data/waPostcodes";
+import { POSTCODE_COORDS } from "@/lib/utils";
 
 async function listAllClaims() {
   const results: Record<string, unknown>[] = [];
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (claim.isNewListing) {
           // New listing — create a gym record from submitted details
           const postcode = claim.gymPostcode ?? "";
-          const coords = WA_POSTCODE_COORDS[postcode];
+          const coords = POSTCODE_COORDS[postcode];
           const [lat, lng] = coords ?? [-31.9505, 115.8605]; // Perth default
 
           const newGym = await ownerStore.create({
