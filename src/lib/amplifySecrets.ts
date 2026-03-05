@@ -16,13 +16,10 @@
  */
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 
+// Only truly sensitive values — price IDs are non-sensitive and come from process.env
 const STRIPE_KEYS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
-  "STRIPE_PRICE_PAID_MONTHLY",
-  "STRIPE_PRICE_PAID_ANNUAL",
-  "STRIPE_PRICE_FEATURED_MONTHLY",
-  "STRIPE_PRICE_FEATURED_ANNUAL",
 ] as const;
 
 const cache: Record<string, string> = {};
