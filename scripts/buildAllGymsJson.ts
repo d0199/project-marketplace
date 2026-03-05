@@ -246,8 +246,11 @@ function generateDescription(type: GymType, name: string, suburb: string, id: st
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-const CSV_PATH = path.join(process.cwd(), "data", "gyms_all.csv");
-const OUT_PATH = path.join(process.cwd(), "data", "gyms_all.json");
+const csvArg = process.argv[2];
+const csvFile = csvArg ?? "data/gyms_all.csv";
+const jsonFile = csvFile.replace(/\.csv$/i, ".json");
+const CSV_PATH = path.join(process.cwd(), csvFile);
+const OUT_PATH = path.join(process.cwd(), jsonFile);
 
 if (!fs.existsSync(CSV_PATH)) {
   console.error(`CSV not found: ${CSV_PATH}`);
@@ -319,8 +322,8 @@ const byState = gyms.reduce<Record<string, number>>((acc, g) => {
   return acc;
 }, {});
 
-console.log(`\nWrote ${gyms.length} gyms to data/gyms_all.json`);
+console.log(`\nWrote ${gyms.length} gyms to ${jsonFile}`);
 for (const [state, count] of Object.entries(byState).sort()) {
   console.log(`  ${state}: ${count}`);
 }
-console.log(`\nNext step: npx tsx scripts/importGyms.ts data/gyms_all.json\n`);
+console.log(`\nNext step: npx tsx scripts/importGyms.ts ${jsonFile}\n`);

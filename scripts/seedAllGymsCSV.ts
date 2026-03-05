@@ -308,14 +308,26 @@ function toCSV(gyms: Gym[]): string {
 }
 
 async function run() {
-  console.log("\nFetching gyms for all Australian states...\n");
+  // Optional: --states=NT,ACT  to run only specific state codes
+  const statesArg = process.argv.find((a) => a.startsWith("--states="));
+  const filterStates = statesArg
+    ? new Set(statesArg.replace("--states=", "").split(",").map((s) => s.trim().toUpperCase()))
+    : null;
+
+  const activeGroups = Object.entries(STATE_CONFIGS).filter(([groupKey]) => {
+    if (!filterStates) return true;
+    return filterStates.has(STATE_CODE[groupKey]);
+  });
+
+  const stateLabel = filterStates ? [...filterStates].join(", ") : "all Australian states";
+  console.log(`\nFetching gyms for ${stateLabel}...\n`);
   console.log("Running 2 queries per location (gym + fitness centre)\n");
 
   const allGyms: Gym[] = [];
   const seen = new Set<string>();
   let totalCalls = 0;
 
-  for (const [groupKey, config] of Object.entries(STATE_CONFIGS)) {
+  for (const [groupKey, config] of activeGroups) {
     const stateCode = STATE_CODE[groupKey];
     console.log(`\n--- ${stateCode} (${groupKey}) ---`);
 
@@ -355,13 +367,15 @@ async function run() {
   }
   console.log(`  API calls used: ${totalCalls}`);
 
-  const outputPath = path.join(process.cwd(), "data", "gyms_all.csv");
+  const suffix = filterStates ? [...filterStates].join("_").toLowerCase() : "all";
+  const csvFile = `gyms_${suffix}.csv`;
+  const outputPath = path.join(process.cwd(), "data", csvFile);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, toCSV(allGyms), "utf8");
 
-  console.log(`\nCSV saved to: data/gyms_all.csv`);
-  console.log(`Next: npx tsx scripts/buildAllGymsJson.ts`);
-  console.log(`Then: npx tsx scripts/importGyms.ts data/gyms_all.json\n`);
+  console.log(`\nCSV saved to: data/${csvFile}`);
+  console.log(`Next: npx tsx scripts/buildAllGymsJson.ts data/${csvFile}`);
+  console.log(`Then: npx tsx scripts/importGyms.ts data/gyms_${suffix}.json\n`);
 }
 
 run().catch((err) => {
