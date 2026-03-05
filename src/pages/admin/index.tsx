@@ -1512,6 +1512,8 @@ function UsersTab() {
   const [newForm, setNewForm] = useState({ email: "", password: "", ownerId: "", isAdmin: false });
   const [resetFor, setResetFor] = useState<string | null>(null);
   const [resetPw, setResetPw] = useState("");
+  const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
+  const [editOwnerVal, setEditOwnerVal] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
@@ -1586,6 +1588,22 @@ function UsersTab() {
     }
   }
 
+  async function setOwnerId(username: string) {
+    const r = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerId: editOwnerVal }),
+    });
+    if (r.ok) {
+      showToast("Owner ID updated.");
+      setEditOwnerFor(null);
+      setEditOwnerVal("");
+      search(q);
+    } else {
+      showToast("Error updating Owner ID.");
+    }
+  }
+
   return (
     <div>
       {toast && (
@@ -1646,7 +1664,28 @@ function UsersTab() {
                     ) : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {resetFor === u.username ? (
+                    {editOwnerFor === u.username ? (
+                      <div className="flex gap-2 items-center">
+                        <input
+                          value={editOwnerVal}
+                          onChange={(e) => setEditOwnerVal(e.target.value)}
+                          placeholder="owner-xxxxxxxx"
+                          className="px-2 py-1 border rounded text-xs w-36 font-mono focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                        />
+                        <button
+                          onClick={() => setOwnerId(u.username)}
+                          className="px-2 py-1 bg-brand-orange text-white text-xs rounded font-medium"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => { setEditOwnerFor(null); setEditOwnerVal(""); }}
+                          className="text-gray-400 text-xs"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : resetFor === u.username ? (
                       <div className="flex gap-2 items-center">
                         <input
                           type="password"
@@ -1670,6 +1709,12 @@ function UsersTab() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => { setEditOwnerFor(u.username); setEditOwnerVal(u.ownerId || ""); }}
+                          className="text-blue-500 hover:underline text-xs font-medium"
+                        >
+                          Set ID
+                        </button>
                         <button
                           onClick={() => setResetFor(u.username)}
                           className="text-brand-orange hover:underline text-xs font-medium"
