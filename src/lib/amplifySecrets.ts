@@ -43,22 +43,24 @@ export async function loadStripeSecrets(): Promise<void> {
 
     const client = new SSMClient({ region });
 
-    // Try branch-specific paths then shared paths in one batch call
+    // Fetch branch-specific and shared paths in two separate calls
+    // (SSM GetParameters is capped at 10 names per request)
     const branchPaths = STRIPE_KEYS.map(k => `/amplify/${appId}/${branch}/${k}`);
     const sharedPaths = STRIPE_KEYS.map(k => `/amplify/${appId}/shared/${k}`);
 
-    const allPaths = [...branchPaths, ...sharedPaths];
-    try {
-      const result = await client.send(
-        new GetParametersCommand({ Names: allPaths, WithDecryption: true })
-      );
-      for (const param of result.Parameters ?? []) {
-        if (!param.Name || !param.Value) continue;
-        const key = param.Name.split("/").pop()!;
-        if (!cache[key]) cache[key] = param.Value; // branch wins over shared
+    for (const paths of [branchPaths, sharedPaths]) {
+      try {
+        const result = await client.send(
+          new GetParametersCommand({ Names: paths, WithDecryption: true })
+        );
+        for (const param of result.Parameters ?? []) {
+          if (!param.Name || !param.Value) continue;
+          const key = param.Name.split("/").pop()!;
+          if (!cache[key]) cache[key] = param.Value; // branch wins over shared
+        }
+      } catch (err) {
+        console.error("[amplifySecrets] SSM fetch failed:", err);
       }
-    } catch (err) {
-      console.error("[amplifySecrets] SSM fetch failed:", err);
     }
 
     // Final fallback: process.env (works in local dev / older Amplify setups)
