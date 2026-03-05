@@ -7,7 +7,7 @@ interface Props {
 export default function AmenityBadge({ amenity }: Props) {
   const icon = AMENITY_ICONS[amenity] ?? "✓";
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+    <span className="inline-flex items-center gap-1 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
       <span>{icon}</span>
       <span className="capitalize">{amenity}</span>
     </span>
