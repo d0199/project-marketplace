@@ -439,10 +439,15 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
 const DIFF_LABELS: Record<string, string> = {
   name: "Name", description: "Description", phone: "Phone",
   email: "Email", website: "Website", pricePerWeek: "Price/week",
+  instagram: "Instagram", facebook: "Facebook",
   "address.street": "Address", "address.suburb": "Suburb", "address.postcode": "Postcode",
   "hours.monday": "Mon", "hours.tuesday": "Tue", "hours.wednesday": "Wed",
   "hours.thursday": "Thu", "hours.friday": "Fri", "hours.saturday": "Sat", "hours.sunday": "Sun",
+  hoursComment: "Hours note",
   amenities: "Amenities", images: "Images",
+  memberOffers: "Member offers", memberOffersNotes: "Benefits / affiliations",
+  memberScrollText: "Scroll banner", memberOffersScroll: "Scroll on card",
+  memberOffersTnC: "Terms & Conditions",
 };
 
 function getFieldValue(gym: Gym, field: string): string {
@@ -455,8 +460,10 @@ function getFieldValue(gym: Gym, field: string): string {
     return String(gym.hours?.[k] ?? "");
   }
   if (field === "amenities") return (gym.amenities ?? []).sort().join(", ") || "—";
+  if (field === "memberOffers") return (gym.memberOffers ?? []).sort().join(", ") || "—";
   if (field === "images") return `${(gym.images ?? []).length} image(s)`;
   if (field === "pricePerWeek") return gym.pricePerWeek ? `$${gym.pricePerWeek}/wk` : "—";
+  if (field === "memberOffersScroll") return gym.memberOffersScroll ? "Yes" : "No";
   return String((gym as unknown as Record<string, unknown>)[field] ?? "");
 }
 
