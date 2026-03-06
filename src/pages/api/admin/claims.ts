@@ -117,6 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           const newGym = await ownerStore.create({
             ownerId,
+            createdBy: email,
             name: claim.gymName ?? "",
             description: claim.message ?? "",
             address: {

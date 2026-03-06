@@ -154,6 +154,7 @@ async function run() {
       // googlePlaceId included — works once Amplify backend redeploys new schema
       googlePlaceId: gym.googlePlaceId,
       ownerId: gym.ownerId,
+      createdBy: "bulk",
       isActive: gym.isActive ?? true,
       isTest: gym.isTest ?? false,
       isFeatured: gym.isFeatured ?? false,
@@ -189,6 +190,7 @@ async function run() {
       if (errs.some((e) => e.message.includes("not defined for input"))) {
         const { errors: errs2 } = await client.models.Gym.create({
           ownerId: gym.ownerId,
+          createdBy: "bulk",
           isActive: gym.isActive ?? true,
           isTest: gym.isTest ?? false,
           isFeatured: gym.isFeatured ?? false,

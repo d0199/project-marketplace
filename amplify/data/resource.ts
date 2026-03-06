@@ -45,6 +45,8 @@ const schema = a.schema({
       stripePlan: a.string(), // "paid" | "featured" | null
       // Google Places ID — used for deduplication on re-import
       googlePlaceId: a.string(),
+      // Who created this record: email address, "bulk", or "system"
+      createdBy: a.string(),
       // member offers
       memberOffers: a.string().array(),
       memberOffersNotes: a.string(),

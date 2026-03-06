@@ -24,6 +24,7 @@ function toGym(r: GymRecord): Gym {
     ...(r.stripeSubscriptionId != null && { stripeSubscriptionId: r.stripeSubscriptionId }),
     ...(r.stripePlan != null && { stripePlan: r.stripePlan as "paid" | "featured" }),
     ...(r.googlePlaceId != null && { googlePlaceId: r.googlePlaceId }),
+    ...(r.createdBy != null && { createdBy: r.createdBy }),
     name: r.name ?? "",
     description: r.description ?? "",
     address: {
@@ -72,6 +73,7 @@ function fromGym(gym: Gym) {
     stripeSubscriptionId: gym.stripeSubscriptionId,
     stripePlan: gym.stripePlan,
     googlePlaceId: gym.googlePlaceId,
+    createdBy: gym.createdBy,
     name: gym.name,
     description: gym.description,
     addressStreet: gym.address.street,
@@ -172,6 +174,7 @@ export const ownerStore = {
       isFeatured: gym.isFeatured ?? false,
       priceVerified: gym.priceVerified ?? false,
       isPaid: gym.isPaid ?? false,
+      createdBy: gym.createdBy,
       name: gym.name,
       description: gym.description,
       addressStreet: gym.address.street,

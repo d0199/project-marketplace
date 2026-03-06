@@ -52,6 +52,7 @@ async function seed() {
     const { errors } = await client.models.Gym.create({
       id: gym.id,
       ownerId: gym.ownerId,
+      createdBy: "bulk",
       name: gym.name,
       description: gym.description,
       images: gym.images,

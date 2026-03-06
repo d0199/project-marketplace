@@ -86,6 +86,7 @@ export default function AdminPage() {
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users" | "leads">("claims");
+  const [adminEmail, setAdminEmail] = useState("");
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const setClaimsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, claims: n })), []);
   const setModerationPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, moderation: n })), []);
@@ -109,8 +110,9 @@ export default function AdminPage() {
   useEffect(() => {
     (async () => {
       try {
-        await getCurrentUser();
+        const user = await getCurrentUser();
         const attrs = await fetchUserAttributes();
+        setAdminEmail(user.signInDetails?.loginId ?? attrs.email ?? "");
         if (attrs["custom:isAdmin"] !== "true") {
           setAccessDenied(true);
         } else {
@@ -190,7 +192,7 @@ export default function AdminPage() {
       <div className="p-6 max-w-7xl mx-auto">
         {tab === "claims" && <ClaimsTab onPendingCount={setClaimsPending} />}
         {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
-        {tab === "gyms" && <GymsTab initialGymId={initialGymId} />}
+        {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
         {tab === "users" && <UsersTab />}
         {tab === "leads" && <LeadsTab />}
       </div>
@@ -770,7 +772,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
 // ---------------------------------------------------------------------------
 // Gyms tab
 // ---------------------------------------------------------------------------
-function GymsTab({ initialGymId }: { initialGymId?: string }) {
+function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEmail?: string }) {
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -935,7 +937,7 @@ function GymsTab({ initialGymId }: { initialGymId?: string }) {
       // OwnerGymForm initialises its internal state from props once, so the
       // ownerId typed in the separate input above doesn't reach the form's
       // onSave payload — override it from panel state here.
-      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false, isActive: panel.gym.isActive !== false, isPaid: panel.gym.isPaid ?? false };
+      const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false, isActive: panel.gym.isActive !== false, isPaid: panel.gym.isPaid ?? false, createdBy: adminEmail };
       const r = await fetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

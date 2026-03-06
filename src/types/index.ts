@@ -26,6 +26,7 @@ export interface Gym {
   stripeSubscriptionId?: string;
   stripePlan?: "paid" | "featured";
   googlePlaceId?: string;
+  createdBy?: string;
   name: string;
   description: string;
   address: Address;
