@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Layout from "@/components/Layout";
+import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 
 interface Form {
   contactName: string;
@@ -27,6 +28,26 @@ export default function ListGymPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await getCurrentUser();
+        const attrs = await fetchUserAttributes();
+        const name = attrs.name ?? attrs.given_name ?? "";
+        const email = attrs.email ?? "";
+        if (name || email) {
+          setForm((f) => ({
+            ...f,
+            contactName: name || f.contactName,
+            contactEmail: email || f.contactEmail,
+          }));
+        }
+      } catch {
+        // not signed in — leave form empty
+      }
+    })();
+  }, []);
 
   function set(field: keyof Form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));

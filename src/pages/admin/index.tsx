@@ -220,6 +220,7 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
   const [approved, setApproved] = useState<{ ownerId: string; isNewUser: boolean } | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [pageSize, setPageSize] = useState(25);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -260,6 +261,19 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
     }
     setBusy(null);
   }
+
+  const filteredClaims = claims.filter((c) => {
+    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      c.claimantName.toLowerCase().includes(q) ||
+      c.claimantEmail.toLowerCase().includes(q) ||
+      (c.gymName ?? "").toLowerCase().includes(q) ||
+      (c.gymAddress ?? "").toLowerCase().includes(q)
+    );
+  });
+  const displayedClaims = pageSize === 0 ? filteredClaims : filteredClaims.slice(0, pageSize);
 
   return (
     <div>
@@ -326,19 +340,11 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : claims.length === 0 ? (
         <p className="text-gray-500 text-sm">No claims yet.</p>
+      ) : filteredClaims.length === 0 ? (
+        <p className="text-gray-500 text-sm">No claims match your filter.</p>
       ) : (
         <div className="space-y-4">
-          {claims.filter((c) => {
-            if (statusFilter !== "all" && c.status !== statusFilter) return false;
-            if (!search.trim()) return true;
-            const q = search.toLowerCase();
-            return (
-              c.claimantName.toLowerCase().includes(q) ||
-              c.claimantEmail.toLowerCase().includes(q) ||
-              (c.gymName ?? "").toLowerCase().includes(q) ||
-              (c.gymAddress ?? "").toLowerCase().includes(q)
-            );
-          }).map((c) => (
+          {displayedClaims.map((c) => (
             <div
               key={c.id}
               className={`bg-white rounded-lg border p-4 ${c.status !== "pending" ? "opacity-60" : ""}`}
@@ -428,6 +434,18 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
               )}
             </div>
           ))}
+          <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
+            <span>Showing {displayedClaims.length} of {filteredClaims.length}</span>
+            <div className="flex items-center gap-2">
+              <span>Show:</span>
+              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={0}>All</option>
+              </select>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -540,6 +558,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pageSize, setPageSize] = useState(25);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -612,6 +631,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
       (e.ownerEmail ?? "").toLowerCase().includes(q)
     );
   });
+  const displayedEdits = pageSize === 0 ? filtered : filtered.slice(0, pageSize);
 
   return (
     <div>
@@ -650,7 +670,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
         <p className="text-gray-500 text-sm">{edits.length === 0 ? "No moderation reviews yet." : "No results match your filter."}</p>
       ) : (
         <div className="space-y-4">
-          {filtered.map((e) => {
+          {displayedEdits.map((e) => {
             const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) as Gym : null;
             const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) as Gym : null;
             const changedFields = current && proposed ? computeDiff(current, proposed) : [];
@@ -763,6 +783,18 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
               </div>
             );
           })}
+          <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
+            <span>Showing {displayedEdits.length} of {filtered.length}</span>
+            <div className="flex items-center gap-2">
+              <span>Show:</span>
+              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={0}>All</option>
+              </select>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -804,6 +836,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
+  const [pageSize, setPageSize] = useState(25);
 
   const filteredGyms = gyms.filter((g) => {
     if (activeFilter === "active" && g.isActive === false) return false;
@@ -816,6 +849,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     if (planFilter === "free" && (g.isPaid || g.isFeatured)) return false;
     return true;
   });
+  const displayedGyms = pageSize === 0 ? filteredGyms : filteredGyms.slice(0, pageSize);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -1274,6 +1308,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : (
+        <>
         <div className="overflow-x-auto rounded-lg border bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -1292,7 +1327,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredGyms.map((g) => (
+              {displayedGyms.map((g) => (
                 <tr key={g.id} className={selected.has(g.id) ? "bg-blue-50" : ""}>
                   <td className="px-4 py-3">
                     <input
@@ -1358,6 +1393,19 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
             </tbody>
           </table>
         </div>
+        <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
+          <span>Showing {displayedGyms.length} of {filteredGyms.length}</span>
+          <div className="flex items-center gap-2">
+            <span>Show:</span>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={0}>All</option>
+            </select>
+          </div>
+        </div>
+        </>
       )}
 
       {/* Slide-in edit panel */}
@@ -1510,6 +1558,7 @@ function UsersTab() {
   const [users, setUsers] = useState<CognitoUser[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pageSize, setPageSize] = useState(25);
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ email: "", password: "", ownerId: "", isAdmin: false });
   const [resetFor, setResetFor] = useState<string | null>(null);
@@ -1643,6 +1692,7 @@ function UsersTab() {
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : (
+        <>
         <div className="overflow-x-auto rounded-lg border bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -1653,7 +1703,7 @@ function UsersTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users.map((u) => (
+              {(pageSize === 0 ? users : users.slice(0, pageSize)).map((u) => (
                 <tr key={u.username}>
                   <td className="px-4 py-3 font-medium text-gray-900">{u.email}</td>
                   <td className="px-4 py-3">
@@ -1762,6 +1812,19 @@ function UsersTab() {
             </tbody>
           </table>
         </div>
+        <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
+          <span>Showing {pageSize === 0 ? users.length : Math.min(pageSize, users.length)} of {users.length}</span>
+          <div className="flex items-center gap-2">
+            <span>Show:</span>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={0}>All</option>
+            </select>
+          </div>
+        </div>
+        </>
       )}
 
       {/* New user modal */}
@@ -1848,6 +1911,7 @@ interface LeadRecord {
 function LeadsTab() {
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pageSize, setPageSize] = useState(25);
 
   useEffect(() => {
     (async () => {
@@ -1869,6 +1933,7 @@ function LeadsTab() {
       ) : leads.length === 0 ? (
         <p className="text-gray-500 text-sm">No leads yet.</p>
       ) : (
+        <>
         <div className="overflow-x-auto rounded-lg border bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -1879,7 +1944,7 @@ function LeadsTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {leads.map((l) => (
+              {(pageSize === 0 ? leads : leads.slice(0, pageSize)).map((l) => (
                 <tr key={l.id}>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDate(l.createdAt)}</td>
                   <td className="px-4 py-3 text-gray-700">
@@ -1895,6 +1960,19 @@ function LeadsTab() {
             </tbody>
           </table>
         </div>
+        <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
+          <span>Showing {pageSize === 0 ? leads.length : Math.min(pageSize, leads.length)} of {leads.length}</span>
+          <div className="flex items-center gap-2">
+            <span>Show:</span>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={0}>All</option>
+            </select>
+          </div>
+        </div>
+        </>
       )}
     </div>
   );
