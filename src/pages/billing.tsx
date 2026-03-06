@@ -102,6 +102,7 @@ function GymRow({
 }) {
   const currentPlan =
     gym.stripePlan ?? (gym.isFeatured ? "featured" : gym.isPaid ? "paid" : null);
+  const hasBillingAccount = !!gym.stripeSubscriptionId;
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -212,21 +213,33 @@ function GymRow({
             </ul>
             <div className="mt-4">
               {currentPlan === "paid" ? (
-                <button
-                  onClick={onManage}
-                  disabled={busy === "portal"}
-                  className="w-full text-sm py-2 border border-green-400 text-green-700 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
-                >
-                  {busy === "portal" ? "Loading…" : "Manage Billing ↗"}
-                </button>
+                hasBillingAccount ? (
+                  <button
+                    onClick={onManage}
+                    disabled={busy === "portal"}
+                    className="w-full text-sm py-2 border border-green-400 text-green-700 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                  >
+                    {busy === "portal" ? "Loading…" : "Manage Billing ↗"}
+                  </button>
+                ) : (
+                  <div className="w-full text-sm py-2 text-center text-green-700 bg-green-50 rounded-lg font-medium">
+                    Complimentary
+                  </div>
+                )
               ) : currentPlan === "featured" ? (
-                <button
-                  onClick={onManage}
-                  disabled={busy === "portal"}
-                  className="w-full text-sm py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  {busy === "portal" ? "Loading…" : "Switch plan ↗"}
-                </button>
+                hasBillingAccount ? (
+                  <button
+                    onClick={onManage}
+                    disabled={busy === "portal"}
+                    className="w-full text-sm py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    {busy === "portal" ? "Loading…" : "Switch plan ↗"}
+                  </button>
+                ) : (
+                  <div className="w-full text-sm py-2 text-center text-amber-700 bg-amber-50 rounded-lg font-medium">
+                    Complimentary
+                  </div>
+                )
               ) : (
                 <button
                   onClick={() => onUpgrade(gym, "paid")}
@@ -270,13 +283,19 @@ function GymRow({
             </ul>
             <div className="mt-4">
               {currentPlan === "featured" ? (
-                <button
-                  onClick={onManage}
-                  disabled={busy === "portal"}
-                  className="w-full text-sm py-2 border border-amber-400 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50"
-                >
-                  {busy === "portal" ? "Loading…" : "Manage Billing ↗"}
-                </button>
+                hasBillingAccount ? (
+                  <button
+                    onClick={onManage}
+                    disabled={busy === "portal"}
+                    className="w-full text-sm py-2 border border-amber-400 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50"
+                  >
+                    {busy === "portal" ? "Loading…" : "Manage Billing ↗"}
+                  </button>
+                ) : (
+                  <div className="w-full text-sm py-2 text-center text-amber-700 bg-amber-50 rounded-lg font-medium">
+                    Complimentary
+                  </div>
+                )
               ) : (
                 <button
                   onClick={() => onUpgrade(gym, "featured")}
