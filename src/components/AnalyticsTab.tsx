@@ -108,6 +108,7 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
   const [appliedTo, setAppliedTo] = useState(todayStr());
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [gymSearch, setGymSearch] = useState("");
 
   useEffect(() => {
     load();
@@ -174,6 +175,14 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
             </button>
           ))}
         </div>
+        {gyms.length > 1 && (
+          <input
+            value={gymSearch}
+            onChange={(e) => setGymSearch(e.target.value)}
+            placeholder="Search gym, suburb, postcode…"
+            className="ml-auto px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange min-w-[220px]"
+          />
+        )}
       </div>
 
       {/* Note about data availability */}
@@ -197,21 +206,32 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
             />
           )}
           {/* Per-gym cards */}
-          {data.gyms.map((row) => {
-            const gym = gyms.find((g) => g.id === row.gymId);
-            return (
-              <StatsCard
-                key={row.gymId}
-                title={row.gymName}
-                subtitle={
-                  gym
-                    ? `${gym.address.suburb}, ${gym.address.state} · ${appliedFrom} – ${appliedTo}`
-                    : `${appliedFrom} – ${appliedTo}`
-                }
-                stats={row.stats}
-              />
-            );
-          })}
+          {data.gyms
+            .filter((row) => {
+              if (!gymSearch.trim()) return true;
+              const q = gymSearch.toLowerCase();
+              const gym = gyms.find((g) => g.id === row.gymId);
+              return (
+                row.gymName.toLowerCase().includes(q) ||
+                (gym?.address.suburb ?? "").toLowerCase().includes(q) ||
+                (gym?.address.postcode ?? "").includes(q)
+              );
+            })
+            .map((row) => {
+              const gym = gyms.find((g) => g.id === row.gymId);
+              return (
+                <StatsCard
+                  key={row.gymId}
+                  title={row.gymName}
+                  subtitle={
+                    gym
+                      ? `${gym.address.suburb}, ${gym.address.state} · ${appliedFrom} – ${appliedTo}`
+                      : `${appliedFrom} – ${appliedTo}`
+                  }
+                  stats={row.stats}
+                />
+              );
+            })}
         </div>
       )}
     </div>

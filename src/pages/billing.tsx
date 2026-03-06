@@ -325,6 +325,7 @@ export default function BillingPage() {
 
   // Tab
   const [tab, setTab] = useState<Tab>("billing");
+  const [leadsNewCount, setLeadsNewCount] = useState(0);
 
   // Billing tab controls
   const [interval, setInterval] = useState<Interval>("month");
@@ -532,13 +533,16 @@ export default function BillingPage() {
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
                   tab === key
                     ? "border-brand-orange text-brand-orange"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 {label}
+                {key === "leads" && leadsNewCount > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
+                )}
               </button>
             ))}
           </nav>
@@ -687,7 +691,7 @@ export default function BillingPage() {
 
         {/* ── Leads tab ────────────────────────────────────────────────────── */}
         {tab === "leads" && session && (
-          <LeadsTab ownerId={session.ownerId} gyms={gyms} />
+          <LeadsTab ownerId={session.ownerId} gyms={gyms} onNewCount={setLeadsNewCount} />
         )}
 
         {/* ── Analytics tab ────────────────────────────────────────────────── */}

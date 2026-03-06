@@ -31,12 +31,21 @@ function daysAgoStr(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
-export default function LeadsTab({ ownerId, gyms }: { ownerId: string; gyms: Gym[] }) {
+export default function LeadsTab({
+  ownerId,
+  gyms,
+  onNewCount,
+}: {
+  ownerId: string;
+  gyms: Gym[];
+  onNewCount?: (n: number) => void;
+}) {
   const [from, setFrom] = useState(daysAgoStr(30));
   const [to, setTo] = useState(todayStr());
   const [appliedFrom, setAppliedFrom] = useState(daysAgoStr(30));
   const [appliedTo, setAppliedTo] = useState(todayStr());
   const [gymFilter, setGymFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("new");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -53,7 +62,9 @@ export default function LeadsTab({ ownerId, gyms }: { ownerId: string; gyms: Gym
         `/api/owner/leads?ownerId=${ownerId}&from=${appliedFrom}&to=${appliedTo}`
       );
       const data = await r.json();
-      setLeads(Array.isArray(data) ? data : []);
+      const list: Lead[] = Array.isArray(data) ? data : [];
+      setLeads(list);
+      onNewCount?.(list.filter((l) => !l.status || l.status === "new").length);
     } catch {
       setLeads([]);
     }
@@ -82,10 +93,16 @@ export default function LeadsTab({ ownerId, gyms }: { ownerId: string; gyms: Gym
     setAppliedFrom(f); setAppliedTo(t);
   }
 
-  const filtered =
-    gymFilter === "all" ? leads : leads.filter((l) => l.gymId === gymFilter);
-
   const newCount = leads.filter((l) => !l.status || l.status === "new").length;
+
+  const filtered = leads.filter((l) => {
+    if (gymFilter !== "all" && l.gymId !== gymFilter) return false;
+    if (statusFilter !== "all") {
+      const s = l.status ?? "new";
+      if (s !== statusFilter) return false;
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -139,10 +156,36 @@ export default function LeadsTab({ ownerId, gyms }: { ownerId: string; gyms: Gym
           </select>
         )}
         {newCount > 0 && (
-          <span className="ml-auto text-sm font-semibold text-orange-600">
+          <span className="text-sm font-semibold text-orange-600">
             {newCount} new {newCount === 1 ? "lead" : "leads"}
           </span>
         )}
+      </div>
+
+      {/* Status filter */}
+      <div className="flex items-center gap-2 mb-5">
+        {(["all", "new", "read", "contacted"] as const).map((s) => {
+          const count = s === "all" ? leads.length : leads.filter((l) => (l.status ?? "new") === s).length;
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                statusFilter === s
+                  ? "bg-brand-orange text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {s === "new" && statusFilter !== "new" && newCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
+              )}
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+              <span className={`text-xs ${statusFilter === s ? "text-white/75" : "text-gray-400"}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Lead list */}
