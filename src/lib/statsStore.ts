@@ -5,6 +5,7 @@ export interface GymStats {
   websiteClicks: number;
   phoneClicks: number;
   emailClicks: number;
+  bookingClicks: number;
 }
 
 export type StatEvent = keyof GymStats;
@@ -14,6 +15,7 @@ const ZERO: GymStats = {
   websiteClicks: 0,
   phoneClicks: 0,
   emailClicks: 0,
+  bookingClicks: 0,
 };
 
 // GymStat records use gymId as the DynamoDB item id so that get({ id: gymId })
@@ -39,6 +41,7 @@ export const statsStore = {
         websiteClicks: event === "websiteClicks" ? 1 : 0,
         phoneClicks: event === "phoneClicks" ? 1 : 0,
         emailClicks: event === "emailClicks" ? 1 : 0,
+        bookingClicks: event === "bookingClicks" ? 1 : 0,
       });
     }
 
@@ -57,6 +60,7 @@ export const statsStore = {
         websiteClicks: event === "websiteClicks" ? 1 : 0,
         phoneClicks: event === "phoneClicks" ? 1 : 0,
         emailClicks: event === "emailClicks" ? 1 : 0,
+        bookingClicks: event === "bookingClicks" ? 1 : 0,
       });
     }
   },
@@ -69,6 +73,7 @@ export const statsStore = {
       websiteClicks: data?.websiteClicks ?? 0,
       phoneClicks: data?.phoneClicks ?? 0,
       emailClicks: data?.emailClicks ?? 0,
+      bookingClicks: data?.bookingClicks ?? 0,
     };
   },
 };

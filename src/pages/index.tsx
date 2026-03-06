@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function HomePage({ gyms }: Props) {
+  const router = useRouter();
   const [postcode, setPostcode] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
@@ -29,8 +31,18 @@ export default function HomePage({ gyms }: Props) {
   const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc" | null>(null);
   const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
   const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(1);
   // Rotation seed changes every 8 hours — stable for the session
   const rotationSeed = useMemo(() => Math.floor(Date.now() / (8 * 60 * 60 * 1000)), []);
+
+  // Auto-search when arriving from suburb page with ?postcode=xxx
+  useEffect(() => {
+    const pc = router.query.postcode as string | undefined;
+    if (pc) {
+      setPostcode(pc);
+      setHasSearched(true);
+    }
+  }, [router.query.postcode]);
 
   useEffect(() => {
     getCurrentUser()
@@ -70,6 +82,7 @@ export default function HomePage({ gyms }: Props) {
     setPostcode(pc);
     setHasSearched(true);
     setPageSize(25);
+    setPage(1);
   }
 
   return (
@@ -158,27 +171,37 @@ export default function HomePage({ gyms }: Props) {
                     <option value="price-desc">Price: High to low</option>
                   </select>
                 </div>
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {(pageSize === 0 ? results : results.slice(0, pageSize)).map((gym) => (
-                    <GymCard key={gym.id} gym={gym} unclaimed={gym.ownerId === "owner-3" || gym.ownerId === "unclaimed"} />
-                  ))}
-                </div>
-                <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
-                  <span>Showing {pageSize === 0 ? results.length : Math.min(pageSize, results.length)} of {results.length}</span>
-                  <div className="flex items-center gap-2">
-                    <span>Show:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange"
-                    >
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={0}>All</option>
-                    </select>
-                  </div>
-                </div>
+                {(() => {
+                  const totalPages = pageSize === 0 ? 1 : Math.ceil(results.length / pageSize);
+                  const safePage = Math.min(page, totalPages);
+                  const start = pageSize === 0 ? 0 : (safePage - 1) * pageSize;
+                  const paged = pageSize === 0 ? results : results.slice(start, start + pageSize);
+                  return (
+                    <>
+                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        {paged.map((gym) => (
+                          <GymCard key={gym.id} gym={gym} unclaimed={gym.ownerId === "owner-3" || gym.ownerId === "unclaimed"} />
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
+                        <span>Showing {start + 1}–{Math.min(start + paged.length, results.length)} of {results.length}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage <= 1} className="px-2 py-1 border border-gray-200 rounded disabled:opacity-30 hover:bg-gray-50">‹</button>
+                            <span className="px-2">Page {safePage} of {totalPages}</span>
+                            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} className="px-2 py-1 border border-gray-200 rounded disabled:opacity-30 hover:bg-gray-50">›</button>
+                          </div>
+                          <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
+                            <option value={25}>25 / page</option>
+                            <option value={50}>50 / page</option>
+                            <option value={100}>100 / page</option>
+                            <option value={0}>All</option>
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
           </div>

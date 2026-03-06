@@ -90,6 +90,7 @@ export default function AdminPage() {
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const setClaimsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, claims: n })), []);
   const setModerationPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, moderation: n })), []);
+  const setLeadsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, leads: n })), []);
 
   // Pre-fetch pending counts so badges show immediately on all tabs
   useEffect(() => {
@@ -179,7 +180,7 @@ export default function AdminPage() {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t === "moderation" ? "Moderation Review" : t === "leads" ? "Leads" : t}
+              {t === "moderation" ? "Moderation" : t === "leads" ? "Leads" : t}
               {(pendingCounts[t] ?? 0) > 0 && (
                 <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
               )}
@@ -194,7 +195,7 @@ export default function AdminPage() {
         {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
         {tab === "users" && <UsersTab />}
-        {tab === "leads" && <LeadsTab />}
+        {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
       </div>
     </div>
   );
@@ -219,7 +220,7 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [approved, setApproved] = useState<{ ownerId: string; isNewUser: boolean } | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [pageSize, setPageSize] = useState(25);
 
   const load = useCallback(async () => {
@@ -556,7 +557,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
   const [toast, setToast] = useState<{ msg: string; ok: boolean }>({ msg: "", ok: true });
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pageSize, setPageSize] = useState(25);
 
@@ -642,7 +643,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
       )}
 
       <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-base font-semibold text-gray-900 shrink-0">Moderation Review</h2>
+        <h2 className="text-base font-semibold text-gray-900 shrink-0">Moderation</h2>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -832,8 +833,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     const words = ["CONFIRM", "ERASE", "CLEAR", "PROCEED", "WIPE", "RESET", "APPLY", "DELETE"];
     return words[Math.floor(Math.random() * words.length)];
   });
-  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
-  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("owned");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [pageSize, setPageSize] = useState(25);
@@ -1559,6 +1560,8 @@ function UsersTab() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [pageSize, setPageSize] = useState(25);
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
+  const [gymFilter, setGymFilter] = useState<"all" | "with-gym" | "no-gym">("all");
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ email: "", password: "", ownerId: "", isAdmin: false });
   const [resetFor, setResetFor] = useState<string | null>(null);
@@ -1663,10 +1666,10 @@ function UsersTab() {
         </div>
       )}
 
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         <form
           onSubmit={(e) => { e.preventDefault(); search(q); }}
-          className="flex gap-2 flex-1"
+          className="flex gap-2 flex-1 min-w-[200px]"
         >
           <input
             value={q}
@@ -1681,6 +1684,16 @@ function UsersTab() {
             Search
           </button>
         </form>
+        <select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)} className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive / Disabled</option>
+        </select>
+        <select value={gymFilter} onChange={(e) => setGymFilter(e.target.value as typeof gymFilter)} className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange">
+          <option value="all">All users</option>
+          <option value="with-gym">Has gym claim</option>
+          <option value="no-gym">No gym claim</option>
+        </select>
         <button
           onClick={() => setShowNew(true)}
           className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
@@ -1693,6 +1706,17 @@ function UsersTab() {
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : (
         <>
+        {(() => {
+          const filteredUsers = users.filter((u) => {
+            if (activeFilter === "active" && !u.enabled) return false;
+            if (activeFilter === "inactive" && u.enabled) return false;
+            if (gymFilter === "with-gym" && !u.ownerId) return false;
+            if (gymFilter === "no-gym" && u.ownerId) return false;
+            return true;
+          });
+          const displayedUsers = pageSize === 0 ? filteredUsers : filteredUsers.slice(0, pageSize);
+          return (
+        <>
         <div className="overflow-x-auto rounded-lg border bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -1703,7 +1727,7 @@ function UsersTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {(pageSize === 0 ? users : users.slice(0, pageSize)).map((u) => (
+              {displayedUsers.map((u) => (
                 <tr key={u.username}>
                   <td className="px-4 py-3 font-medium text-gray-900">{u.email}</td>
                   <td className="px-4 py-3">
@@ -1813,7 +1837,7 @@ function UsersTab() {
           </table>
         </div>
         <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
-          <span>Showing {pageSize === 0 ? users.length : Math.min(pageSize, users.length)} of {users.length}</span>
+          <span>Showing {displayedUsers.length} of {filteredUsers.length}{filteredUsers.length !== users.length ? ` (${users.length} total)` : ""}</span>
           <div className="flex items-center gap-2">
             <span>Show:</span>
             <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">
@@ -1824,6 +1848,9 @@ function UsersTab() {
             </select>
           </div>
         </div>
+        </>
+          );
+        })()}
         </>
       )}
 
@@ -1908,26 +1935,75 @@ interface LeadRecord {
   status?: string;
 }
 
-function LeadsTab() {
+function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) {
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageSize, setPageSize] = useState(25);
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
         const r = await fetch("/api/admin/leads");
-        if (r.ok) setLeads(await r.json());
+        if (r.ok) {
+          const data = await r.json();
+          setLeads(data);
+          onPendingCount?.(data.filter((l: LeadRecord) => !l.status || l.status === "new").length);
+        }
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [onPendingCount]);
+
+  const filtered = leads.filter((l) => {
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      if (
+        !l.name.toLowerCase().includes(q) &&
+        !l.email.toLowerCase().includes(q) &&
+        !(l.phone ?? "").toLowerCase().includes(q) &&
+        !(l.gymName ?? l.gymId).toLowerCase().includes(q)
+      ) return false;
+    }
+    const date = (l.createdAt ?? "").slice(0, 10);
+    if (dateFrom && date < dateFrom) return false;
+    if (dateTo && date > dateTo) return false;
+    return true;
+  });
+
+  const displayed = pageSize === 0 ? filtered : filtered.slice(0, pageSize);
 
   return (
     <div>
-      <h2 className="text-base font-semibold text-gray-900 mb-4">Leads</h2>
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <h2 className="text-base font-semibold text-gray-900 shrink-0">Leads</h2>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search name, email, phone, gym…"
+          className="flex-1 min-w-[200px] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        />
+        <span className="text-gray-400 text-sm">to</span>
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        />
+        {(search || dateFrom || dateTo) && (
+          <button onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }} className="text-sm text-gray-400 hover:text-gray-600">Clear</button>
+        )}
+      </div>
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : leads.length === 0 ? (
@@ -1944,7 +2020,7 @@ function LeadsTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {(pageSize === 0 ? leads : leads.slice(0, pageSize)).map((l) => (
+              {displayed.map((l) => (
                 <tr key={l.id}>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDate(l.createdAt)}</td>
                   <td className="px-4 py-3 text-gray-700">
@@ -1961,7 +2037,7 @@ function LeadsTab() {
           </table>
         </div>
         <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100 text-xs text-gray-500">
-          <span>Showing {pageSize === 0 ? leads.length : Math.min(pageSize, leads.length)} of {leads.length}</span>
+          <span>Showing {displayed.length} of {filtered.length}{filtered.length !== leads.length ? ` (${leads.length} total)` : ""}</span>
           <div className="flex items-center gap-2">
             <span>Show:</span>
             <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange">

@@ -192,10 +192,10 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
         </div>
       </section>
 
-      {/* Social Media — paid listings only */}
+      {/* Social Media + Booking — paid listings only */}
       {form.isPaid && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-          Social Media
+          Social Media &amp; Booking
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -221,6 +221,19 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
               placeholder="https://facebook.com/yourgym"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
             />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Online Booking URL
+            </label>
+            <input
+              type="url"
+              value={form.bookingUrl ?? ""}
+              onChange={(e) => setField("bookingUrl", e.target.value || undefined)}
+              placeholder="https://app.mindbodyonline.com/... or your booking page"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+            />
+            <p className="text-xs text-gray-400 mt-1">Mindbody, Glofox, Pike13, or any direct booking link. Displays a &ldquo;Book Now&rdquo; button on your profile.</p>
           </div>
         </div>
       </section>}

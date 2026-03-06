@@ -29,6 +29,7 @@ const schema = a.schema({
       website: a.string(),
       instagram: a.string(),
       facebook: a.string(),
+      bookingUrl: a.string(),
       // hours (flattened)
       hoursMonday: a.string(),
       hoursTuesday: a.string(),
@@ -67,6 +68,7 @@ const schema = a.schema({
       websiteClicks: a.integer().default(0),
       phoneClicks: a.integer().default(0),
       emailClicks: a.integer().default(0),
+      bookingClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
@@ -125,6 +127,7 @@ const schema = a.schema({
       websiteClicks: a.integer().default(0),
       phoneClicks: a.integer().default(0),
       emailClicks: a.integer().default(0),
+      bookingClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });

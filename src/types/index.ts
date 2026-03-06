@@ -35,6 +35,7 @@ export interface Gym {
   website: string;
   instagram?: string;
   facebook?: string;
+  bookingUrl?: string;
   lat: number;
   lng: number;
   amenities: string[];

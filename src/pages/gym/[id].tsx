@@ -241,6 +241,17 @@ export default function GymProfilePage({ gym }: Props) {
               )}
 
               {/* Contact form for paid gyms with email; otherwise Visit Website button */}
+              {gym.isPaid && gym.bookingUrl && (
+                <a
+                  href={gym.bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => track(gym.id, "bookingClicks")}
+                  className="block mt-4 bg-white text-brand-orange text-center font-bold py-2.5 rounded-lg hover:bg-orange-50 transition-colors text-sm"
+                >
+                  Book Now →
+                </a>
+              )}
               {gym.isPaid && gym.email ? (
                 <div className="mt-4">
                   {contactStatus === "sent" ? (

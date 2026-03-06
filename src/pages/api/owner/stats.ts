@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 
 function zeroStats() {
-  return { leads: 0, pageViews: 0, websiteClicks: 0, phoneClicks: 0, emailClicks: 0 };
+  return { leads: 0, pageViews: 0, websiteClicks: 0, phoneClicks: 0, emailClicks: 0, bookingClicks: 0 };
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -57,6 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     s.websiteClicks += Number(d.websiteClicks ?? 0);
     s.phoneClicks += Number(d.phoneClicks ?? 0);
     s.emailClicks += Number(d.emailClicks ?? 0);
+    s.bookingClicks += Number(d.bookingClicks ?? 0);
   }
 
   // Count leads per gym in date range
@@ -92,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     aggregate.websiteClicks += stats.websiteClicks;
     aggregate.phoneClicks += stats.phoneClicks;
     aggregate.emailClicks += stats.emailClicks;
+    aggregate.bookingClicks += stats.bookingClicks;
   }
 
   return res.status(200).json({ gyms: gymStats, aggregate });

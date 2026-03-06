@@ -38,11 +38,16 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
     e.preventDefault();
     const pc = searchInput.trim();
     const meta = POSTCODE_META[pc];
-    if (!meta) {
-      setSearchError("Postcode not found — try a WA postcode e.g. 6000");
+    if (meta) {
+      router.push(`/gyms/${meta.slug}`);
       return;
     }
-    router.push(`/gyms/${meta.slug}`);
+    if (POSTCODE_COORDS[pc]) {
+      // Valid postcode but no dedicated suburb page — search from home
+      router.push(`/?postcode=${pc}`);
+      return;
+    }
+    setSearchError("Postcode not found. Try a valid Australian postcode e.g. 6000");
   }
 
   // Client-side filter + sort on top of the server-pre-filtered set
