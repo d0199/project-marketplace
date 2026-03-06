@@ -144,9 +144,17 @@ export const ownerStore = {
   async getByOwner(ownerId: string): Promise<Gym[]> {
     if (!isAmplifyConfigured())
       return seedGyms.filter((g) => g.ownerId === ownerId);
-    return (
-      await listAllGyms({ filter: { ownerId: { eq: ownerId } } })
-    ).map(toGym);
+    const results: GymRecord[] = [];
+    let nextToken: string | null | undefined;
+    do {
+      const res = await dataClient.models.Gym.listGymByOwnerId(
+        { ownerId },
+        { limit: 1000, nextToken }
+      );
+      results.push(...(res.data ?? []));
+      nextToken = res.nextToken;
+    } while (nextToken);
+    return results.map(toGym);
   },
 
   async update(gym: Gym): Promise<void> {

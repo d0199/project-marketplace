@@ -12,15 +12,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { ownerId, from, to } = req.query as Record<string, string>;
   if (!ownerId) return res.status(400).json({ error: "ownerId required" });
 
-  // Get owner's gyms — paginate to handle large datasets
+  // Get owner's gyms via GSI (fast index query)
   const allGyms: { id: string; name?: string | null }[] = [];
   let gymToken: string | null | undefined;
   do {
-    const res = await dataClient.models.Gym.list({
-      filter: { ownerId: { eq: ownerId } },
-      limit: 1000,
-      nextToken: gymToken,
-    });
+    const res = await dataClient.models.Gym.listGymByOwnerId(
+      { ownerId },
+      { limit: 1000, nextToken: gymToken }
+    );
     allGyms.push(...(res.data ?? []));
     gymToken = res.nextToken;
   } while (gymToken);

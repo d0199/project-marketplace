@@ -54,6 +54,8 @@ const schema = a.schema({
       memberScrollText: a.string(),
       memberOffersTnC: a.string(),
     })
+    // GSI on ownerId — makes getByOwner O(1) instead of a full table scan.
+    .secondaryIndexes((index) => [index("ownerId")])
     // API key allows public reads and owner writes from server-side API routes.
     // The API routes themselves enforce ownership by comparing ownerId values.
     .authorization((allow) => [allow.publicApiKey()]),
