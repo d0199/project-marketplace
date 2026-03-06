@@ -477,7 +477,7 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
             rel="noopener noreferrer"
             className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"
           >
-            View Page ↗
+            View Page →
           </Link>
         ) : <span />}
         <button
