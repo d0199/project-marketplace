@@ -394,6 +394,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   params,
 }) => {
   const gym = await ownerStore.getById(params?.id as string);
-  if (!gym) return { notFound: true };
+  if (!gym) return { redirect: { destination: "/", permanent: false } };
   return { props: { gym } };
 };
