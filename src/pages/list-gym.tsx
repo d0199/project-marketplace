@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 
 interface Form {
+  contactName: string;
   contactEmail: string;
   contactPhone: string;
   gymName: string;
@@ -17,7 +18,7 @@ interface Form {
 }
 
 const EMPTY: Form = {
-  contactEmail: "", contactPhone: "",
+  contactName: "", contactEmail: "", contactPhone: "",
   gymName: "", gymSuburb: "", gymPostcode: "",
   gymPhone: "", gymEmail: "", gymWebsite: "", description: "",
 };
@@ -33,9 +34,14 @@ export default function ListGymPage() {
       try {
         await getCurrentUser();
         const attrs = await fetchUserAttributes();
+        const name = attrs.name ?? attrs.given_name ?? "";
         const email = attrs.email ?? "";
-        if (email) {
-          setForm((f) => ({ ...f, contactEmail: email }));
+        if (name || email) {
+          setForm((f) => ({
+            ...f,
+            contactName: name || f.contactName,
+            contactEmail: email || f.contactEmail,
+          }));
         }
       } catch {
         // not signed in — leave form empty
@@ -65,7 +71,7 @@ export default function ListGymPage() {
           gymWebsite: form.gymWebsite,
           gymPhone: form.gymPhone,
           gymEmail: form.gymEmail,
-          name: "",
+          name: form.contactName,
           email: form.contactEmail,
           phone: form.contactPhone,
           message: form.description,
@@ -90,7 +96,7 @@ export default function ListGymPage() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Listing submitted!</h1>
           <p className="text-gray-500 mb-6">
-            Thanks! Our team will review your submission and be in touch within 1–2 business days.
+            Thanks, {form.contactName.split(" ")[0]}. Our team will review your submission and be in touch within 1–2 business days.
           </p>
           <Link href="/" className="text-brand-orange hover:underline text-sm font-medium">
             Back to home
@@ -121,6 +127,15 @@ export default function ListGymPage() {
             <section>
               <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b">Your contact details</h2>
               <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full name <span className="text-red-500">*</span></label>
+                  <input
+                    required
+                    value={form.contactName}
+                    onChange={(e) => set("contactName", e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
                   <input
