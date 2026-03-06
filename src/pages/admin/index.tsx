@@ -1571,9 +1571,9 @@ function UsersTab() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
-  function showToast(msg: string) {
+  function showToast(msg: string, error = false) {
     setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+    setTimeout(() => setToast(""), error ? 8000 : 3000);
   }
 
   const search = useCallback(async (query: string) => {
@@ -1638,7 +1638,8 @@ function UsersTab() {
       setResetFor(null);
       setResetPw("");
     } else {
-      showToast("Error resetting password.");
+      const body = await r.json().catch(() => ({}));
+      showToast(`Reset failed: ${body.error ?? r.statusText}`, true);
     }
   }
 
@@ -1695,7 +1696,11 @@ function UsersTab() {
           <option value="no-gym">No gym claim</option>
         </select>
         <button
-          onClick={() => setShowNew(true)}
+          onClick={() => {
+            const autoId = `owner-${Math.random().toString(36).slice(2, 10)}`;
+            setNewForm((f) => ({ ...f, ownerId: autoId }));
+            setShowNew(true);
+          }}
           className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
         >
           + New User
@@ -1762,26 +1767,29 @@ function UsersTab() {
                         </button>
                       </div>
                     ) : resetFor === u.username ? (
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="password"
-                          value={resetPw}
-                          onChange={(e) => setResetPw(e.target.value)}
-                          placeholder="New password"
-                          className="px-2 py-1 border rounded text-xs w-36 focus:outline-none focus:ring-1 focus:ring-brand-orange"
-                        />
-                        <button
-                          onClick={() => resetPassword(u.username)}
-                          className="px-2 py-1 bg-brand-orange text-white text-xs rounded font-medium"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => { setResetFor(null); setResetPw(""); }}
-                          className="text-gray-400 text-xs"
-                        >
-                          Cancel
-                        </button>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            value={resetPw}
+                            onChange={(e) => setResetPw(e.target.value)}
+                            placeholder="New password"
+                            className="px-2 py-1 border rounded text-xs w-40 focus:outline-none focus:ring-1 focus:ring-brand-orange font-mono"
+                          />
+                          <button
+                            onClick={() => resetPassword(u.username)}
+                            className="px-2 py-1 bg-brand-orange text-white text-xs rounded font-medium"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => { setResetFor(null); setResetPw(""); }}
+                            className="text-gray-400 text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400">Min 8 chars, upper + lower + number + symbol</p>
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
