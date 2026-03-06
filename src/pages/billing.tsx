@@ -127,7 +127,7 @@ function GymRow({
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"
           >
-            View profile ↗
+            View profile →
           </Link>
           <button
             onClick={onToggleCollapse}
