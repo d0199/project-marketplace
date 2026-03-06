@@ -11,12 +11,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { ownerId, from, to } = req.query as Record<string, string>;
     if (!ownerId) return res.status(400).json({ error: "ownerId required" });
 
-    // Resolve the owner's gym IDs
-    const { data: gyms } = await dataClient.models.Gym.list({
-      filter: { ownerId: { eq: ownerId } },
-      limit: 200,
-    });
-    const gymIds = new Set((gyms ?? []).map((g) => g.id));
+    // Resolve the owner's gym IDs — paginate to handle large datasets
+    const allGyms: { id: string }[] = [];
+    let gymToken: string | null | undefined;
+    do {
+      const res = await dataClient.models.Gym.list({
+        filter: { ownerId: { eq: ownerId } },
+        limit: 1000,
+        nextToken: gymToken,
+      });
+      allGyms.push(...(res.data ?? []));
+      gymToken = res.nextToken;
+    } while (gymToken);
+    const gymIds = new Set(allGyms.map((g) => g.id));
     if (gymIds.size === 0) return res.status(200).json([]);
 
     // Paginate all leads, filter client-side by gymId + date range

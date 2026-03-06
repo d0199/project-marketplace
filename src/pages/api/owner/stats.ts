@@ -12,16 +12,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { ownerId, from, to } = req.query as Record<string, string>;
   if (!ownerId) return res.status(400).json({ error: "ownerId required" });
 
-  // Get owner's gyms
-  const { data: gyms } = await dataClient.models.Gym.list({
-    filter: { ownerId: { eq: ownerId } },
-    limit: 200,
-  });
-  if (!gyms || gyms.length === 0) {
+  // Get owner's gyms — paginate to handle large datasets
+  const allGyms: { id: string; name?: string | null }[] = [];
+  let gymToken: string | null | undefined;
+  do {
+    const res = await dataClient.models.Gym.list({
+      filter: { ownerId: { eq: ownerId } },
+      limit: 1000,
+      nextToken: gymToken,
+    });
+    allGyms.push(...(res.data ?? []));
+    gymToken = res.nextToken;
+  } while (gymToken);
+
+  if (allGyms.length === 0) {
     return res.status(200).json({ gyms: [], aggregate: zeroStats() });
   }
 
-  const gymMap = new Map(gyms.map((g) => [g.id, g.name ?? ""]));
+  const gymMap = new Map(allGyms.map((g) => [g.id, g.name ?? ""]));
   const gymIds = new Set(gymMap.keys());
 
   // Fetch all DailyGymStat records, filter client-side
