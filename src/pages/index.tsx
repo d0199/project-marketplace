@@ -28,6 +28,7 @@ export default function HomePage({ gyms }: Props) {
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
   const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc" | null>(null);
   const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
+  const [pageSize, setPageSize] = useState(25);
   // Rotation seed changes every 8 hours — stable for the session
   const rotationSeed = useMemo(() => Math.floor(Date.now() / (8 * 60 * 60 * 1000)), []);
 
@@ -68,6 +69,7 @@ export default function HomePage({ gyms }: Props) {
   function handleSearch(pc: string) {
     setPostcode(pc);
     setHasSearched(true);
+    setPageSize(25);
   }
 
   return (
@@ -157,9 +159,25 @@ export default function HomePage({ gyms }: Props) {
                   </select>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {results.map((gym) => (
+                  {(pageSize === 0 ? results : results.slice(0, pageSize)).map((gym) => (
                     <GymCard key={gym.id} gym={gym} unclaimed={gym.ownerId === "owner-3" || gym.ownerId === "unclaimed"} />
                   ))}
+                </div>
+                <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
+                  <span>Showing {pageSize === 0 ? results.length : Math.min(pageSize, results.length)} of {results.length}</span>
+                  <div className="flex items-center gap-2">
+                    <span>Show:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                      className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                    >
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={0}>All</option>
+                    </select>
+                  </div>
                 </div>
               </>
             )}

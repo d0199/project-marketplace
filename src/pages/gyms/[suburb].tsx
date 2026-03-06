@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
 import GymCard from "@/components/GymCard";
 import AmenityFilter from "@/components/AmenityFilter";
@@ -27,6 +28,22 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  function handleSuburbSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const pc = searchInput.trim();
+    const meta = POSTCODE_META[pc];
+    if (!meta) {
+      setSearchError("Postcode not found — try a WA postcode e.g. 6000");
+      return;
+    }
+    router.push(`/gyms/${meta.slug}`);
+  }
 
   // Client-side filter + sort on top of the server-pre-filtered set
   const results = useMemo(() => {
@@ -58,7 +75,9 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
     return sorted;
   }, [gyms, selectedAmenities, selectedMemberOffers, sortBy]);
 
+  const [pageSize, setPageSize] = useState(25);
   const activeFilters = selectedAmenities.length + selectedMemberOffers.length;
+  const displayedResults = pageSize === 0 ? results : results.slice(0, pageSize);
 
   const count = gyms.length;
   const title = `Gyms in ${suburbName} (${postcode}) | mynextgym.com.au`;
@@ -103,17 +122,47 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
         </div>
 
         {/* CTA — search a different suburb */}
-        <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-8">
-          <span className="text-sm text-gray-600">
-            Searching in <span className="font-semibold text-gray-900">{suburbName}</span>
-          </span>
-          <span className="text-gray-300">·</span>
-          <Link
-            href="/"
-            className="text-sm font-semibold text-brand-orange hover:text-brand-orange-dark transition-colors"
-          >
-            Search a different suburb →
-          </Link>
+        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-8">
+          {showSearch ? (
+            <form onSubmit={handleSuburbSearch} className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-gray-600 shrink-0">Search suburb:</span>
+              <input
+                ref={searchRef}
+                value={searchInput}
+                onChange={(e) => { setSearchInput(e.target.value); setSearchError(""); }}
+                placeholder="Enter postcode e.g. 6000"
+                className="flex-1 min-w-[160px] px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                Go
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowSearch(false); setSearchInput(""); setSearchError(""); }}
+                className="text-sm text-gray-400 hover:text-gray-600"
+              >
+                Cancel
+              </button>
+              {searchError && <p className="w-full text-xs text-red-500 mt-0.5">{searchError}</p>}
+            </form>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">
+                Searching in <span className="font-semibold text-gray-900">{suburbName}</span>
+              </span>
+              <span className="text-gray-300">·</span>
+              <button
+                onClick={() => { setShowSearch(true); }}
+                className="text-sm font-semibold text-brand-orange hover:text-brand-orange-dark transition-colors"
+              >
+                Search a different suburb →
+              </button>
+            </div>
+          )}
         </div>
 
         {count === 0 ? (
@@ -204,15 +253,33 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
                   </button>
                 </div>
               ) : (
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {results.map((gym) => (
-                    <GymCard
-                      key={gym.id}
-                      gym={gym}
-                      unclaimed={gym.ownerId === "owner-3" || gym.ownerId === "unclaimed"}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {displayedResults.map((gym) => (
+                      <GymCard
+                        key={gym.id}
+                        gym={gym}
+                        unclaimed={gym.ownerId === "owner-3" || gym.ownerId === "unclaimed"}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
+                    <span>Showing {displayedResults.length} of {results.length}</span>
+                    <div className="flex items-center gap-2">
+                      <span>Show:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                      >
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                        <option value={0}>All</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
