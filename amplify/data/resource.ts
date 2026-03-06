@@ -107,7 +107,20 @@ const schema = a.schema({
       email: a.string().required(),
       phone: a.string(),
       message: a.string(),
-      status: a.string(), // "new" | "read"
+      status: a.string(), // "new" | "read" | "contacted"
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  // Daily stat buckets for time-series analytics.
+  // id = gymId#YYYY-MM-DD (deterministic) so upserts work without a GSI.
+  DailyGymStat: a
+    .model({
+      gymId: a.string().required(),
+      date: a.string().required(), // YYYY-MM-DD
+      pageViews: a.integer().default(0),
+      websiteClicks: a.integer().default(0),
+      phoneClicks: a.integer().default(0),
+      emailClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });

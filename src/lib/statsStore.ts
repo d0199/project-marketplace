@@ -26,18 +26,33 @@ const ZERO: GymStats = {
 export const statsStore = {
   async record(gymId: string, event: StatEvent): Promise<void> {
     if (!isAmplifyConfigured()) return;
-    const { data: existing } = await dataClient.models.GymStat.get({
-      id: gymId,
-    });
+
+    // Update cumulative stat
+    const { data: existing } = await dataClient.models.GymStat.get({ id: gymId });
     if (existing) {
-      await dataClient.models.GymStat.update({
-        id: gymId,
-        [event]: (existing[event] ?? 0) + 1,
-      });
+      await dataClient.models.GymStat.update({ id: gymId, [event]: (existing[event] ?? 0) + 1 });
     } else {
       await dataClient.models.GymStat.create({
         id: gymId,
         gymId,
+        pageViews: event === "pageViews" ? 1 : 0,
+        websiteClicks: event === "websiteClicks" ? 1 : 0,
+        phoneClicks: event === "phoneClicks" ? 1 : 0,
+        emailClicks: event === "emailClicks" ? 1 : 0,
+      });
+    }
+
+    // Update daily bucket (gymId#YYYY-MM-DD) for time-series analytics
+    const today = new Date().toISOString().slice(0, 10);
+    const dailyId = `${gymId}#${today}`;
+    const { data: daily } = await dataClient.models.DailyGymStat.get({ id: dailyId });
+    if (daily) {
+      await dataClient.models.DailyGymStat.update({ id: dailyId, [event]: (daily[event] ?? 0) + 1 });
+    } else {
+      await dataClient.models.DailyGymStat.create({
+        id: dailyId,
+        gymId,
+        date: today,
         pageViews: event === "pageViews" ? 1 : 0,
         websiteClicks: event === "websiteClicks" ? 1 : 0,
         phoneClicks: event === "phoneClicks" ? 1 : 0,
