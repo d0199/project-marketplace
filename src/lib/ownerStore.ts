@@ -59,6 +59,7 @@ function toGym(r: GymRecord): Gym {
     ...(r.memberOffersTnC != null && { memberOffersTnC: r.memberOffersTnC }),
     pricePerWeek: r.pricePerWeek ?? 0,
     images: (r.images?.filter(Boolean) ?? []) as string[],
+    ...(r.imageFocalPoints != null && { imageFocalPoints: (r.imageFocalPoints.filter((v) => v != null) as number[]) }),
   };
 }
 
@@ -105,6 +106,7 @@ function fromGym(gym: Gym) {
     memberOffersTnC: gym.memberOffersTnC,
     pricePerWeek: gym.pricePerWeek,
     images: gym.images,
+    imageFocalPoints: gym.imageFocalPoints,
   };
 }
 
@@ -215,6 +217,7 @@ export const ownerStore = {
       memberOffersTnC: gym.memberOffersTnC,
       pricePerWeek: gym.pricePerWeek,
       images: gym.images,
+      imageFocalPoints: gym.imageFocalPoints,
     });
     if (!data) throw new Error("Failed to create gym");
     return toGym(data);

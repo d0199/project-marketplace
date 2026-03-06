@@ -48,6 +48,7 @@ export interface Gym {
   memberOffersTnC?: string;
   pricePerWeek: number;
   images: string[];
+  imageFocalPoints?: number[];
 }
 
 export interface Lead {

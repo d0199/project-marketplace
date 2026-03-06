@@ -7,6 +7,7 @@ interface Props {
   sizes?: string;
   showDots?: boolean;
   intervalMs?: number;
+  focalPoints?: number[];
 }
 
 export default function ImageCarousel({
@@ -15,6 +16,7 @@ export default function ImageCarousel({
   sizes = "(max-width: 768px) 100vw, 50vw",
   showDots = true,
   intervalMs = 5000,
+  focalPoints,
 }: Props) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -51,6 +53,7 @@ export default function ImageCarousel({
             alt={`${alt} — photo ${i + 1}`}
             fill
             className="object-cover"
+            style={{ objectPosition: `center ${focalPoints?.[i] ?? 50}%` }}
             sizes={sizes}
             unoptimized
             priority={i === 0}

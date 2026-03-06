@@ -43,7 +43,9 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
     setForm((f) => {
       const imgs = [...f.images];
       imgs.splice(idx, 0, imgs.splice(from, 1)[0]);
-      return { ...f, images: imgs };
+      const fps = [...(f.imageFocalPoints ?? f.images.map(() => 50))];
+      fps.splice(idx, 0, fps.splice(from, 1)[0]);
+      return { ...f, images: imgs, imageFocalPoints: fps };
     });
     dragIndex.current = idx;
   }
@@ -385,32 +387,72 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
           First image is the primary photo shown on cards. Drag to reorder — add up to 6 images.
         </p>
         <div className="space-y-3 mb-4">
-          {form.images.map((url, idx) => (
-            <div
-              key={url + idx}
-              draggable
-              onDragStart={() => onDragStart(idx)}
-              onDragOver={(e) => onDragOver(e, idx)}
-              className="flex items-center gap-3 cursor-grab active:cursor-grabbing rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 px-1 -mx-1 transition-colors"
-            >
-              <span className="text-gray-300 select-none text-base leading-none shrink-0" title="Drag to reorder">⠿</span>
-              <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                <Image src={url} alt={`Image ${idx + 1}`} fill className="object-cover" unoptimized sizes="64px" />
-              </div>
-              <span className="flex-1 text-xs text-gray-600 truncate">{url}</span>
-              {idx === 0 && (
-                <span className="text-xs bg-brand-orange text-white px-2 py-0.5 rounded-full shrink-0">Primary</span>
-              )}
-              <button
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))}
-                className="text-red-400 hover:text-red-600 text-lg leading-none shrink-0"
-                aria-label="Remove image"
+          {form.images.map((url, idx) => {
+            const focalY = form.imageFocalPoints?.[idx] ?? 50;
+            return (
+              <div
+                key={url + idx}
+                draggable
+                onDragStart={() => onDragStart(idx)}
+                onDragOver={(e) => onDragOver(e, idx)}
+                className="rounded-lg border border-gray-100 hover:border-gray-200 bg-white hover:bg-gray-50 px-3 py-2 -mx-1 transition-colors cursor-grab active:cursor-grabbing"
               >
-                ×
-              </button>
-            </div>
-          ))}
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-300 select-none text-base leading-none shrink-0" title="Drag to reorder">⠿</span>
+                  <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                    <Image
+                      src={url}
+                      alt={`Image ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      style={{ objectPosition: `center ${focalY}%` }}
+                      unoptimized
+                      sizes="64px"
+                    />
+                  </div>
+                  <span className="flex-1 text-xs text-gray-600 truncate">{url}</span>
+                  {idx === 0 && (
+                    <span className="text-xs bg-brand-orange text-white px-2 py-0.5 rounded-full shrink-0">Primary</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({
+                      ...f,
+                      images: f.images.filter((_, i) => i !== idx),
+                      imageFocalPoints: (f.imageFocalPoints ?? f.images.map(() => 50)).filter((_, i) => i !== idx),
+                    }))}
+                    className="text-red-400 hover:text-red-600 text-lg leading-none shrink-0"
+                    aria-label="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
+                {/* Focal point slider */}
+                <div className="mt-2 flex items-center gap-2 pl-7">
+                  <span className="text-xs text-gray-400 shrink-0">Focus</span>
+                  <span className="text-xs text-gray-400 shrink-0">Top</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={focalY}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setForm((f) => {
+                        const fps = [...(f.imageFocalPoints ?? f.images.map(() => 50))];
+                        fps[idx] = val;
+                        return { ...f, imageFocalPoints: fps };
+                      });
+                    }}
+                    className="flex-1 accent-brand-orange cursor-pointer"
+                  />
+                  <span className="text-xs text-gray-400 shrink-0">Bottom</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
         {form.images.length < 6 && (
           <div className="flex gap-2">
@@ -426,7 +468,11 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
               onClick={() => {
                 const url = newImageUrl.trim();
                 if (url) {
-                  setForm((f) => ({ ...f, images: [...f.images, url] }));
+                  setForm((f) => ({
+                    ...f,
+                    images: [...f.images, url],
+                    imageFocalPoints: [...(f.imageFocalPoints ?? f.images.map(() => 50)), 50],
+                  }));
                   setNewImageUrl("");
                 }
               }}

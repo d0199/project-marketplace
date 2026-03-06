@@ -23,6 +23,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           images={gym.images}
           alt={gym.name}
           sizes="(max-width: 768px) 100vw, 33vw"
+          focalPoints={gym.imageFocalPoints}
         />
         {gym.isFeatured && (
           <span className="absolute top-2 left-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded-full">

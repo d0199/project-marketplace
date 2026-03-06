@@ -49,6 +49,7 @@ const schema = a.schema({
       // Who created this record: email address, "bulk", or "system"
       createdBy: a.string(),
       // member offers
+      imageFocalPoints: a.integer().array(),
       memberOffers: a.string().array(),
       memberOffersNotes: a.string(),
       memberOffersScroll: a.boolean(),

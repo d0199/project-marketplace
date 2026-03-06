@@ -122,6 +122,7 @@ export default function GymProfilePage({ gym }: Props) {
               alt={gym.name}
               sizes="100vw"
               showDots={false}
+              focalPoints={gym.imageFocalPoints}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
