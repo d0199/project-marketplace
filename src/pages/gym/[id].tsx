@@ -9,6 +9,7 @@ import ImageCarousel from "@/components/ImageCarousel";
 import type { Gym } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
 import { MEMBER_OFFER_ICONS } from "@/lib/utils";
+import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 
 const DAYS = [
   "monday",
@@ -115,16 +116,30 @@ export default function GymProfilePage({ gym }: Props) {
         </nav>
 
         {/* Banner */}
+        {(() => {
+          const isStock = gym.images.length === 0;
+          const displayImages = isStock ? [getStockImage(gym.id)] : gym.images;
+          return (
         <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 mb-6 bg-brand-black">
           <div className="absolute inset-0 opacity-60">
             <ImageCarousel
-              images={gym.images}
+              images={displayImages}
               alt={gym.name}
               sizes="100vw"
               showDots={false}
               focalPoints={gym.imageFocalPoints}
             />
           </div>
+          {isStock && (
+            <a
+              href={STOCK_ATTRIBUTION.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute bottom-2 right-3 text-[10px] text-white/50 hover:text-white/80 z-10"
+            >
+              {STOCK_ATTRIBUTION.text}
+            </a>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none">
             <h1 className="text-3xl font-bold text-white drop-shadow-md">
@@ -136,6 +151,8 @@ export default function GymProfilePage({ gym }: Props) {
             </p>
           </div>
         </div>
+          );
+        })()}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}

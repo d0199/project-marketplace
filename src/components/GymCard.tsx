@@ -4,6 +4,7 @@ import type { GymWithDistance } from "@/lib/utils";
 import AmenityBadge from "./AmenityBadge";
 import ImageCarousel from "./ImageCarousel";
 import ClaimModal from "./ClaimModal";
+import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 
 interface Props {
   gym: GymWithDistance;
@@ -15,16 +16,28 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
   const MAX_BADGES = 4;
   const shown = gym.amenities.slice(0, MAX_BADGES);
   const extra = gym.amenities.length - MAX_BADGES;
+  const isStock = gym.images.length === 0;
+  const displayImages = isStock ? [getStockImage(gym.id)] : gym.images;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
       <div className="relative h-44 w-full bg-gray-100">
         <ImageCarousel
-          images={gym.images}
+          images={displayImages}
           alt={gym.name}
           sizes="(max-width: 768px) 100vw, 33vw"
           focalPoints={gym.imageFocalPoints}
         />
+        {isStock && (
+          <a
+            href={STOCK_ATTRIBUTION.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-1 right-1 text-[10px] text-white/60 hover:text-white/90 bg-black/30 px-1.5 py-0.5 rounded"
+          >
+            {STOCK_ATTRIBUTION.text}
+          </a>
+        )}
         {gym.isFeatured && (
           <span className="absolute top-2 left-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded-full">
             ★ Featured
