@@ -337,10 +337,16 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
           <option value="rejected">Rejected</option>
         </select>
         <button
-          onClick={() => { setSearch(""); setStatusFilter("pending"); }}
+          onClick={() => { setSearch(""); setStatusFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Clear
+        </button>
+        <button
+          onClick={() => { setSearch(""); setStatusFilter("pending"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Reset
         </button>
       </div>
       {loading ? (
@@ -1110,10 +1116,16 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           <option value="free">Free</option>
         </select>
         <button
-          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
+          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Clear
+        </button>
+        <button
+          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Reset
         </button>
         <span className="text-sm text-gray-400">{filteredGyms.length} gym{filteredGyms.length !== 1 ? "s" : ""}</span>
       </div>
