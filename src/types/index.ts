@@ -46,6 +46,7 @@ export interface Gym {
   memberOffersScroll?: boolean;
   memberScrollText?: string;
   memberOffersTnC?: string;
+  pricingNotes?: string;
   pricePerWeek: number;
   images: string[];
   imageFocalPoints?: number[];

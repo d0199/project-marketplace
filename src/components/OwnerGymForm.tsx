@@ -190,6 +190,20 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
               />
               <span className="text-sm text-gray-600">Show this price on the listing</span>
             </label>
+            {form.priceVerified && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pricing note <span className="text-gray-400 font-normal">(shown below price)</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.pricingNotes ?? ""}
+                  onChange={(e) => setField("pricingNotes", e.target.value)}
+                  placeholder="e.g. Verified using AI"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+                />
+              </div>
+            )}
           </div>
         </div>
       </section>

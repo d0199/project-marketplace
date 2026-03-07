@@ -34,7 +34,7 @@ if (fs.existsSync(envFile)) {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const INPUT_CSV  = path.resolve("data/gyms_dynamo.csv");
-const MODEL      = "claude-sonnet-4-6";
+const MODEL      = "claude-haiku-4-5";
 const DEFAULT_OUTPUT = `data/gyms_enriched_${new Date().toISOString().slice(0,10)}_${MODEL.replace(/[^a-z0-9]/g,"-")}.csv`;
 const MAX_RETRIES        = 3;
 const MAX_CONTINUATIONS  = 6;
@@ -81,9 +81,10 @@ confidence levels:
 - "low"     = very little data, mostly inferred from gym type
 - "no_data" = website unreachable or no relevant content found`;
 
+// web_search_20250305 is the version compatible with Haiku 4.5
+// web_fetch (direct URL fetch) requires Sonnet/Opus — use web_search only for Haiku
 const TOOLS = [
-  { type: "web_search_20260209", name: "web_search" },
-  { type: "web_fetch_20260209",  name: "web_fetch"  },
+  { type: "web_search_20250305", name: "web_search" },
 ] as any[];
 
 const DEFAULT_AMENITIES = {

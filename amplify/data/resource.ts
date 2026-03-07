@@ -55,6 +55,8 @@ const schema = a.schema({
       memberOffersScroll: a.boolean(),
       memberScrollText: a.string(),
       memberOffersTnC: a.string(),
+      // pricing notes — shown publicly below the price; auto-set to "Verified using AI" on scrape
+      pricingNotes: a.string(),
     })
     // GSI on ownerId — makes getByOwner O(1) instead of a full table scan.
     .secondaryIndexes((index) => [index("ownerId")])

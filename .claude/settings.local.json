@@ -30,7 +30,11 @@
       "Bash(cat:*)",
       "Bash(cp:*)",
       "WebFetch(domain:docs.amplify.aws)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(npx next:*)",
+      "Bash(mv:*)",
+      "Skill(claude-api)",
+      "Bash(grep:*)"
     ]
   }
 }

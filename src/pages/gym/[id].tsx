@@ -232,9 +232,19 @@ export default function GymProfilePage({ gym }: Props) {
             <div className="bg-brand-orange rounded-xl p-5 text-white">
               <p className="text-orange-100 text-sm mb-1">Pricing</p>
               {gym.priceVerified && gym.pricePerWeek > 0 ? (
-                <p className="text-2xl font-bold text-white">
-                  ${gym.pricePerWeek}<span className="text-base font-normal text-orange-100">/week</span>
-                </p>
+                <>
+                  <p className="text-2xl font-bold text-white">
+                    ${gym.pricePerWeek}<span className="text-base font-normal text-orange-100">/week</span>
+                  </p>
+                  {gym.pricingNotes && (
+                    <p className="mt-1 text-xs text-orange-200 flex items-center gap-1">
+                      <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      {gym.pricingNotes}
+                    </p>
+                  )}
+                </>
               ) : (
                 <p className="text-base font-semibold text-orange-50">
                   Check out website for pricing
