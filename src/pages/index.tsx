@@ -176,7 +176,7 @@ export default function HomePage({ gyms }: Props) {
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">🏋️</p>
                 <p className="text-lg font-medium text-gray-500">Search by suburb, postcode or gym name</p>
-                <p className="text-sm mt-2">Try <strong className="text-gray-600">Joondalup</strong>, <strong className="text-gray-600">6000</strong> or <strong className="text-gray-600">F45</strong></p>
+                <p className="text-sm mt-2">Try <strong className="text-gray-600">Joondalup</strong>, <strong className="text-gray-600">6000</strong> or your gym name</p>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">
