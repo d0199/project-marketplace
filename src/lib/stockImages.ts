@@ -15,6 +15,9 @@ export const STOCK_IMAGES = [
   "/stock/gym-6.jpg",
   "/stock/gym-7.jpg",
   "/stock/gym-8.jpg",
+  "/stock/gym-9.jpg",
+  "/stock/gym-10.jpg",
+  "/stock/gym-11.jpg",
 ];
 
 /**
