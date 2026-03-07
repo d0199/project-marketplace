@@ -66,15 +66,19 @@ export default function SearchBar({
 
   const gymMatches = useMemo<GymSuggestion[]>(() => {
     if (query.length < 2 || isPostcodeInput) return [];
-    const q = normalize(query);
+    const words = normalize(query).split(/\s+/).filter(Boolean);
     return gymIndex
-      .filter((g) => normalize(g.name).includes(q))
+      .filter((g) => {
+        const combined = normalize(`${g.name} ${g.suburb} ${g.state}`);
+        return words.every((w) => combined.includes(w));
+      })
       .sort((a, b) => {
-        const aS = normalize(a.name).startsWith(q) ? 0 : 1;
-        const bS = normalize(b.name).startsWith(q) ? 0 : 1;
+        const first = words[0];
+        const aS = normalize(a.name).startsWith(first) ? 0 : 1;
+        const bS = normalize(b.name).startsWith(first) ? 0 : 1;
         return aS - bS || a.name.localeCompare(b.name);
       })
-      .slice(0, 5);
+      .slice(0, 8);
   }, [query, gymIndex, isPostcodeInput]);
 
   type Item =
