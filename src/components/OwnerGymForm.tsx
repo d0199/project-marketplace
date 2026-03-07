@@ -174,10 +174,11 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
             </label>
             <input
               type="number"
-              min={1}
+              min={0}
+              step={0.01}
               value={form.pricePerWeek}
               onChange={(e) =>
-                setField("pricePerWeek", parseInt(e.target.value) || 0)
+                setField("pricePerWeek", parseFloat(e.target.value) || 0)
               }
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
             />

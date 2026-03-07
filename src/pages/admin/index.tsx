@@ -912,7 +912,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     await Promise.all(
       targets.map((g) => {
         const updated = { ...g };
-        const price = parseInt(bulk.price);
+        const price = parseFloat(bulk.price);
         if (bulk.price !== "" && price > 0) updated.pricePerWeek = price;
         if (bulk.priceVerified !== "") updated.priceVerified = bulk.priceVerified === "true";
         if (bulk.ownerId !== "") updated.ownerId = bulk.ownerId;
@@ -1168,7 +1168,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   <label className="block text-xs font-medium text-gray-700 mb-1">Price per week ($)</label>
                   <input
                     type="number"
-                    min={1}
+                    min={0}
+                    step={0.01}
                     value={bulk.price}
                     onChange={(e) => setBulk((b) => ({ ...b, price: e.target.value }))}
                     placeholder="Leave blank = no change"
