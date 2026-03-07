@@ -254,7 +254,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const suburbName = POSTCODE_META[postcode]?.name ?? suburbFromSlug;
 
   const allGyms = await ownerStore.getAll();
-  const gyms = filterGyms(allGyms, { postcode, amenities: [], radiusKm: 10 });
+  const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
+  const gyms = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 });
 
   // Build suburb index (one entry per postcode)
   const seenPc = new Set<string>();
