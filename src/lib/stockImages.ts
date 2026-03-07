@@ -7,14 +7,14 @@
  */
 
 export const STOCK_IMAGES = [
-  "https://picsum.photos/seed/gym1/800/600",
-  "https://picsum.photos/seed/gym2/800/600",
-  "https://picsum.photos/seed/gym3/800/600",
-  "https://picsum.photos/seed/gym4/800/600",
-  "https://picsum.photos/seed/gym5/800/600",
-  "https://picsum.photos/seed/gym6/800/600",
-  "https://picsum.photos/seed/gym7/800/600",
-  "https://picsum.photos/seed/gym8/800/600",
+  "/stock/gym-1.jpg",
+  "/stock/gym-2.jpg",
+  "/stock/gym-3.jpg",
+  "/stock/gym-4.jpg",
+  "/stock/gym-5.jpg",
+  "/stock/gym-6.jpg",
+  "/stock/gym-7.jpg",
+  "/stock/gym-8.jpg",
 ];
 
 /**
