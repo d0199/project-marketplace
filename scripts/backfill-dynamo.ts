@@ -124,6 +124,8 @@ async function main() {
       id: row.id,
       amenities,
       memberOffers,
+      amenitiesVerified: true,
+      amenitiesNotes: "Verified using AI",
     };
 
     if (price !== null && !isNaN(price)) {
@@ -131,10 +133,8 @@ async function main() {
     }
 
     if (isHighConfidence) {
-      update.priceVerified      = true;
-      update.pricingNotes       = "Verified using AI";
-      update.amenitiesVerified  = true;
-      update.amenitiesNotes     = "Verified using AI";
+      update.priceVerified = true;
+      update.pricingNotes  = "Verified using AI";
     }
 
     if (opts.dryRun) {
