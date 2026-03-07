@@ -182,9 +182,9 @@ export default function HomePage({ gyms }: Props) {
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">😕</p>
                 <p className="text-lg font-medium text-gray-500">
-                  No gyms found within {radiusKm} km of {postcode}
+                  No gyms found within {radiusKm} km of {searchLabel || postcode}
                 </p>
-                <p className="text-sm mt-2">Try increasing the radius or removing amenity filters</p>
+                <p className="text-sm mt-2">Try increasing the search radius or removing amenity filters</p>
               </div>
             ) : (
               <>

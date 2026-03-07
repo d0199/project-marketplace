@@ -107,7 +107,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbInd
           <p className="text-orange-100 mb-5 text-sm">
             {count > 0
               ? `${count} gym${count !== 1 ? "s" : ""} within 10 km`
-              : `No gyms listed near ${suburbName} yet`}
+              : `No gyms found within 10 km of ${suburbName}`}
           </p>
           <SearchBar
             onSearch={handleSearch}
@@ -118,7 +118,13 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbInd
 
         {count === 0 ? (
           <div className="text-center py-12 mb-12 bg-gray-50 rounded-xl">
-            <p className="text-gray-500 mb-4">No gyms listed for this area yet.</p>
+            <p className="text-5xl mb-4">😕</p>
+            <p className="text-lg font-medium text-gray-700 mb-2">
+              No gyms found within 10 km of {suburbName} ({postcode})
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Try searching a nearby suburb or browse all locations below
+            </p>
             <Link
               href="/"
               className="inline-block px-5 py-2 bg-brand-orange text-white text-sm font-semibold rounded-lg hover:bg-brand-orange-dark transition-colors"
