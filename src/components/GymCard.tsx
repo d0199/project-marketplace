@@ -16,7 +16,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
   const MAX_BADGES = 4;
   const shown = gym.amenities.slice(0, MAX_BADGES);
   const extra = gym.amenities.length - MAX_BADGES;
-  const isStock = gym.images.length === 0;
+  const isStock = gym.images.length === 0 && unclaimed;
   const displayImages = isStock ? [getStockImage(gym.id)] : gym.images;
 
   return (

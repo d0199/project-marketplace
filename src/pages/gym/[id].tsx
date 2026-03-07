@@ -117,7 +117,8 @@ export default function GymProfilePage({ gym }: Props) {
 
         {/* Banner */}
         {(() => {
-          const isStock = gym.images.length === 0;
+          const isUnclaimed = gym.ownerId === "unclaimed" || gym.ownerId === "owner-3";
+          const isStock = gym.images.length === 0 && isUnclaimed;
           const displayImages = isStock ? [getStockImage(gym.id)] : gym.images;
           return (
         <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 mb-6 bg-brand-black">
