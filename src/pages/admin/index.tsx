@@ -336,14 +336,12 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
-        {(search || statusFilter !== "pending") && (
-          <button
-            onClick={() => { setSearch(""); setStatusFilter("pending"); }}
-            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
-          >
-            Clear
-          </button>
-        )}
+        <button
+          onClick={() => { setSearch(""); setStatusFilter("pending"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Clear
+        </button>
       </div>
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
@@ -668,14 +666,12 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
-        {(search || statusFilter !== "all") && (
-          <button
-            onClick={() => { setSearch(""); setStatusFilter("all"); }}
-            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
-          >
-            Clear
-          </button>
-        )}
+        <button
+          onClick={() => { setSearch(""); setStatusFilter("all"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Clear
+        </button>
       </div>
 
       {/* Bulk action bar */}
@@ -1113,14 +1109,12 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           <option value="paid">Paid</option>
           <option value="free">Free</option>
         </select>
-        {(activeFilter !== "active" || ownerFilter !== "owned" || stateFilter !== "all" || planFilter !== "all") && (
-          <button
-            onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
-            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
-          >
-            Clear
-          </button>
-        )}
+        <button
+          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Clear
+        </button>
         <span className="text-sm text-gray-400">{filteredGyms.length} gym{filteredGyms.length !== 1 ? "s" : ""}</span>
       </div>
 
@@ -1719,14 +1713,12 @@ function UsersTab() {
           <option value="with-gym">Has gym claim</option>
           <option value="no-gym">No gym claim</option>
         </select>
-        {(activeFilter !== "all" || gymFilter !== "all") && (
-          <button
-            onClick={() => { setActiveFilter("all"); setGymFilter("all"); }}
-            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
-          >
-            Clear
-          </button>
-        )}
+        <button
+          onClick={() => { setActiveFilter("all"); setGymFilter("all"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Clear
+        </button>
         <button
           onClick={() => {
             const autoId = `owner-${Math.random().toString(36).slice(2, 10)}`;
