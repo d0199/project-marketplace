@@ -27,7 +27,6 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           alt={gym.name}
           sizes="(max-width: 768px) 100vw, 33vw"
           focalPoints={gym.imageFocalPoints}
-          objectFit={isStock ? "contain" : "cover"}
         />
         {isStock && (
           <span className="absolute bottom-1 right-1 text-[10px] text-white/60 bg-black/30 px-1.5 py-0.5 rounded">

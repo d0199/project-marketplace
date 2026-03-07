@@ -129,7 +129,6 @@ export default function GymProfilePage({ gym }: Props) {
               sizes="100vw"
               showDots={false}
               focalPoints={gym.imageFocalPoints}
-              objectFit={isStock ? "contain" : "cover"}
             />
           </div>
           {isStock && (
