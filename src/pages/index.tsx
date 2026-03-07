@@ -10,6 +10,7 @@ import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
 import GymCard from "@/components/GymCard";
 import { filterGyms, rankGyms, POSTCODE_META, ALL_SUBURB_INDEX, type GymWithDistance } from "@/lib/utils";
+import type { SuburbSuggestion } from "@/components/SearchBar";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
 
@@ -19,9 +20,10 @@ const MAX_RADIUS = 50;
 
 interface Props {
   gyms: Gym[];
+  suburbIndex: SuburbSuggestion[];
 }
 
-export default function HomePage({ gyms }: Props) {
+export default function HomePage({ gyms, suburbIndex }: Props) {
   const router = useRouter();
   const [postcode, setPostcode] = useState("");
   const [searchLabel, setSearchLabel] = useState("");
@@ -55,8 +57,6 @@ export default function HomePage({ gyms }: Props) {
       .catch(() => {});
   }, []);
 
-  // Suburb index: full postcode database — not limited to gyms in the DB
-  const suburbIndex = ALL_SUBURB_INDEX;
 
   // Gym index: lightweight list for name search
   const gymIndex = useMemo(() =>
@@ -266,5 +266,5 @@ export default function HomePage({ gyms }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  return { props: { gyms: await ownerStore.getAll() } };
+  return { props: { gyms: await ownerStore.getAll(), suburbIndex: ALL_SUBURB_INDEX } };
 };
