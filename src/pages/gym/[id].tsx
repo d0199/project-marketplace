@@ -129,17 +129,13 @@ export default function GymProfilePage({ gym }: Props) {
               sizes="100vw"
               showDots={false}
               focalPoints={gym.imageFocalPoints}
+              objectFit={isStock ? "contain" : "cover"}
             />
           </div>
           {isStock && (
-            <a
-              href={STOCK_ATTRIBUTION.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute bottom-2 right-3 text-[10px] text-white/50 hover:text-white/80 z-10"
-            >
-              {STOCK_ATTRIBUTION.text}
-            </a>
+            <span className="absolute bottom-2 right-3 text-[10px] text-white/50 z-10">
+              {STOCK_ATTRIBUTION}
+            </span>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none">

@@ -27,16 +27,12 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           alt={gym.name}
           sizes="(max-width: 768px) 100vw, 33vw"
           focalPoints={gym.imageFocalPoints}
+          objectFit={isStock ? "contain" : "cover"}
         />
         {isStock && (
-          <a
-            href={STOCK_ATTRIBUTION.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute bottom-1 right-1 text-[10px] text-white/60 hover:text-white/90 bg-black/30 px-1.5 py-0.5 rounded"
-          >
-            {STOCK_ATTRIBUTION.text}
-          </a>
+          <span className="absolute bottom-1 right-1 text-[10px] text-white/60 bg-black/30 px-1.5 py-0.5 rounded">
+            {STOCK_ATTRIBUTION}
+          </span>
         )}
         {gym.isFeatured && (
           <span className="absolute top-2 left-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded-full">
