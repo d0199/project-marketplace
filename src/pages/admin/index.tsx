@@ -678,6 +678,12 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
         >
           Clear
         </button>
+        <button
+          onClick={() => { setSearch(""); setStatusFilter("pending"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Reset
+        </button>
       </div>
 
       {/* Bulk action bar */}
@@ -830,6 +836,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [panel, setPanel] = useState<{ gym: Gym; isNew: boolean } | null>(null);
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmUnclaim, setConfirmUnclaim] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulk, setBulk] = useState<{
@@ -842,7 +849,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     isPaid: "" | "true" | "false";
     addAmenities: Set<string>;
     removeAmenities: Set<string>;
-  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set() });
+    addImages: string;
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addImages: "" });
   const [bulkBusy, setBulkBusy] = useState(false);
   const [clearAmenitiesOpen, setClearAmenitiesOpen] = useState(false);
   const [clearWord, setClearWord] = useState("");
@@ -903,7 +911,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   }
 
   function resetBulk() {
-    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set() });
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addImages: "" });
   }
 
   async function applyBulk() {
@@ -925,6 +933,13 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           bulk.addAmenities.forEach((a) => amenitySet.add(a));
           bulk.removeAmenities.forEach((a) => amenitySet.delete(a));
           updated.amenities = Array.from(amenitySet);
+        }
+        if (bulk.addImages.trim()) {
+          const newUrls = bulk.addImages.split("\n").map((u) => u.trim()).filter((u) => u.startsWith("http"));
+          if (newUrls.length > 0) {
+            const toAdd = newUrls.filter((u) => !updated.images.includes(u));
+            updated.images = [...updated.images, ...toAdd].slice(0, 6);
+          }
         }
         return fetch(`/api/admin/gym/${g.id}`, {
           method: "PUT",
@@ -1027,6 +1042,23 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       search(q);
     } else {
       showToast("Error deleting gym.");
+    }
+  }
+
+  async function handleUnclaim(id: string) {
+    const gym = gyms.find((g) => g.id === id);
+    if (!gym) return;
+    const r = await fetch(`/api/admin/gym/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...gym, ownerId: "unclaimed" }),
+    });
+    if (r.ok) {
+      showToast("Gym reverted to unclaimed.");
+      setConfirmUnclaim(null);
+      search(q);
+    } else {
+      showToast("Error unclaiming gym.");
     }
   }
 
@@ -1251,6 +1283,19 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                 </div>
               </div>
 
+              {/* Images */}
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-1">Add images (one URL per line)</p>
+                <textarea
+                  value={bulk.addImages}
+                  onChange={(e) => setBulk((b) => ({ ...b, addImages: e.target.value }))}
+                  placeholder={"https://example.com/gym-photo-1.jpg\nhttps://example.com/gym-photo-2.jpg"}
+                  rows={4}
+                  className="w-full px-3 py-2 border rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                />
+                <p className="text-xs text-gray-400 mt-1">Appended to each gym&apos;s existing images. Max 6 per gym total. Useful for gym chains sharing stock photos.</p>
+              </div>
+
               {/* Amenities */}
               <div>
                 <p className="text-xs font-medium text-gray-700 mb-2">Amenities</p>
@@ -1406,6 +1451,14 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                     >
                       Edit
                     </button>
+                    {g.ownerId !== "unclaimed" && g.ownerId !== "owner-3" && (
+                      <button
+                        onClick={() => setConfirmUnclaim(g.id)}
+                        className="text-amber-500 hover:underline text-xs font-medium mr-3"
+                      >
+                        Unclaim
+                      </button>
+                    )}
                     <button
                       onClick={() => setConfirmDelete(g.id)}
                       className="text-red-500 hover:underline text-xs font-medium"
@@ -1554,6 +1607,33 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         </div>
       )}
 
+      {/* Unclaim confirmation modal */}
+      {confirmUnclaim && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Revert gym to unclaimed?</h3>
+            <p className="text-sm text-gray-500 mb-1">
+              Gym <span className="font-mono font-medium">{confirmUnclaim}</span> will be set to <span className="font-medium">unclaimed</span>.
+            </p>
+            <p className="text-sm text-gray-400 mb-5">The owner&apos;s Cognito account is not affected — only this gym is released.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmUnclaim(null)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUnclaim(confirmUnclaim)}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg"
+              >
+                Unclaim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete confirmation modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -1648,12 +1728,13 @@ function UsersTab() {
 
   async function deleteUser(username: string) {
     const r = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, { method: "DELETE" });
+    const body = await r.json().catch(() => ({}));
     if (r.ok) {
-      showToast("User deleted.");
+      const n = body.gymsReleased ?? 0;
+      showToast(n > 0 ? `User deleted. ${n} gym${n !== 1 ? "s" : ""} reverted to unclaimed.` : "User deleted.");
       setConfirmDelete(null);
       search(q);
     } else {
-      const body = await r.json().catch(() => ({}));
       showToast(`Error: ${body.error ?? r.statusText}`);
     }
   }
@@ -1980,12 +2061,18 @@ interface LeadRecord {
   status?: string;
 }
 
+function defaultLeadsDateFrom() {
+  const d = new Date();
+  d.setDate(d.getDate() - 30);
+  return d.toISOString().slice(0, 10);
+}
+
 function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) {
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
+  const [dateFrom, setDateFrom] = useState(defaultLeadsDateFrom);
   const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
@@ -2045,9 +2132,8 @@ function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) 
           onChange={(e) => setDateTo(e.target.value)}
           className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
         />
-        {(search || dateFrom || dateTo) && (
-          <button onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }} className="text-sm text-gray-400 hover:text-gray-600">Clear</button>
-        )}
+        <button onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }} className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap">Clear</button>
+        <button onClick={() => { setSearch(""); setDateFrom(defaultLeadsDateFrom()); setDateTo(""); }} className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap">Reset</button>
       </div>
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
