@@ -234,7 +234,7 @@ export default function GymProfilePage({ gym }: Props) {
               {gym.priceVerified && gym.pricePerWeek > 0 ? (
                 <>
                   <p className="text-2xl font-bold text-white">
-                    ${gym.pricePerWeek}<span className="text-base font-normal text-orange-100">/week</span>
+                    ${+gym.pricePerWeek.toFixed(2)}<span className="text-base font-normal text-orange-100">/week</span>
                   </p>
                   {gym.pricingNotes && (
                     <p className="mt-1 text-xs text-orange-200 flex items-center gap-1">

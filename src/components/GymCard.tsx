@@ -53,7 +53,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           </h2>
           {gym.priceVerified && gym.pricePerWeek > 0 ? (
             <span className="text-sm font-semibold text-brand-orange whitespace-nowrap">
-              ${gym.pricePerWeek}/wk
+              ${+gym.pricePerWeek.toFixed(2)}/wk
             </span>
           ) : (
             <span className="text-xs text-gray-400 italic whitespace-nowrap">

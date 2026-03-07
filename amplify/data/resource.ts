@@ -17,7 +17,7 @@ const schema = a.schema({
       amenities: a.string().array(),
       lat: a.float().required(),
       lng: a.float().required(),
-      pricePerWeek: a.integer(),
+      pricePerWeek: a.float(),
       // address (flattened)
       addressStreet: a.string(),
       addressSuburb: a.string(),

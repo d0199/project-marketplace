@@ -34,7 +34,8 @@
       "Bash(npx next:*)",
       "Bash(mv:*)",
       "Skill(claude-api)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:www.adapthealthclub.com.au)"
     ]
   }
 }

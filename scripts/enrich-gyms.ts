@@ -34,7 +34,7 @@ if (fs.existsSync(envFile)) {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const INPUT_CSV  = path.resolve("data/gyms_dynamo.csv");
-const MODEL      = "claude-haiku-4-5";
+const MODEL      = "claude-sonnet-4-6";
 const DEFAULT_OUTPUT = `data/gyms_enriched_${new Date().toISOString().slice(0,10)}_${MODEL.replace(/[^a-z0-9]/g,"-")}.csv`;
 const MAX_RETRIES        = 3;
 const MAX_CONTINUATIONS  = 6;
@@ -59,6 +59,13 @@ Use web_search only if web_fetch fails or yields no useful content.
 Your FINAL response must be ONLY valid JSON — no preamble, no explanation, no markdown fences.
 Use exactly this schema (all fields required, use null if unknown):
 
+IMPORTANT for min_weekly_price_aud:
+- Find the LOWEST available weekly membership price (the cheapest entry-level option)
+- If prices are shown monthly, divide by 4.33 to convert to weekly
+- If prices are shown fortnightly, divide by 2
+- Ignore casual/day passes — only recurring membership prices
+- Use the cheapest base membership (ignore premium/VIP tiers)
+
 {
   "min_weekly_price_aud": <number or null>,
   "confidence": "high" | "medium" | "low" | "no_data",
@@ -81,10 +88,9 @@ confidence levels:
 - "low"     = very little data, mostly inferred from gym type
 - "no_data" = website unreachable or no relevant content found`;
 
-// web_search_20250305 is the version compatible with Haiku 4.5
-// web_fetch (direct URL fetch) requires Sonnet/Opus — use web_search only for Haiku
 const TOOLS = [
-  { type: "web_search_20250305", name: "web_search" },
+  { type: "web_search_20260209", name: "web_search" },
+  { type: "web_fetch_20260209",  name: "web_fetch"  },
 ] as any[];
 
 const DEFAULT_AMENITIES = {

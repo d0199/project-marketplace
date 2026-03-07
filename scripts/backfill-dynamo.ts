@@ -127,7 +127,7 @@ async function main() {
     };
 
     if (price !== null && !isNaN(price)) {
-      update.pricePerWeek = Math.round(price);
+      update.pricePerWeek = price;
     }
 
     if (isHighConfidence) {
