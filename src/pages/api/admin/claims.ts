@@ -149,11 +149,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           return res.status(200).json({ ok: true, ownerId, isNewUser, gymId: newGym.id });
         } else {
-          // Existing gym claim — assign ownership
+          // Existing gym claim — assign ownership and clear AI-generated data
           const gym = await ownerStore.getById(claim.gymId ?? "");
           if (!gym) return res.status(404).json({ error: `Gym not found: ${claim.gymId}` });
 
-          await ownerStore.update({ ...gym, ownerId });
+          await ownerStore.update({
+            ...gym,
+            ownerId,
+            priceVerified: false,
+            pricingNotes: "",
+            amenitiesVerified: false,
+            amenitiesNotes: "",
+          });
           await dataClient.models.Claim.update({
             id,
             status: "approved",
