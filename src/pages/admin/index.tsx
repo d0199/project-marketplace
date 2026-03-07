@@ -1721,7 +1721,7 @@ function UsersTab() {
         </button>
         <button
           onClick={() => {
-            const autoId = `owner-${Math.random().toString(36).slice(2, 10)}`;
+            const autoId = `owner-${crypto.randomUUID()}`;
             setNewForm((f) => ({ ...f, ownerId: autoId }));
             setShowNew(true);
           }}

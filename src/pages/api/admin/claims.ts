@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             (Users[0].Attributes ?? []).map((a) => [a.Name, a.Value])
           );
           const existingOwnerId = attrs["custom:ownerId"];
-          ownerId = existingOwnerId ?? `owner-${id.slice(0, 8)}`;
+          ownerId = existingOwnerId ?? `owner-${crypto.randomUUID()}`;
           isNewUser = false;
           // If existing user had no ownerId, write the generated one back to Cognito
           if (!existingOwnerId) {
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             );
           }
         } else {
-          ownerId = `owner-${id.slice(0, 8)}`;
+          ownerId = `owner-${crypto.randomUUID()}`;
           const tempPassword = `Welcome${id.slice(0, 4).toUpperCase()}1!`;
           await cognitoClient.send(
             new AdminCreateUserCommand({
