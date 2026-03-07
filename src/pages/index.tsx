@@ -24,6 +24,7 @@ interface Props {
 export default function HomePage({ gyms }: Props) {
   const router = useRouter();
   const [postcode, setPostcode] = useState("");
+  const [searchLabel, setSearchLabel] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -54,6 +55,32 @@ export default function HomePage({ gyms }: Props) {
       .catch(() => {});
   }, []);
 
+  // Suburb index: one entry per postcode, derived from loaded gyms
+  const suburbIndex = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { name: string; postcode: string; state: string }[] = [];
+    for (const g of gyms) {
+      const pc = g.address?.postcode;
+      if (!pc || seen.has(pc) || !g.address?.suburb) continue;
+      seen.add(pc);
+      result.push({ name: g.address.suburb, postcode: pc, state: g.address.state || "" });
+    }
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [gyms]);
+
+  // Gym index: lightweight list for name search
+  const gymIndex = useMemo(() =>
+    gyms
+      .filter((g) => g.isActive !== false && !g.isTest)
+      .map((g) => ({
+        id: g.id,
+        name: g.name,
+        suburb: g.address?.suburb || "",
+        state: g.address?.state || "",
+      })),
+    [gyms]
+  );
+
   const visibleGyms = useMemo(
     () => gyms
       .filter((g) => g.isActive !== false)
@@ -78,8 +105,9 @@ export default function HomePage({ gyms }: Props) {
     return sorted;
   }, [visibleGyms, postcode, selectedAmenities, selectedMemberOffers, hasSearched, radiusKm, sortBy, rotationSeed]);
 
-  function handleSearch(pc: string) {
+  function handleSearch(pc: string, label?: string) {
     setPostcode(pc);
+    setSearchLabel(label || pc);
     setHasSearched(true);
     setPageSize(25);
     setPage(1);
@@ -101,7 +129,12 @@ export default function HomePage({ gyms }: Props) {
           <p className="text-orange-100 mb-6 text-lg">
             Search thousands of gyms across Australia by postcode and amenities.
           </p>
-          <SearchBar onSearch={handleSearch} initialValue={postcode} />
+          <SearchBar
+            onSearch={handleSearch}
+            initialValue={postcode}
+            suburbIndex={suburbIndex}
+            gymIndex={gymIndex}
+          />
 
           {/* Radius control — half-width, left-aligned */}
           <div className="mt-5 max-w-xs">
@@ -157,7 +190,7 @@ export default function HomePage({ gyms }: Props) {
               <>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm text-gray-500">
-                    {results.length} gym{results.length !== 1 ? "s" : ""} within {radiusKm} km of {postcode}
+                    {results.length} gym{results.length !== 1 ? "s" : ""} within {radiusKm} km of {searchLabel || postcode}
                   </p>
                   <select
                     value={sortBy ?? ""}
