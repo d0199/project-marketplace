@@ -117,10 +117,22 @@ export default function SearchBar({
       onSearch(t);
     } else if (suburbMatches.length > 0) {
       pickSuburb(suburbMatches[0]);
-    } else if (gymMatches.length > 0) {
-      pickGym(gymMatches[0]);
     } else {
-      setError("Enter a postcode, suburb or gym name.");
+      // Handle "Suburb, STATE" format (set by pickSuburb) — re-submitted via Search button
+      const nameState = t.match(/^([^,]+),\s*([A-Za-z]{2,3})$/);
+      if (nameState) {
+        const found = suburbIndex.find(
+          (s) =>
+            normalize(s.name) === normalize(nameState[1]) &&
+            s.state.toUpperCase() === nameState[2].toUpperCase()
+        );
+        if (found) { pickSuburb(found); return; }
+      }
+      if (gymMatches.length > 0) {
+        pickGym(gymMatches[0]);
+      } else {
+        setError("Enter a postcode, suburb or gym name.");
+      }
     }
   }
 
