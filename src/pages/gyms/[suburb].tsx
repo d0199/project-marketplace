@@ -11,6 +11,7 @@ import MemberOfferFilter from "@/components/MemberOfferFilter";
 import {
   POSTCODE_COORDS,
   POSTCODE_META,
+  ALL_SUBURB_INDEX,
   filterGyms,
   type GymWithDistance,
 } from "@/lib/utils";
@@ -263,16 +264,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
   const gyms = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 });
 
-  // Build suburb index (one entry per postcode)
-  const seenPc = new Set<string>();
-  const suburbIndex: SuburbSuggestion[] = [];
-  for (const g of allGyms) {
-    const pc = g.address?.postcode;
-    if (!pc || seenPc.has(pc) || !g.address?.suburb || !POSTCODE_COORDS[pc]) continue;
-    seenPc.add(pc);
-    suburbIndex.push({ name: g.address.suburb, postcode: pc, state: g.address.state || "" });
-  }
-  suburbIndex.sort((a, b) => a.name.localeCompare(b.name));
+  // Suburb index: full postcode database
+  const suburbIndex: SuburbSuggestion[] = ALL_SUBURB_INDEX;
 
   // Build gym index
   const gymIndex: GymSuggestion[] = allGyms

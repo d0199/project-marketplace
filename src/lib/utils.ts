@@ -1,6 +1,6 @@
 import type { Gym } from "@/types";
-import { WA_POSTCODE_COORDS } from "@/data/waPostcodes";
-import { EASTERN_POSTCODE_COORDS } from "@/data/easternPostcodes";
+import { WA_POSTCODE_COORDS, WA_SUBURB_INDEX } from "@/data/waPostcodes";
+import { EASTERN_POSTCODE_COORDS, EASTERN_SUBURB_INDEX } from "@/data/easternPostcodes";
 
 // Haversine distance in kilometres
 export function haversineKm(
@@ -25,6 +25,18 @@ export const POSTCODE_COORDS: Record<string, [number, number]> = {
   ...WA_POSTCODE_COORDS,
   ...EASTERN_POSTCODE_COORDS,
 };
+
+// Title-case a locality name (e.g. "MOUNT HAWTHORN" → "Mount Hawthorn")
+function toTitleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Comprehensive suburb search index — all localities across WA + eastern states.
+// Names are title-cased for display. Used to power the SearchBar autocomplete.
+export const ALL_SUBURB_INDEX = [
+  ...WA_SUBURB_INDEX,
+  ...EASTERN_SUBURB_INDEX,
+].map((s) => ({ ...s, name: toTitleCase(s.name) }));
 
 // Derive AU state from postcode prefix
 export function postcodeToState(postcode: string): string {

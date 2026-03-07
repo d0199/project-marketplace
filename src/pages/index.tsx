@@ -9,7 +9,7 @@ import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
 import GymCard from "@/components/GymCard";
-import { filterGyms, rankGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
+import { filterGyms, rankGyms, POSTCODE_META, ALL_SUBURB_INDEX, type GymWithDistance } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
 
@@ -55,18 +55,8 @@ export default function HomePage({ gyms }: Props) {
       .catch(() => {});
   }, []);
 
-  // Suburb index: one entry per postcode, derived from loaded gyms
-  const suburbIndex = useMemo(() => {
-    const seen = new Set<string>();
-    const result: { name: string; postcode: string; state: string }[] = [];
-    for (const g of gyms) {
-      const pc = g.address?.postcode;
-      if (!pc || seen.has(pc) || !g.address?.suburb) continue;
-      seen.add(pc);
-      result.push({ name: g.address.suburb, postcode: pc, state: g.address.state || "" });
-    }
-    return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [gyms]);
+  // Suburb index: full postcode database — not limited to gyms in the DB
+  const suburbIndex = ALL_SUBURB_INDEX;
 
   // Gym index: lightweight list for name search
   const gymIndex = useMemo(() =>
