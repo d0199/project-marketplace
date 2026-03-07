@@ -1,9 +1,10 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
+import SearchBar, { type SuburbSuggestion, type GymSuggestion } from "@/components/SearchBar";
 import GymCard from "@/components/GymCard";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
@@ -22,32 +23,23 @@ interface Props {
   suburbName: string;
   slug: string;
   gyms: GymWithDistance[];
+  suburbIndex: SuburbSuggestion[];
+  gymIndex: GymSuggestion[];
 }
 
-export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) {
+export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbIndex, gymIndex }: Props) {
+  const router = useRouter();
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption | null>(null);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchError, setSearchError] = useState("");
-  const searchRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
-  function handleSuburbSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const pc = searchInput.trim();
+  function handleSearch(pc: string) {
     const meta = POSTCODE_META[pc];
     if (meta) {
       router.push(`/gyms/${meta.slug}`);
-      return;
-    }
-    if (POSTCODE_COORDS[pc]) {
-      // Valid postcode but no dedicated suburb page — search from home
+    } else {
       router.push(`/?postcode=${pc}`);
-      return;
     }
-    setSearchError("Postcode not found. Try a valid Australian postcode e.g. 6000");
   }
 
   // Client-side filter + sort on top of the server-pre-filtered set
@@ -88,8 +80,8 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
   const title = `Gyms in ${suburbName} (${postcode}) | mynextgym.com.au`;
   const description =
     count > 0
-      ? `Find ${count} gym${count !== 1 ? "s" : ""} near ${suburbName}, ${postcode} WA. Compare prices, amenities and opening hours.`
-      : `Looking for gyms near ${suburbName}, ${postcode} WA? Browse gyms in surrounding Perth suburbs.`;
+      ? `Find ${count} gym${count !== 1 ? "s" : ""} near ${suburbName}, ${postcode}. Compare prices, amenities and opening hours.`
+      : `Looking for gyms near ${suburbName}, ${postcode}? Browse gyms in surrounding suburbs.`;
 
   return (
     <>
@@ -99,75 +91,29 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <link
-          rel="canonical"
-          href={`https://www.mynextgym.com.au/gyms/${slug}`}
-        />
+        <link rel="canonical" href={`https://www.mynextgym.com.au/gyms/${slug}`} />
       </Head>
       <Layout>
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-5">
-          <Link href="/" className="hover:text-brand-orange">
-            Home
-          </Link>
+          <Link href="/" className="hover:text-brand-orange">Home</Link>
           {" / "}
           <span className="text-gray-800">Gyms in {suburbName}</span>
         </nav>
 
-        {/* Hero */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
-            Gyms in {suburbName}, {postcode}
-          </h1>
-          <p className="text-gray-500">
+        {/* Hero with smart search */}
+        <div className="bg-gradient-to-r from-brand-orange to-brand-orange-dark rounded-2xl px-6 py-8 mb-8 text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">Gyms in {suburbName}, {postcode}</h1>
+          <p className="text-orange-100 mb-5 text-sm">
             {count > 0
-              ? `${count} gym${count !== 1 ? "s" : ""} within 10 km of ${suburbName}`
+              ? `${count} gym${count !== 1 ? "s" : ""} within 10 km`
               : `No gyms listed near ${suburbName} yet`}
           </p>
-        </div>
-
-        {/* CTA — search a different suburb */}
-        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-8">
-          {showSearch ? (
-            <form onSubmit={handleSuburbSearch} className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-gray-600 shrink-0">Search suburb:</span>
-              <input
-                ref={searchRef}
-                value={searchInput}
-                onChange={(e) => { setSearchInput(e.target.value); setSearchError(""); }}
-                placeholder="Enter postcode e.g. 6000"
-                className="flex-1 min-w-[160px] px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                autoFocus
-              />
-              <button
-                type="submit"
-                className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                Go
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowSearch(false); setSearchInput(""); setSearchError(""); }}
-                className="text-sm text-gray-400 hover:text-gray-600"
-              >
-                Cancel
-              </button>
-              {searchError && <p className="w-full text-xs text-red-500 mt-0.5">{searchError}</p>}
-            </form>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
-                Searching in <span className="font-semibold text-gray-900">{suburbName}</span>
-              </span>
-              <span className="text-gray-300">·</span>
-              <button
-                onClick={() => { setShowSearch(true); }}
-                className="text-sm font-semibold text-brand-orange hover:text-brand-orange-dark transition-colors"
-              >
-                Search a different suburb →
-              </button>
-            </div>
-          )}
+          <SearchBar
+            onSearch={handleSearch}
+            suburbIndex={suburbIndex}
+            gymIndex={gymIndex}
+          />
         </div>
 
         {count === 0 ? (
@@ -184,28 +130,16 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
           <div className="flex gap-6">
             {/* Sidebar filters */}
             <div className="w-52 shrink-0 hidden sm:block">
-              <AmenityFilter
-                selected={selectedAmenities}
-                onChange={setSelectedAmenities}
-              />
-              <MemberOfferFilter
-                selected={selectedMemberOffers}
-                onChange={setSelectedMemberOffers}
-              />
+              <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
+              <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
             </div>
 
             {/* Results */}
             <div className="flex-1 min-w-0">
               {/* Mobile filters */}
               <div className="sm:hidden mb-4">
-                <AmenityFilter
-                  selected={selectedAmenities}
-                  onChange={setSelectedAmenities}
-                />
-                <MemberOfferFilter
-                  selected={selectedMemberOffers}
-                  onChange={setSelectedMemberOffers}
-                />
+                <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
+                <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
               </div>
 
               {/* Results bar */}
@@ -217,10 +151,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
                     : `gym${count !== 1 ? "s" : ""} within 10 km`}
                   {activeFilters > 0 && (
                     <button
-                      onClick={() => {
-                        setSelectedAmenities([]);
-                        setSelectedMemberOffers([]);
-                      }}
+                      onClick={() => { setSelectedAmenities([]); setSelectedMemberOffers([]); }}
                       className="ml-2 text-brand-orange hover:underline"
                     >
                       Clear filters
@@ -229,9 +160,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
                 </p>
                 <select
                   value={sortBy ?? ""}
-                  onChange={(e) =>
-                    setSortBy((e.target.value || null) as SortOption | null)
-                  }
+                  onChange={(e) => setSortBy((e.target.value || null) as SortOption | null)}
                   className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-orange"
                 >
                   <option value="">Sort by</option>
@@ -244,14 +173,9 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
 
               {results.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
-                  <p className="text-lg font-medium text-gray-500 mb-2">
-                    No gyms match your filters
-                  </p>
+                  <p className="text-lg font-medium text-gray-500 mb-2">No gyms match your filters</p>
                   <button
-                    onClick={() => {
-                      setSelectedAmenities([]);
-                      setSelectedMemberOffers([]);
-                    }}
+                    onClick={() => { setSelectedAmenities([]); setSelectedMemberOffers([]); }}
                     className="text-sm text-brand-orange hover:underline"
                   >
                     Clear all filters
@@ -292,9 +216,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
 
         {/* Browse other suburbs */}
         <div className="border-t pt-8 mt-12">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Browse gyms in other Perth suburbs
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Browse gyms in other suburbs</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2">
             {Object.entries(POSTCODE_META)
               .filter(([pc]) => pc !== postcode)
@@ -314,9 +236,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
   );
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
-  params,
-}) => {
+export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
   const slug = params?.suburb as string;
 
   const match = slug?.match(/^(.*?)-?(\d{4})$/);
@@ -336,12 +256,26 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   const allGyms = await ownerStore.getAll();
   const gyms = filterGyms(allGyms, { postcode, amenities: [], radiusKm: 10 });
 
-  return {
-    props: {
-      postcode,
-      suburbName,
-      slug,
-      gyms,
-    },
-  };
+  // Build suburb index (one entry per postcode)
+  const seenPc = new Set<string>();
+  const suburbIndex: SuburbSuggestion[] = [];
+  for (const g of allGyms) {
+    const pc = g.address?.postcode;
+    if (!pc || seenPc.has(pc) || !g.address?.suburb || !POSTCODE_COORDS[pc]) continue;
+    seenPc.add(pc);
+    suburbIndex.push({ name: g.address.suburb, postcode: pc, state: g.address.state || "" });
+  }
+  suburbIndex.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Build gym index
+  const gymIndex: GymSuggestion[] = allGyms
+    .filter((g) => g.isActive !== false && !g.isTest)
+    .map((g) => ({
+      id: g.id,
+      name: g.name,
+      suburb: g.address?.suburb || "",
+      state: g.address?.state || "",
+    }));
+
+  return { props: { postcode, suburbName, slug, gyms, suburbIndex, gymIndex } };
 };
