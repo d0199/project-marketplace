@@ -317,6 +317,18 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
             </label>
           ))}
         </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Amenities note <span className="text-gray-400 font-normal">(shown below amenities)</span>
+          </label>
+          <input
+            type="text"
+            value={form.amenitiesNotes ?? ""}
+            onChange={(e) => setField("amenitiesNotes", e.target.value)}
+            placeholder="e.g. Verified using AI"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+          />
+        </div>
       </section>
 
       {/* Member Offers — paid listings only */}

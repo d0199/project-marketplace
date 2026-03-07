@@ -131,8 +131,10 @@ async function main() {
     }
 
     if (isHighConfidence) {
-      update.priceVerified = true;
-      update.pricingNotes  = "Verified using AI";
+      update.priceVerified      = true;
+      update.pricingNotes       = "Verified using AI";
+      update.amenitiesVerified  = true;
+      update.amenitiesNotes     = "Verified using AI";
     }
 
     if (opts.dryRun) {

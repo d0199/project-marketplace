@@ -59,6 +59,8 @@ function toGym(r: GymRecord): Gym {
     ...(r.memberOffersTnC != null && { memberOffersTnC: r.memberOffersTnC }),
     pricePerWeek: r.pricePerWeek ?? 0,
     ...(r.pricingNotes != null && { pricingNotes: r.pricingNotes }),
+    amenitiesVerified: r.amenitiesVerified ?? false,
+    ...(r.amenitiesNotes != null && { amenitiesNotes: r.amenitiesNotes }),
     images: (r.images?.filter(Boolean) ?? []) as string[],
     ...(r.imageFocalPoints != null && { imageFocalPoints: (r.imageFocalPoints.filter((v) => v != null) as number[]) }),
   };
@@ -107,6 +109,8 @@ function fromGym(gym: Gym) {
     memberOffersTnC: gym.memberOffersTnC,
     pricePerWeek: gym.pricePerWeek,
     pricingNotes: gym.pricingNotes,
+    amenitiesVerified: gym.amenitiesVerified ?? false,
+    amenitiesNotes: gym.amenitiesNotes,
     images: gym.images,
     imageFocalPoints: gym.imageFocalPoints,
   };
