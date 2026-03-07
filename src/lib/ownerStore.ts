@@ -58,6 +58,7 @@ function toGym(r: GymRecord): Gym {
     ...(r.memberScrollText != null && { memberScrollText: r.memberScrollText }),
     ...(r.memberOffersTnC != null && { memberOffersTnC: r.memberOffersTnC }),
     pricePerWeek: r.pricePerWeek ?? 0,
+    ...(r.pricingNotes != null && { pricingNotes: r.pricingNotes }),
     images: (r.images?.filter(Boolean) ?? []) as string[],
     ...(r.imageFocalPoints != null && { imageFocalPoints: (r.imageFocalPoints.filter((v) => v != null) as number[]) }),
   };
@@ -105,6 +106,7 @@ function fromGym(gym: Gym) {
     memberScrollText: gym.memberScrollText,
     memberOffersTnC: gym.memberOffersTnC,
     pricePerWeek: gym.pricePerWeek,
+    pricingNotes: gym.pricingNotes,
     images: gym.images,
     imageFocalPoints: gym.imageFocalPoints,
   };
