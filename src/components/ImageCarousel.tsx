@@ -8,6 +8,7 @@ interface Props {
   showDots?: boolean;
   intervalMs?: number;
   focalPoints?: number[];
+  objectFit?: "cover" | "contain";
 }
 
 export default function ImageCarousel({
@@ -17,6 +18,7 @@ export default function ImageCarousel({
   showDots = true,
   intervalMs = 5000,
   focalPoints,
+  objectFit = "cover",
 }: Props) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -52,8 +54,8 @@ export default function ImageCarousel({
             src={src}
             alt={`${alt} — photo ${i + 1}`}
             fill
-            className="object-cover"
-            style={{ objectPosition: `center ${focalPoints?.[i] ?? 50}%` }}
+            className={objectFit === "contain" ? "object-contain" : "object-cover"}
+            style={objectFit === "cover" ? { objectPosition: `center ${focalPoints?.[i] ?? 50}%` } : undefined}
             sizes={sizes}
             unoptimized
             priority={i === 0}

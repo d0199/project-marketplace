@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -112,45 +112,133 @@ export default function HomePage({ gyms, suburbIndex }: Props) {
         <meta property="og:description" content="Search gyms across Australia by suburb and postcode. Compare prices, amenities and opening hours." />
         <meta property="og:type" content="website" />
       </Head>
-      <Layout>
-        {/* Hero */}
-        <div className="bg-gradient-to-r from-brand-orange to-brand-orange-dark rounded-2xl px-8 py-12 mb-8 text-white">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Find your perfect gym</h1>
-          <p className="text-orange-100 mb-6 text-lg">
-            Search thousands of gyms across Australia by postcode and amenities.
-          </p>
-          <SearchBar
-            onSearch={handleSearch}
-            initialValue={postcode}
-            suburbIndex={suburbIndex}
-            gymIndex={gymIndex}
-          />
+      <Layout hero={
+        <div className="relative overflow-hidden" style={{ height: 460 }}>
+          <img src="/stock/Hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 drop-shadow-lg">
+              Your Next Move Starts Here.
+            </h1>
+            <p className="text-white/75 text-lg mb-7">
+              Discover thousands of premium gyms across Australia
+            </p>
 
-          {/* Radius control — half-width, left-aligned */}
-          <div className="mt-5 max-w-xs">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-orange-100 text-sm">Search radius</span>
-              <span className="text-white font-bold text-sm tabular-nums">{radiusKm} km</span>
+            <div className="w-full max-w-2xl">
+              <SearchBar
+                onSearch={handleSearch}
+                initialValue={postcode}
+                suburbIndex={suburbIndex}
+                gymIndex={gymIndex}
+              />
             </div>
-            <input
-              type="range"
-              min={MIN_RADIUS}
-              max={MAX_RADIUS}
-              step={1}
-              value={radiusKm}
-              onChange={(e) => setRadiusKm(Number(e.target.value))}
-              className="w-full cursor-pointer accent-white"
-            />
-            <div className="flex justify-between text-xs text-orange-200 mt-1">
-              <span>{MIN_RADIUS} km</span>
-              <span>{MAX_RADIUS} km</span>
+
+            <div className="flex items-end justify-evenly w-full max-w-2xl mt-7">
+              {([
+                {
+                  key: "pool", label: "pool",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+                      <path d="M2 18c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3-2 4.5 0" strokeLinecap="round" />
+                      <circle cx="16" cy="7" r="2" />
+                      <path d="M4 13l4-5 3 3 2.5-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "spa", label: "spa",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+                      <path d="M12 3C9 7 6 9 6 13a6 6 0 0012 0c0-4-3-6-6-10z" strokeLinejoin="round" />
+                      <path d="M12 19v3M9 22h6" strokeLinecap="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "sauna", label: "sauna",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+                      <path d="M8 2c0 2.5-2 3.5-2 6M12 2c0 2.5-2 3.5-2 6M16 2c0 2.5-2 3.5-2 6" strokeLinecap="round" />
+                      <rect x="3" y="12" width="18" height="9" rx="2" />
+                      <path d="M7 17h10" strokeLinecap="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "24/7 access", label: "24/7 access",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "personal training", label: "personal training",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+                      <circle cx="12" cy="5" r="2" />
+                      <path d="M12 9v6M9 12h6" strokeLinecap="round" />
+                      <path d="M6 8l2 2M18 8l-2 2M8 19l2-4M16 19l-2-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "childcare", label: "childcare",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+                      <circle cx="12" cy="6" r="2.5" />
+                      <path d="M9 11c-2 .5-3 2-3 4v1h12v-1c0-2-1-3.5-3-4" strokeLinecap="round" />
+                      <path d="M8 20c0-1.5 4-2.5 4-2.5s4 1 4 2.5" strokeLinecap="round" />
+                    </svg>
+                  ),
+                },
+              ] as { key: string; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() =>
+                    setSelectedAmenities((prev) =>
+                      prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key]
+                    )
+                  }
+                  className={`flex flex-col items-center gap-1.5 transition-all ${
+                    selectedAmenities.includes(key)
+                      ? "text-brand-orange scale-110"
+                      : "text-white/55 hover:text-white/90"
+                  }`}
+                >
+                  {icon}
+                  <span className="text-xs">{label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
+      }>
 
         <div className="flex gap-6">
           {/* Sidebar */}
           <div className="w-52 shrink-0 hidden sm:block">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">Search Radius</h3>
+                <span className="text-brand-orange font-bold text-sm tabular-nums">{radiusKm} km</span>
+              </div>
+              <input
+                type="range"
+                min={MIN_RADIUS}
+                max={MAX_RADIUS}
+                step={1}
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="w-full cursor-pointer accent-orange-500"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>{MIN_RADIUS} km</span>
+                <span>{MAX_RADIUS} km</span>
+              </div>
+            </div>
             <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
             <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
           </div>
@@ -158,6 +246,25 @@ export default function HomePage({ gyms, suburbIndex }: Props) {
           {/* Results */}
           <div className="flex-1 min-w-0">
             <div className="sm:hidden mb-4">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">Search Radius</h3>
+                  <span className="text-brand-orange font-bold text-sm tabular-nums">{radiusKm} km</span>
+                </div>
+                <input
+                  type="range"
+                  min={MIN_RADIUS}
+                  max={MAX_RADIUS}
+                  step={1}
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  className="w-full cursor-pointer accent-orange-500"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>{MIN_RADIUS} km</span>
+                  <span>{MAX_RADIUS} km</span>
+                </div>
+              </div>
               <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
               <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
             </div>

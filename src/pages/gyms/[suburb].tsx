@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -102,19 +102,87 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbInd
           <span className="text-gray-800">Gyms in {suburbName}</span>
         </nav>
 
-        {/* Hero with smart search */}
-        <div className="bg-gradient-to-r from-brand-orange to-brand-orange-dark rounded-2xl px-6 py-8 mb-8 text-white">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-1">Gyms in {suburbName}, {postcode}</h1>
-          <p className="text-orange-100 mb-5 text-sm">
-            {count > 0
-              ? `${count} gym${count !== 1 ? "s" : ""} within 10 km`
-              : `No gyms found within 10 km of ${suburbName}`}
-          </p>
-          <SearchBar
-            onSearch={handleSearch}
-            suburbIndex={suburbIndex}
-            gymIndex={gymIndex}
-          />
+        {/* Hero */}
+        <div className="relative rounded-2xl overflow-hidden mb-8" style={{ height: 340 }}>
+          <img src="/stock/Hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-2 drop-shadow-lg">
+              Gyms in {suburbName}
+            </h1>
+            <p className="text-white/75 mb-6">
+              {count > 0
+                ? `${count} gym${count !== 1 ? "s" : ""} within 10 km of ${postcode}`
+                : `No gyms found within 10 km of ${suburbName}`}
+            </p>
+            <div className="w-full max-w-xl">
+              <SearchBar
+                onSearch={handleSearch}
+                suburbIndex={suburbIndex}
+                gymIndex={gymIndex}
+              />
+            </div>
+            <div className="flex items-end gap-8 sm:gap-12 mt-6">
+              {([
+                {
+                  key: "pool", label: "pool",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <path d="M2 18c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3-2 4.5 0" strokeLinecap="round" />
+                      <circle cx="16" cy="7" r="2" />
+                      <path d="M4 13l4-5 3 3 2.5-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "spa", label: "spa",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <path d="M12 3C9 7 6 9 6 13a6 6 0 0012 0c0-4-3-6-6-10z" strokeLinejoin="round" />
+                      <path d="M12 19v3M9 22h6" strokeLinecap="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "sauna", label: "sauna",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <path d="M8 2c0 2.5-2 3.5-2 6M12 2c0 2.5-2 3.5-2 6M16 2c0 2.5-2 3.5-2 6" strokeLinecap="round" />
+                      <rect x="3" y="12" width="18" height="9" rx="2" />
+                      <path d="M7 17h10" strokeLinecap="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "24/7 access", label: "24/7 access",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+              ] as { key: string; label: string; icon: React.ReactNode }[]).map(({ key, label, icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() =>
+                    setSelectedAmenities((prev) =>
+                      prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key]
+                    )
+                  }
+                  className={`flex flex-col items-center gap-1.5 transition-all ${
+                    selectedAmenities.includes(key)
+                      ? "text-brand-orange scale-110"
+                      : "text-white/55 hover:text-white/90"
+                  }`}
+                >
+                  {icon}
+                  <span className="text-xs">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {count === 0 ? (
