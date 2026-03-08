@@ -1,4 +1,5 @@
-import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
+import { ALL_AMENITIES } from "@/lib/utils";
+import AmenityIcon from "./AmenityIcon";
 
 interface Props {
   selected: string[];
@@ -41,8 +42,9 @@ export default function AmenityFilter({ selected, onChange }: Props) {
                   onChange={() => toggle(amenity)}
                   className="w-4 h-4 rounded accent-brand-orange"
                 />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                  {AMENITY_ICONS[amenity]} {amenity}
+                <span className="flex items-center gap-1.5 text-sm text-gray-700 group-hover:text-gray-900">
+                  <AmenityIcon amenity={amenity} className="w-4 h-4 shrink-0 text-gray-500 group-hover:text-brand-orange transition-colors" />
+                  <span className="capitalize">{amenity}</span>
                 </span>
               </label>
             </li>

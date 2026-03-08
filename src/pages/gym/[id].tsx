@@ -8,7 +8,7 @@ import AmenityBadge from "@/components/AmenityBadge";
 import ImageCarousel from "@/components/ImageCarousel";
 import type { Gym } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
-import { MEMBER_OFFER_ICONS } from "@/lib/utils";
+import { MemberOfferIcon } from "@/components/AmenityIcon";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 
 const DAYS = [
@@ -194,8 +194,9 @@ export default function GymProfilePage({ gym }: Props) {
                 {gym.memberOffers && gym.memberOffers.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {gym.memberOffers.map((offer) => (
-                      <span key={offer} className="inline-flex items-center gap-1 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
-                        {MEMBER_OFFER_ICONS[offer]} {offer}
+                      <span key={offer} className="inline-flex items-center gap-1.5 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
+                        <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0" />
+                        <span className="capitalize">{offer}</span>
                       </span>
                     ))}
                   </div>

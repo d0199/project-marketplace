@@ -271,9 +271,12 @@ export default function HomePage({ gyms, suburbIndex }: Props) {
 
             {!hasSearched ? (
               <div className="text-center py-20 text-gray-400">
-                <p className="text-5xl mb-4">🏋️</p>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-14 h-14 mx-auto mb-4 text-gray-300">
+                  <path d="M6 12h12" />
+                  <path d="M3 9v6M6 9v6M18 9v6M21 9v6" />
+                </svg>
                 <p className="text-lg font-medium text-gray-500">Search by suburb, postcode or gym name</p>
-                <p className="text-sm mt-2">Try <strong className="text-gray-600">Joondalup</strong>, <strong className="text-gray-600">6000</strong> or your gym name</p>
+                <p className="text-sm mt-2">Try <strong className="text-gray-600">Perth</strong>, <strong className="text-gray-600">6000</strong> or your gym name</p>
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">

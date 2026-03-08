@@ -1,4 +1,5 @@
-import { ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS } from "@/lib/utils";
+import { ALL_MEMBER_OFFERS } from "@/lib/utils";
+import { MemberOfferIcon } from "./AmenityIcon";
 
 interface Props {
   selected: string[];
@@ -41,8 +42,9 @@ export default function MemberOfferFilter({ selected, onChange }: Props) {
                   onChange={() => toggle(offer)}
                   className="w-4 h-4 rounded accent-brand-orange"
                 />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                  {MEMBER_OFFER_ICONS[offer]} {offer}
+                <span className="flex items-center gap-1.5 text-sm text-gray-700 group-hover:text-gray-900">
+                  <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0 text-gray-500 group-hover:text-brand-orange transition-colors" />
+                  <span className="capitalize">{offer}</span>
                 </span>
               </label>
             </li>
