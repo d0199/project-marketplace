@@ -110,6 +110,7 @@ export default function GymProfilePage({ gym }: Props) {
         <title>{gym.name} — mynextgym.com.au</title>
         <meta name="description" content={gym.description} />
         {gym.isTest && <meta name="robots" content="noindex, nofollow" />}
+        <link rel="canonical" href={`https://www.mynextgym.com.au/gym/${gym.id}`} />
       </Head>
       <Layout>
         {/* Breadcrumb */}

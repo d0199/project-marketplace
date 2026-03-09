@@ -140,6 +140,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gymCount }: Pro
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
+        {gymCount === 0 && <meta name="robots" content="noindex, follow" />}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
