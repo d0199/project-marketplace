@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, fetchAuthSession, signOut } from "aws-amplify/auth";
 import type { Gym, GymEdit } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
-import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
+import { ALL_AMENITIES, ALL_SPECIALTIES, AMENITY_ICONS } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -865,8 +865,10 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     isPaid: "" | "true" | "false";
     addAmenities: Set<string>;
     removeAmenities: Set<string>;
+    addSpecialties: Set<string>;
+    removeSpecialties: Set<string>;
     addImages: string;
-  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addImages: "" });
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addSpecialties: new Set(), removeSpecialties: new Set(), addImages: "" });
   const [bulkBusy, setBulkBusy] = useState(false);
   const [clearAmenitiesOpen, setClearAmenitiesOpen] = useState(false);
   const [clearWord, setClearWord] = useState("");
@@ -883,11 +885,16 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [sortCol, setSortCol] = useState<string>("ID");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dynamicAmenities, setDynamicAmenities] = useState<string[]>([...ALL_AMENITIES]);
+  const [dynamicSpecialties, setDynamicSpecialties] = useState<string[]>([...ALL_SPECIALTIES]);
 
   useEffect(() => {
     fetch("/api/datasets/amenities")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries?.length) setDynamicAmenities(data.entries); })
+      .catch(() => {});
+    fetch("/api/datasets/specialties")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setDynamicSpecialties(data.entries); })
       .catch(() => {});
   }, []);
 
@@ -963,8 +970,23 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     });
   }
 
+  function toggleBulkSpecialty(specialty: string, mode: "add" | "remove") {
+    setBulk((b) => {
+      const addSpecialties = new Set(b.addSpecialties);
+      const removeSpecialties = new Set(b.removeSpecialties);
+      if (mode === "add") {
+        if (addSpecialties.has(specialty)) { addSpecialties.delete(specialty); }
+        else { addSpecialties.add(specialty); removeSpecialties.delete(specialty); }
+      } else {
+        if (removeSpecialties.has(specialty)) { removeSpecialties.delete(specialty); }
+        else { removeSpecialties.add(specialty); addSpecialties.delete(specialty); }
+      }
+      return { ...b, addSpecialties, removeSpecialties };
+    });
+  }
+
   function resetBulk() {
-    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addImages: "" });
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addSpecialties: new Set(), removeSpecialties: new Set(), addImages: "" });
   }
 
   async function applyBulk() {
@@ -986,6 +1008,12 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           bulk.addAmenities.forEach((a) => amenitySet.add(a));
           bulk.removeAmenities.forEach((a) => amenitySet.delete(a));
           updated.amenities = Array.from(amenitySet);
+        }
+        if (bulk.addSpecialties.size > 0 || bulk.removeSpecialties.size > 0) {
+          const specSet = new Set(g.specialties ?? []);
+          bulk.addSpecialties.forEach((s) => specSet.add(s));
+          bulk.removeSpecialties.forEach((s) => specSet.delete(s));
+          updated.specialties = Array.from(specSet);
         }
         if (bulk.addImages.trim()) {
           const newUrls = bulk.addImages.split("\n").map((u) => u.trim()).filter((u) => u.startsWith("http"));
@@ -1367,6 +1395,34 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                         </button>
                         <button
                           onClick={() => toggleBulkAmenity(a, "remove")}
+                          className={`px-2 py-0.5 rounded text-xs font-medium border ${removing ? "bg-red-100 border-red-400 text-red-700" : "border-gray-200 text-gray-400 hover:border-red-300"}`}
+                        >
+                          − Remove
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Specialties */}
+              <div>
+                <p className="text-xs font-medium text-gray-700 mb-2">Specialties</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  {dynamicSpecialties.map((s) => {
+                    const adding = bulk.addSpecialties.has(s);
+                    const removing = bulk.removeSpecialties.has(s);
+                    return (
+                      <div key={s} className="flex items-center gap-2 text-sm">
+                        <span className="w-28 text-gray-700 truncate">{s}</span>
+                        <button
+                          onClick={() => toggleBulkSpecialty(s, "add")}
+                          className={`px-2 py-0.5 rounded text-xs font-medium border ${adding ? "bg-green-100 border-green-400 text-green-800" : "border-gray-200 text-gray-400 hover:border-green-300"}`}
+                        >
+                          + Add
+                        </button>
+                        <button
+                          onClick={() => toggleBulkSpecialty(s, "remove")}
                           className={`px-2 py-0.5 rounded text-xs font-medium border ${removing ? "bg-red-100 border-red-400 text-red-700" : "border-gray-200 text-gray-400 hover:border-red-300"}`}
                         >
                           − Remove

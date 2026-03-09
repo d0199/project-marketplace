@@ -84,7 +84,7 @@ export default function SearchBar({
         .then((r) => r.json())
         .then((data: SuburbSuggestion[]) => setSuburbMatches(data))
         .catch(() => {});
-    }, 150);
+    }, 80);
 
     return () => clearTimeout(timer);
   }, [query, isPostcodeInput, suburbIndex]);
@@ -104,7 +104,7 @@ export default function SearchBar({
         .then((r) => r.json())
         .then((data: GymSuggestion[]) => setGymMatches(data))
         .catch(() => {});
-    }, 150);
+    }, 80);
 
     return () => clearTimeout(timer);
   }, [query, isPostcodeInput]);
