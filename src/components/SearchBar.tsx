@@ -156,21 +156,32 @@ export default function SearchBar({
     setError("");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const nearest = findNearestPostcode(pos.coords.latitude, pos.coords.longitude);
-        setLocating(false);
-        if (nearest) {
-          setValue(nearest.postcode);
-          setOpen(false);
-          onSearch(nearest.postcode);
-        } else {
-          setError("No coverage found near your location.");
+        try {
+          const nearest = findNearestPostcode(pos.coords.latitude, pos.coords.longitude);
+          setLocating(false);
+          if (nearest) {
+            setValue(nearest.postcode);
+            setOpen(false);
+            onSearch(nearest.postcode);
+          } else {
+            setError("No coverage found near your location.");
+          }
+        } catch {
+          setLocating(false);
+          setError("Something went wrong finding nearby postcodes.");
         }
       },
-      () => {
+      (err) => {
         setLocating(false);
-        setError("Unable to get your location. Please allow location access.");
+        if (err.code === err.PERMISSION_DENIED) {
+          setError("Location access denied. Please allow location access in your browser settings.");
+        } else if (err.code === err.TIMEOUT) {
+          setError("Location request timed out. Please try again.");
+        } else {
+          setError("Unable to get your location. Please try again.");
+        }
       },
-      { enableHighAccuracy: false, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 15000 }
     );
   }, [onSearch]);
 
