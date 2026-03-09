@@ -158,7 +158,7 @@ export default function SearchBar({
       (pos) => {
         const nearest = findNearestPostcode(pos.coords.latitude, pos.coords.longitude);
         setLocating(false);
-        if (nearest && nearest.distance < 200) {
+        if (nearest) {
           setValue(nearest.postcode);
           setOpen(false);
           onSearch(nearest.postcode);
@@ -261,7 +261,6 @@ export default function SearchBar({
               placeholder="Enter postcode (e.g. 6000) or search for your suburb or gym"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-900 placeholder-gray-400"
             />
-            {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
           </div>
           <button
             type="button"
@@ -294,6 +293,7 @@ export default function SearchBar({
             Search Gyms
           </button>
         </div>
+        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
       </form>
 
       {hasDropdown && (
