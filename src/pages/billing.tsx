@@ -25,6 +25,11 @@ const PRICES = {
   featured: { month: 99, year: 990 },
 };
 
+const PT_PRICES = {
+  paid: { month: 12, year: 120 },
+  featured: { month: 39, year: 390 },
+};
+
 const PAID_FEATURES = [
   "Contact enquiry form",
   "Instagram & Facebook links",
@@ -36,6 +41,19 @@ const PAID_FEATURES = [
 const FEATURED_FEATURES = [
   "Pinned to top of search results",
   "Rotated among max 3 per postcode",
+];
+
+const PT_PAID_FEATURES = [
+  "Contact enquiry form",
+  "Social media links",
+  "Booking link",
+  "Qualifications display",
+  "Specialties tags",
+];
+
+const PT_FEATURED_FEATURES = [
+  "Featured badge on profile",
+  "Priority in search results",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -344,6 +362,234 @@ function GymRow({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PTRow
+// ─────────────────────────────────────────────────────────────────────────────
+function PTRow({
+  pt,
+  interval,
+  busy,
+  collapsed,
+  onToggleCollapse,
+  onUpgrade,
+  onManage,
+  onCancel,
+}: {
+  pt: PersonalTrainer;
+  interval: Interval;
+  busy: string | null;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onUpgrade: (pt: PersonalTrainer, plan: "paid" | "featured") => void;
+  onManage: () => void;
+  onCancel: (pt: PersonalTrainer) => void;
+}) {
+  const currentPlan =
+    pt.stripePlan ?? (pt.isFeatured ? "featured" : pt.isPaid ? "paid" : null);
+  const hasBillingAccount = !!pt.stripeSubscriptionId;
+
+  function PTPrice({ plan, interval: iv }: { plan: "paid" | "featured"; interval: Interval }) {
+    const price = PT_PRICES[plan][iv];
+    const monthly = iv === "year" ? Math.round(PT_PRICES[plan].year / 12) : PT_PRICES[plan].month;
+    return (
+      <div>
+        <span className="text-3xl font-bold text-gray-900">${price}</span>
+        <span className="text-sm text-gray-500">/{iv === "month" ? "mo" : "yr"}</span>
+        {iv === "year" && (
+          <div className="text-xs text-green-600 font-medium mt-0.5">
+            ${monthly}/mo — 2 months free
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      {/* PT header */}
+      <div className="flex items-center justify-between px-5 py-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded-full">PT</span>
+            <span className="font-semibold text-gray-900">{pt.name}</span>
+          </div>
+          <div className="text-sm text-gray-500">
+            {pt.address.suburb}, {pt.address.state} {pt.address.postcode}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <PlanBadge plan={currentPlan} />
+          <Link
+            href={`/pt/${pt.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"
+          >
+            View profile →
+          </Link>
+          <button
+            onClick={onToggleCollapse}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label={collapsed ? "Expand plan options" : "Collapse plan options"}
+          >
+            <svg
+              className={`w-5 h-5 transition-transform duration-200 ${collapsed ? "-rotate-90" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Plan columns */}
+      {!collapsed && (
+        <div className="border-t border-gray-100 grid grid-cols-3 divide-x divide-gray-100">
+          {/* Free */}
+          <div className={`p-5 flex flex-col ${!currentPlan ? "bg-gray-50" : ""}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-semibold text-gray-700">Free</span>
+              {!currentPlan && (
+                <span className="text-xs bg-gray-200 text-gray-600 font-semibold px-2 py-0.5 rounded-full">Current</span>
+              )}
+            </div>
+            <div className="text-2xl font-bold text-gray-400 mb-3">$0</div>
+            <ul className="space-y-1.5 text-xs text-gray-400 flex-1">
+              <li>✓ Basic profile</li>
+              <li>✓ Search visibility</li>
+              <li className="text-gray-300">✗ Contact form</li>
+              <li className="text-gray-300">✗ Social links</li>
+              <li className="text-gray-300">✗ Booking link</li>
+              <li className="text-gray-300">✗ Featured badge</li>
+            </ul>
+            {currentPlan && (
+              <div className="mt-4">
+                <button
+                  onClick={() => onCancel(pt)}
+                  disabled={busy === `${pt.id}-cancel`}
+                  className="w-full text-xs py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-300 transition-colors disabled:opacity-50"
+                >
+                  {busy === `${pt.id}-cancel` ? "Cancelling…" : "Downgrade to Free"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Basic ($12) */}
+          <div className={`p-5 flex flex-col ${currentPlan === "paid" ? "bg-green-50" : ""}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-semibold text-gray-700">Basic</span>
+              {currentPlan === "paid" && (
+                <span className="text-xs bg-green-200 text-green-800 font-semibold px-2 py-0.5 rounded-full">Current</span>
+              )}
+            </div>
+            <div className="mb-3">
+              <PTPrice plan="paid" interval={interval} />
+            </div>
+            <ul className="space-y-1.5 text-xs text-gray-600 flex-1">
+              <li>✓ Basic profile</li>
+              <li>✓ Search visibility</li>
+              {PT_PAID_FEATURES.map((f) => (
+                <li key={f}>✓ {f}</li>
+              ))}
+              <li className="text-gray-300">✗ Featured badge</li>
+            </ul>
+            <div className="mt-4">
+              {currentPlan === "paid" ? (
+                hasBillingAccount ? (
+                  <button
+                    onClick={onManage}
+                    disabled={busy === "portal"}
+                    className="w-full text-sm py-2 border border-green-400 text-green-700 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                  >
+                    {busy === "portal" ? "Loading…" : "Manage Billing ↗"}
+                  </button>
+                ) : (
+                  <div className="w-full text-sm py-2 text-center text-green-700 bg-green-50 rounded-lg font-medium">
+                    Complimentary
+                  </div>
+                )
+              ) : currentPlan === "featured" ? (
+                hasBillingAccount ? (
+                  <button
+                    onClick={onManage}
+                    disabled={busy === "portal"}
+                    className="w-full text-sm py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    {busy === "portal" ? "Loading…" : "Switch plan ↗"}
+                  </button>
+                ) : (
+                  <div className="w-full text-sm py-2 text-center text-amber-700 bg-amber-50 rounded-lg font-medium">
+                    Complimentary
+                  </div>
+                )
+              ) : (
+                <button
+                  onClick={() => onUpgrade(pt, "paid")}
+                  disabled={busy === `${pt.id}-paid`}
+                  className="w-full text-sm py-2 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+                >
+                  {busy === `${pt.id}-paid` ? "Loading…" : "Upgrade to Basic"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Featured ($39) */}
+          <div className={`p-5 flex flex-col ${currentPlan === "featured" ? "bg-amber-50" : ""}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-semibold text-gray-700">Featured</span>
+              {currentPlan === "featured" && (
+                <span className="text-xs bg-amber-200 text-amber-800 font-semibold px-2 py-0.5 rounded-full">Current</span>
+              )}
+            </div>
+            <div className="mb-3">
+              <PTPrice plan="featured" interval={interval} />
+            </div>
+            <ul className="space-y-1.5 text-xs text-gray-600 flex-1">
+              <li>✓ Basic profile</li>
+              <li>✓ Search visibility</li>
+              {PT_PAID_FEATURES.map((f) => (
+                <li key={f}>✓ {f}</li>
+              ))}
+              {PT_FEATURED_FEATURES.map((f) => (
+                <li key={f} className="font-medium text-amber-700">★ {f}</li>
+              ))}
+            </ul>
+            <div className="mt-4">
+              {currentPlan === "featured" ? (
+                hasBillingAccount ? (
+                  <button
+                    onClick={onManage}
+                    disabled={busy === "portal"}
+                    className="w-full text-sm py-2 border border-amber-400 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50"
+                  >
+                    {busy === "portal" ? "Loading…" : "Manage Billing ↗"}
+                  </button>
+                ) : (
+                  <div className="w-full text-sm py-2 text-center text-amber-700 bg-amber-50 rounded-lg font-medium">
+                    Complimentary
+                  </div>
+                )
+              ) : (
+                <button
+                  onClick={() => onUpgrade(pt, "featured")}
+                  disabled={busy === `${pt.id}-featured`}
+                  className="w-full text-sm py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+                >
+                  {busy === `${pt.id}-featured` ? "Loading…" : "Upgrade to Featured"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BillingPage
 // ─────────────────────────────────────────────────────────────────────────────
 export default function BillingPage() {
@@ -456,6 +702,65 @@ export default function BillingPage() {
   const allCollapsed = gyms.length > 0 && collapsed.size === gyms.length;
 
   // ── Billing actions ───────────────────────────────────────────────────────
+  async function handlePTUpgrade(pt: PersonalTrainer, plan: "paid" | "featured") {
+    if (!session) return;
+    setBusy(`${pt.id}-${plan}`);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gymId: pt.id,
+          ownerId: session.ownerId,
+          email: session.email,
+          plan,
+          interval,
+          entityType: "pt",
+        }),
+      });
+      const data = await res.json();
+      if (data.redirect === "portal") {
+        await handleManage();
+      } else if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error ?? "Something went wrong");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    }
+    setBusy(null);
+  }
+
+  async function handlePTCancel(pt: PersonalTrainer) {
+    if (!session) return;
+    if (
+      !confirm(
+        `Downgrade ${pt.name} to Free? Your paid features will remain active until the end of the current billing period.`
+      )
+    )
+      return;
+    setBusy(`${pt.id}-cancel`);
+    try {
+      const res = await fetch("/api/billing/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gymId: pt.id, email: session.email, entityType: "pt" }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setCancelToast(
+          `Subscription cancelled. ${pt.name} will revert to Free on ${data.periodEnd}.`
+        );
+      } else {
+        alert(data.error ?? "Something went wrong");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    }
+    setBusy(null);
+  }
+
   async function handleUpgrade(gym: Gym, plan: "paid" | "featured") {
     if (!session) return;
     setBusy(`${gym.id}-${plan}`);
@@ -616,9 +921,9 @@ export default function BillingPage() {
               </div>
             )}
 
-            {gyms.length === 0 ? (
+            {gyms.length === 0 && pts.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-gray-500 mb-4">No gym listings yet.</p>
+                <p className="text-gray-500 mb-4">No listings yet.</p>
                 <div className="flex gap-3 justify-center">
                   <Link
                     href="/list-gym"
@@ -631,6 +936,12 @@ export default function BillingPage() {
                     className="px-5 py-2.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg text-sm transition-colors"
                   >
                     Claim your gym
+                  </Link>
+                  <Link
+                    href="/claim-pt"
+                    className="px-5 py-2.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg text-sm transition-colors"
+                  >
+                    Claim your PT profile
                   </Link>
                 </div>
               </div>
@@ -733,6 +1044,19 @@ export default function BillingPage() {
                         onUpgrade={handleUpgrade}
                         onManage={handleManage}
                         onCancel={handleCancel}
+                      />
+                    ))}
+                    {pts.map((pt) => (
+                      <PTRow
+                        key={pt.id}
+                        pt={pt}
+                        interval={interval}
+                        busy={busy}
+                        collapsed={collapsed.has(pt.id)}
+                        onToggleCollapse={() => toggleCollapse(pt.id)}
+                        onUpgrade={handlePTUpgrade}
+                        onManage={handleManage}
+                        onCancel={handlePTCancel}
                       />
                     ))}
                   </div>
