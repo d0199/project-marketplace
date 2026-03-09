@@ -52,8 +52,8 @@ export default function GymProfilePage({ gym }: Props) {
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [showFeedback, setShowFeedback] = useState(false);
 
-  // Admins and internal users on test gyms see all paid fields for maintenance
-  const effectivePaid = gym.isPaid || isAdmin || (gym.isTest && isInternalUser);
+  // Profile page always respects isPaid — admins edit via admin panel, not the listing view
+  const effectivePaid = !!gym.isPaid;
 
   useEffect(() => {
     getCurrentUser()
