@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { ALL_MEMBER_OFFERS } from "@/lib/utils";
 import { MemberOfferIcon } from "./AmenityIcon";
 
@@ -7,6 +8,15 @@ interface Props {
 }
 
 export default function MemberOfferFilter({ selected, onChange }: Props) {
+  const [offers, setOffers] = useState<string[]>([...ALL_MEMBER_OFFERS]);
+
+  useEffect(() => {
+    fetch("/api/datasets/member-offers")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setOffers(data.entries); })
+      .catch(() => {});
+  }, []);
+
   function toggle(offer: string) {
     if (selected.includes(offer)) {
       onChange(selected.filter((o) => o !== offer));
@@ -31,7 +41,7 @@ export default function MemberOfferFilter({ selected, onChange }: Props) {
         )}
       </div>
       <ul className="space-y-2">
-        {ALL_MEMBER_OFFERS.map((offer) => {
+        {offers.map((offer) => {
           const checked = selected.includes(offer);
           return (
             <li key={offer}>

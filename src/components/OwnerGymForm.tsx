@@ -28,13 +28,23 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([...ALL_SPECIALTIES]);
+  const [availableAmenities, setAvailableAmenities] = useState<string[]>([...ALL_AMENITIES]);
+  const [availableMemberOffers, setAvailableMemberOffers] = useState<string[]>([...ALL_MEMBER_OFFERS]);
   const [specSearch, setSpecSearch] = useState("");
 
-  // Fetch specialties from dataset API (fallback to hardcoded list)
+  // Fetch datasets from API (fallback to hardcoded lists)
   useEffect(() => {
     fetch("/api/datasets/specialties")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries?.length) setAvailableSpecialties(data.entries); })
+      .catch(() => {});
+    fetch("/api/datasets/amenities")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setAvailableAmenities(data.entries); })
+      .catch(() => {});
+    fetch("/api/datasets/member-offers")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setAvailableMemberOffers(data.entries); })
       .catch(() => {});
   }, []);
 
@@ -314,7 +324,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
           Amenities
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {ALL_AMENITIES.map((amenity) => (
+          {availableAmenities.map((amenity) => (
             <label
               key={amenity}
               className="flex items-center gap-2 cursor-pointer"
@@ -411,7 +421,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
           Member Offers
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-          {ALL_MEMBER_OFFERS.map((offer) => (
+          {availableMemberOffers.map((offer) => (
             <label key={offer} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"

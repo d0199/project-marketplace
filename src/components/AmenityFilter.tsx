@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { ALL_AMENITIES } from "@/lib/utils";
 import AmenityIcon from "./AmenityIcon";
 
@@ -7,6 +8,15 @@ interface Props {
 }
 
 export default function AmenityFilter({ selected, onChange }: Props) {
+  const [amenities, setAmenities] = useState<string[]>([...ALL_AMENITIES]);
+
+  useEffect(() => {
+    fetch("/api/datasets/amenities")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setAmenities(data.entries); })
+      .catch(() => {});
+  }, []);
+
   function toggle(amenity: string) {
     if (selected.includes(amenity)) {
       onChange(selected.filter((a) => a !== amenity));
@@ -31,7 +41,7 @@ export default function AmenityFilter({ selected, onChange }: Props) {
         )}
       </div>
       <ul className="space-y-2">
-        {ALL_AMENITIES.map((amenity) => {
+        {amenities.map((amenity) => {
           const checked = selected.includes(amenity);
           return (
             <li key={amenity}>

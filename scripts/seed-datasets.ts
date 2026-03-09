@@ -1,37 +1,43 @@
 /**
- * Seed the "specialties" dataset into DynamoDB.
+ * Seed datasets (specialties, amenities, member-offers) into DynamoDB.
  * Run: npx tsx scripts/seed-datasets.ts
  */
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
 import outputs from "../amplify_outputs.json";
-import { ALL_SPECIALTIES } from "../src/lib/utils";
+import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS } from "../src/lib/utils";
 
 Amplify.configure(outputs as Parameters<typeof Amplify.configure>[0], { ssr: true });
 const client = generateClient<Schema>({ authMode: "apiKey" });
 
-async function main() {
-  // Check if "specialties" already exists
+const DATASETS: Record<string, string[]> = {
+  specialties: [...ALL_SPECIALTIES],
+  amenities: [...ALL_AMENITIES],
+  "member-offers": [...ALL_MEMBER_OFFERS],
+};
+
+async function upsert(name: string, entries: string[]) {
   const { data: existing } = await client.models.Dataset.list({
-    filter: { name: { eq: "specialties" } },
+    filter: { name: { eq: name } },
     limit: 1,
   });
 
   if (existing && existing.length > 0) {
-    console.log(`"specialties" dataset already exists (${existing[0].entries?.length ?? 0} entries). Updating...`);
-    await client.models.Dataset.update({
-      id: existing[0].id,
-      entries: [...ALL_SPECIALTIES],
-    });
-    console.log(`Updated with ${ALL_SPECIALTIES.length} entries.`);
+    console.log(`"${name}" exists (${existing[0].entries?.length ?? 0} entries). Updating...`);
+    await client.models.Dataset.update({ id: existing[0].id, entries });
+    console.log(`  Updated with ${entries.length} entries.`);
   } else {
-    await client.models.Dataset.create({
-      name: "specialties",
-      entries: [...ALL_SPECIALTIES],
-    });
-    console.log(`Created "specialties" dataset with ${ALL_SPECIALTIES.length} entries.`);
+    await client.models.Dataset.create({ name, entries });
+    console.log(`  Created "${name}" with ${entries.length} entries.`);
   }
+}
+
+async function main() {
+  for (const [name, entries] of Object.entries(DATASETS)) {
+    await upsert(name, entries);
+  }
+  console.log("Done.");
 }
 
 main().catch(console.error);

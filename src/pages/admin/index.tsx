@@ -882,6 +882,14 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [pageSize, setPageSize] = useState(25);
   const [sortCol, setSortCol] = useState<string>("ID");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [dynamicAmenities, setDynamicAmenities] = useState<string[]>([...ALL_AMENITIES]);
+
+  useEffect(() => {
+    fetch("/api/datasets/amenities")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setDynamicAmenities(data.entries); })
+      .catch(() => {});
+  }, []);
 
   function handleSort(col: string) {
     if (sortCol === col) {
@@ -1345,7 +1353,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
               <div>
                 <p className="text-xs font-medium text-gray-700 mb-2">Amenities</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                  {ALL_AMENITIES.map((a) => {
+                  {dynamicAmenities.map((a) => {
                     const adding = bulk.addAmenities.has(a);
                     const removing = bulk.removeAmenities.has(a);
                     return (

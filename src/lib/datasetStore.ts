@@ -1,6 +1,6 @@
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
-import { ALL_SPECIALTIES } from "./utils";
+import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS } from "./utils";
 
 type DatasetRecord = Schema["Dataset"]["type"];
 
@@ -21,6 +21,8 @@ function toDataset(r: DatasetRecord): Dataset {
 // Hardcoded fallback data for when DynamoDB isn't available
 const FALLBACK_DATASETS: Record<string, string[]> = {
   specialties: [...ALL_SPECIALTIES],
+  amenities: [...ALL_AMENITIES],
+  "member-offers": [...ALL_MEMBER_OFFERS],
 };
 
 export const datasetStore = {
