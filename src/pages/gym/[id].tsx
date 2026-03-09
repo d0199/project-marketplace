@@ -50,8 +50,8 @@ export default function GymProfilePage({ gym }: Props) {
   const [contactForm, setContactForm] = useState<ContactForm>({ name: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  // Test gyms act like paid listings for internal users
-  const effectivePaid = gym.isPaid || (gym.isTest && isInternalUser);
+  // Admins and internal users on test gyms see all paid fields for maintenance
+  const effectivePaid = gym.isPaid || isAdmin || (gym.isTest && isInternalUser);
 
   useEffect(() => {
     getCurrentUser()
