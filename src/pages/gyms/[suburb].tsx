@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -9,13 +9,14 @@ import SearchBar from "@/components/SearchBar";
 import GymCard from "@/components/GymCard";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
+import SpecialtyFilter from "@/components/SpecialtyFilter";
 import {
   POSTCODE_COORDS,
   POSTCODE_META,
-  filterGyms,
   type GymWithDistance,
 } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
+import { filterGyms } from "@/lib/utils";
 
 type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
 
@@ -23,14 +24,38 @@ interface Props {
   postcode: string;
   suburbName: string;
   slug: string;
-  gyms: GymWithDistance[];
+  gymCount: number;
 }
 
-export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) {
+export default function SuburbPage({ postcode, suburbName, slug, gymCount }: Props) {
   const router = useRouter();
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption | null>(null);
+  const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(1);
+
+  // Client-side data fetching
+  const [cache, setCache] = useState<GymWithDistance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const fetched = useRef(false);
+
+  const fetchGyms = useCallback(async () => {
+    if (fetched.current) return;
+    fetched.current = true;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/gyms/search?postcode=${postcode}&radius=10`);
+      if (res.ok) {
+        setCache(await res.json());
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [postcode]);
+
+  useEffect(() => { fetchGyms(); }, [fetchGyms]);
 
   function handleSearch(pc: string) {
     const meta = POSTCODE_META[pc];
@@ -41,9 +66,9 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
     }
   }
 
-  // Client-side filter + sort on top of the server-pre-filtered set
+  // Client-side filter + sort
   const results = useMemo(() => {
-    let filtered = gyms;
+    let filtered = cache;
 
     if (selectedAmenities.length > 0) {
       filtered = filtered.filter((g) =>
@@ -54,7 +79,14 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
     if (selectedMemberOffers.length > 0) {
       filtered = filtered.filter((g) =>
         g.isPaid &&
-        selectedMemberOffers.every((o) => g.memberOffers?.includes(o))
+        selectedMemberOffers.every((o) => (g.memberOffers ?? []).includes(o))
+      );
+    }
+
+    if (selectedSpecialties.length > 0) {
+      filtered = filtered.filter((g) =>
+        g.isPaid &&
+        selectedSpecialties.every((s) => (g.specialties ?? []).includes(s))
       );
     }
 
@@ -83,13 +115,20 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
         return b.pricePerWeek - a.pricePerWeek;
       });
     return sorted;
-  }, [gyms, selectedAmenities, selectedMemberOffers, sortBy]);
+  }, [cache, selectedAmenities, selectedMemberOffers, selectedSpecialties, sortBy]);
 
-  const [pageSize, setPageSize] = useState(25);
-  const activeFilters = selectedAmenities.length + selectedMemberOffers.length;
-  const displayedResults = pageSize === 0 ? results : results.slice(0, pageSize);
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [selectedAmenities, selectedMemberOffers, selectedSpecialties, sortBy]);
 
-  const count = gyms.length;
+  const activeFilters = selectedAmenities.length + selectedMemberOffers.length + selectedSpecialties.length;
+  const count = gymCount;
+
+  // Pagination
+  const totalPages = pageSize === 0 ? 1 : Math.ceil(results.length / pageSize);
+  const safePage = Math.min(page, totalPages || 1);
+  const start = pageSize === 0 ? 0 : (safePage - 1) * pageSize;
+  const paged = pageSize === 0 ? results : results.slice(start, start + pageSize);
+
   const title = `Gyms in ${suburbName} (${postcode}) | mynextgym.com.au`;
   const description =
     count > 0
@@ -233,12 +272,18 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
               Search all suburbs
             </Link>
           </div>
+        ) : loading ? (
+          <div className="text-center py-20 text-gray-400">
+            <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-brand-orange rounded-full animate-spin mb-4" />
+            <p className="text-lg font-medium text-gray-500">Loading gyms...</p>
+          </div>
         ) : (
           <div className="flex gap-6">
             {/* Sidebar filters */}
             <div className="w-52 shrink-0 hidden sm:block">
               <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
               <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
+              <SpecialtyFilter selected={selectedSpecialties} onChange={setSelectedSpecialties} />
             </div>
 
             {/* Results */}
@@ -247,18 +292,19 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
               <div className="sm:hidden mb-4">
                 <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
                 <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
+                <SpecialtyFilter selected={selectedSpecialties} onChange={setSelectedSpecialties} />
               </div>
 
               {/* Results bar */}
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-500">
                   {results.length}{" "}
-                  {results.length !== count
-                    ? `of ${count} gym${count !== 1 ? "s" : ""} match your filters`
-                    : `gym${count !== 1 ? "s" : ""} within 10 km`}
+                  {results.length !== cache.length
+                    ? `of ${cache.length} gym${cache.length !== 1 ? "s" : ""} match your filters`
+                    : `gym${cache.length !== 1 ? "s" : ""} within 10 km`}
                   {activeFilters > 0 && (
                     <button
-                      onClick={() => { setSelectedAmenities([]); setSelectedMemberOffers([]); }}
+                      onClick={() => { setSelectedAmenities([]); setSelectedMemberOffers([]); setSelectedSpecialties([]); }}
                       className="ml-2 text-brand-orange hover:underline"
                     >
                       Clear filters
@@ -282,7 +328,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
                 <div className="text-center py-16 text-gray-400">
                   <p className="text-lg font-medium text-gray-500 mb-2">No gyms match your filters</p>
                   <button
-                    onClick={() => { setSelectedAmenities([]); setSelectedMemberOffers([]); }}
+                    onClick={() => { setSelectedAmenities([]); setSelectedMemberOffers([]); setSelectedSpecialties([]); }}
                     className="text-sm text-brand-orange hover:underline"
                   >
                     Clear all filters
@@ -291,7 +337,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
               ) : (
                 <>
                   <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {displayedResults.map((gym) => (
+                    {paged.map((gym) => (
                       <GymCard
                         key={gym.id}
                         gym={gym}
@@ -300,17 +346,21 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) 
                     ))}
                   </div>
                   <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
-                    <span>Showing {displayedResults.length} of {results.length}</span>
-                    <div className="flex items-center gap-2">
-                      <span>Show:</span>
+                    <span>Showing {start + 1}–{Math.min(start + paged.length, results.length)} of {results.length}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage <= 1} className="px-2 py-1 border border-gray-200 rounded disabled:opacity-30 hover:bg-gray-50">‹</button>
+                        <span className="px-2">Page {safePage} of {totalPages}</span>
+                        <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} className="px-2 py-1 border border-gray-200 rounded disabled:opacity-30 hover:bg-gray-50">›</button>
+                      </div>
                       <select
                         value={pageSize}
-                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
                         className="border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-orange"
                       >
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
+                        <option value={25}>25 / page</option>
+                        <option value={50}>50 / page</option>
+                        <option value={100}>100 / page</option>
                         <option value={0}>All</option>
                       </select>
                     </div>
@@ -360,9 +410,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
   const suburbName = POSTCODE_META[postcode]?.name ?? suburbFromSlug;
 
+  // Only compute the count for SEO — gym data is fetched client-side
   const allGyms = await ownerStore.getAll();
   const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
-  const gyms = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 });
+  const gymCount = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 }).length;
 
-  return { props: { postcode, suburbName, slug, gyms } };
+  return { props: { postcode, suburbName, slug, gymCount } };
 };
