@@ -1,6 +1,20 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { POSTCODE_COORDS } from "@/lib/utils";
+
+/** Find the nearest postcode to a given lat/lng using Haversine distance */
+function findNearestPostcode(lat: number, lng: number): { postcode: string; distance: number } | null {
+  let best: { postcode: string; distance: number } | null = null;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  for (const [pc, [pLat, pLng]] of Object.entries(POSTCODE_COORDS)) {
+    const dLat = toRad(pLat - lat);
+    const dLng = toRad(pLng - lng);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(pLat)) * Math.sin(dLng / 2) ** 2;
+    const km = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    if (!best || km < best.distance) best = { postcode: pc, distance: km };
+  }
+  return best;
+}
 
 export interface SuburbSuggestion {
   name: string;
@@ -34,6 +48,7 @@ export default function SearchBar({
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [suburbMatches, setSuburbMatches] = useState<SuburbSuggestion[]>([]);
   const [gymMatches, setGymMatches] = useState<GymSuggestion[]>([]);
@@ -132,6 +147,33 @@ export default function SearchBar({
     router.push(`/gym/${g.id}`);
   }
 
+  const handleLocate = useCallback(() => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setLocating(true);
+    setError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const nearest = findNearestPostcode(pos.coords.latitude, pos.coords.longitude);
+        setLocating(false);
+        if (nearest && nearest.distance < 50) {
+          setValue(nearest.postcode);
+          setOpen(false);
+          onSearch(nearest.postcode);
+        } else {
+          setError("No coverage found near your location.");
+        }
+      },
+      () => {
+        setLocating(false);
+        setError("Unable to get your location. Please allow location access.");
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, [onSearch]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const t = value.trim();
@@ -221,6 +263,25 @@ export default function SearchBar({
             />
             {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
           </div>
+          <button
+            type="button"
+            onClick={handleLocate}
+            disabled={locating}
+            className="px-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors disabled:opacity-50"
+            title="Use my location"
+            aria-label="Use my location"
+          >
+            {locating ? (
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a1 1 0 011 1v2.07A8.003 8.003 0 0118.93 11H21a1 1 0 110 2h-2.07A8.003 8.003 0 0113 18.93V21a1 1 0 11-2 0v-2.07A8.003 8.003 0 015.07 13H3a1 1 0 110-2h2.07A8.003 8.003 0 0111 5.07V3a1 1 0 011-1zm0 5a5 5 0 100 10 5 5 0 000-10zm0 3a2 2 0 110 4 2 2 0 010-4z" />
+              </svg>
+            )}
+          </button>
           <button
             type="submit"
             className="px-6 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
