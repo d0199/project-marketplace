@@ -199,6 +199,39 @@ export const MEMBER_OFFER_ICONS: Record<string, string> = {
   "gym or community app": "📱",
 };
 
+export const ALL_SPECIALTIES = [
+  "HYROX",
+  "CrossFit",
+  "F45",
+  "Pilates",
+  "Yoga",
+  "Olympic Lifting",
+  "Powerlifting",
+  "Strongman",
+  "Boxing",
+  "Kickboxing",
+  "MMA",
+  "Brazilian Jiu-Jitsu",
+  "Muay Thai",
+  "Calisthenics",
+  "Gymnastics",
+  "Functional Training",
+  "HIIT",
+  "Spin / Cycling",
+  "Swimming",
+  "Rock Climbing",
+  "Rehab / Physio",
+  "Seniors Fitness",
+  "Kids Programs",
+  "Women Only",
+  "Group Fitness",
+  "Personal Training",
+  "Boot Camp",
+  "Bodybuilding",
+  "Circuit Training",
+  "Parkour",
+] as const;
+
 export interface FilterOptions {
   postcode?: string;
   amenities: string[];

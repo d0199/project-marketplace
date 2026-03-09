@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Gym, OpeningHours } from "@/types";
-import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, POSTCODE_COORDS } from "@/lib/utils";
+import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, ALL_SPECIALTIES, POSTCODE_COORDS } from "@/lib/utils";
 
 interface Props {
   gym: Gym;
@@ -333,12 +333,12 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
         </div>
       </section>
 
-      {/* Specialties */}
-      <section>
+      {/* Specialties — admin only */}
+      {isAdmin && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
           Specialties
         </h2>
-        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines your gym is known for (e.g. HYROX, Pilates, CrossFit, Olympic Lifting)</p>
+        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines this gym is known for. Choose from the list or add a custom entry.</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {(form.specialties ?? []).map((s) => (
             <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
@@ -353,11 +353,28 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             </span>
           ))}
         </div>
+        <div className="flex gap-2 mb-3">
+          <select
+            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm bg-white"
+            value=""
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val && !(form.specialties ?? []).includes(val)) {
+                setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), val] }));
+              }
+            }}
+          >
+            <option value="">Select a specialty...</option>
+            {[...ALL_SPECIALTIES].filter((s) => !(form.specialties ?? []).includes(s)).map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
         <div className="flex gap-2">
           <input
             type="text"
             id="specialty-input"
-            placeholder="Type a specialty and press Add"
+            placeholder="Or type a custom specialty"
             className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -386,7 +403,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             Add
           </button>
         </div>
-      </section>
+      </section>}
 
       {/* Member Offers — paid listings only */}
       {(form.isPaid || isAdmin) && <section>
