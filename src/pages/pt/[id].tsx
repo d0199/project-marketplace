@@ -136,22 +136,24 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
         </nav>
 
         {/* Banner */}
-        <div className="relative rounded-2xl overflow-hidden h-56 sm:h-72 mb-6 bg-brand-black">
-          <div className="absolute inset-0 opacity-60">
-            <ImageCarousel
-              images={displayImages}
-              alt={pt.name}
-              sizes="100vw"
-              showDots={false}
-              focalPoints={pt.imageFocalPoints}
-            />
+        <div className={`relative rounded-2xl h-56 sm:h-72 bg-brand-black ${hasImages ? "mb-10" : "mb-6"}`}>
+          <div className="absolute inset-0 rounded-2xl overflow-hidden">
+            <div className="absolute inset-0 opacity-60">
+              <ImageCarousel
+                images={hasImages && pt.images.length > 1 ? pt.images.slice(1) : displayImages}
+                alt={pt.name}
+                sizes="100vw"
+                showDots={false}
+                focalPoints={pt.imageFocalPoints}
+              />
+            </div>
+            {!hasImages && (
+              <span className="absolute bottom-2 right-3 text-[10px] text-white/50 z-10">
+                {STOCK_ATTRIBUTION}
+              </span>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
           </div>
-          {!hasImages && (
-            <span className="absolute bottom-2 right-3 text-[10px] text-white/50 z-10">
-              {STOCK_ATTRIBUTION}
-            </span>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none">
             <p className="text-orange-200 text-sm font-medium mb-1">Personal Trainer</p>
             <h1 className="text-3xl font-bold text-white drop-shadow-md">{pt.name}</h1>
@@ -159,6 +161,17 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
               {pt.address.suburb}, {pt.address.state} {pt.address.postcode}
             </p>
           </div>
+          {/* Profile photo — overlaps banner bottom-right */}
+          {hasImages && (
+            <div className="absolute -bottom-8 right-6 sm:right-8 z-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pt.images[0]}
+                alt={pt.name}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
