@@ -158,7 +158,7 @@ export default function SearchBar({
       (pos) => {
         const nearest = findNearestPostcode(pos.coords.latitude, pos.coords.longitude);
         setLocating(false);
-        if (nearest && nearest.distance < 50) {
+        if (nearest && nearest.distance < 200) {
           setValue(nearest.postcode);
           setOpen(false);
           onSearch(nearest.postcode);
