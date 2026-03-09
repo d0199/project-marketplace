@@ -13,7 +13,7 @@ export default function AmenityFilter({ selected, onChange }: Props) {
   const load = useCallback(() => {
     fetch("/api/datasets/amenities")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.entries?.length) setAmenities(data.entries); })
+      .then((data) => { if (data?.entries) setAmenities(data.entries); })
       .catch(() => {});
   }, []);
 

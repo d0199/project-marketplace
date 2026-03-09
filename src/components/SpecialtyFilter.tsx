@@ -25,7 +25,7 @@ export default function SpecialtyFilter({ selected, onChange }: Props) {
   const load = useCallback(() => {
     fetch("/api/datasets/specialties")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.entries?.length) setSpecialties(data.entries); })
+      .then((data) => { if (data?.entries) setSpecialties(data.entries); })
       .catch(() => {});
   }, []);
 

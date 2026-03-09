@@ -13,7 +13,7 @@ export default function MemberOfferFilter({ selected, onChange }: Props) {
   const load = useCallback(() => {
     fetch("/api/datasets/member-offers")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.entries?.length) setOffers(data.entries); })
+      .then((data) => { if (data?.entries) setOffers(data.entries); })
       .catch(() => {});
   }, []);
 
