@@ -90,6 +90,14 @@ function buildJsonLd(gym: Gym) {
   if (gym.website) jsonLd.sameAs = gym.website;
   if (gym.images.length > 0) jsonLd.image = gym.images;
   if (openingHours.length > 0) jsonLd.openingHoursSpecification = openingHours;
+  if (gym.googlePlaceId) {
+    jsonLd.additionalProperty = {
+      "@type": "PropertyValue",
+      propertyID: "googlePlaceId",
+      value: gym.googlePlaceId,
+    };
+    jsonLd.hasMap = `https://www.google.com/maps/place/?q=place_id:${gym.googlePlaceId}`;
+  }
 
   if (gym.priceVerified && gym.pricePerWeek > 0) {
     jsonLd.priceRange = `$${gym.pricePerWeek}/week`;
