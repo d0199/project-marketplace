@@ -43,18 +43,24 @@ interface ContactForm {
 export default function GymProfilePage({ gym }: Props) {
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isInternalUser, setIsInternalUser] = useState(false);
   const [contactForm, setContactForm] = useState<ContactForm>({ name: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
+  // Test gyms act like paid listings for internal users
+  const effectivePaid = gym.isPaid || (gym.isTest && isInternalUser);
+
   useEffect(() => {
     getCurrentUser()
-      .then(async () => {
+      .then(async (user) => {
         const attributes = await fetchUserAttributes();
         setIsOwner(attributes["custom:ownerId"] === gym.ownerId);
         setIsAdmin(attributes["custom:isAdmin"] === "true");
+        const email = user.signInDetails?.loginId ?? attributes.email ?? "";
+        setIsInternalUser(email.endsWith("@mynextgym.com.au"));
       })
       .catch(() => {
-        // Not signed in — isOwner/isAdmin stay false
+        // Not signed in — isOwner/isAdmin/isInternalUser stay false
       });
     track(gym.id, "pageViews");
   }, [gym.id, gym.ownerId]);
@@ -84,6 +90,7 @@ export default function GymProfilePage({ gym }: Props) {
       <Head>
         <title>{gym.name} — mynextgym.com.au</title>
         <meta name="description" content={gym.description} />
+        {gym.isTest && <meta name="robots" content="noindex, nofollow" />}
       </Head>
       <Layout>
         {/* Breadcrumb */}
@@ -186,7 +193,7 @@ export default function GymProfilePage({ gym }: Props) {
             )}
 
             {/* Member Offers — paid listings only */}
-            {gym.isPaid && (gym.memberOffers?.length || gym.memberOffersNotes) && (
+            {effectivePaid && (gym.memberOffers?.length || gym.memberOffersNotes) && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
                   Member Offers
@@ -243,7 +250,7 @@ export default function GymProfilePage({ gym }: Props) {
                     </div>
                   ))}
                 </dl>
-                {gym.isPaid && gym.hoursComment && (
+                {effectivePaid && gym.hoursComment && (
                   <p className="mt-3 text-sm italic text-gray-500">{gym.hoursComment}</p>
                 )}
               </section>
@@ -276,7 +283,7 @@ export default function GymProfilePage({ gym }: Props) {
               )}
 
               {/* Contact form for paid gyms with email; otherwise Visit Website button */}
-              {gym.isPaid && gym.bookingUrl && (
+              {effectivePaid && gym.bookingUrl && (
                 <a
                   href={gym.bookingUrl}
                   target="_blank"
@@ -287,7 +294,7 @@ export default function GymProfilePage({ gym }: Props) {
                   Book Now →
                 </a>
               )}
-              {gym.isPaid && gym.email ? (
+              {effectivePaid && gym.email ? (
                 <div className="mt-4">
                   {contactStatus === "sent" ? (
                     <div className="bg-white/20 rounded-lg p-4 text-center">
@@ -363,7 +370,7 @@ export default function GymProfilePage({ gym }: Props) {
             </div>
 
             {/* Contact — only shown if there is something to display */}
-            {(gym.phone || (gym.isPaid && (gym.instagram || gym.facebook)) || gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
+            {(gym.phone || (effectivePaid && (gym.instagram || gym.facebook)) || gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
                 <ul className="space-y-2 text-sm text-gray-700">
@@ -379,7 +386,7 @@ export default function GymProfilePage({ gym }: Props) {
                       </a>
                     </li>
                   )}
-                  {gym.isPaid && gym.instagram && (
+                  {effectivePaid && gym.instagram && (
                     <li className="flex items-center gap-2">
                       <span>📷</span>
                       <a
@@ -392,7 +399,7 @@ export default function GymProfilePage({ gym }: Props) {
                       </a>
                     </li>
                   )}
-                  {gym.isPaid && gym.facebook && (
+                  {effectivePaid && gym.facebook && (
                     <li className="flex items-center gap-2">
                       <span>💬</span>
                       <a
@@ -407,7 +414,7 @@ export default function GymProfilePage({ gym }: Props) {
                   )}
                 </ul>
                 {(gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
-                  <div className={`${gym.phone || (gym.isPaid && (gym.instagram || gym.facebook)) ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
+                  <div className={`${gym.phone || (effectivePaid && (gym.instagram || gym.facebook)) ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
                     <Link
                       href="/claim-gym"
                       className="text-sm text-brand-orange hover:underline"
@@ -440,6 +447,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   params,
 }) => {
   const gym = await ownerStore.getById(params?.id as string);
-  if (!gym) return { redirect: { destination: "/", permanent: false } };
+  if (!gym || gym.isActive === false) return { redirect: { destination: "/", permanent: false } };
   return { props: { gym } };
 };

@@ -23,7 +23,9 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     ...Object.values(POSTCODE_META).map(({ slug }) =>
       entry(`${BASE}/gyms/${slug}`, "0.8", "weekly")
     ),
-    ...gyms.map((g) => entry(`${BASE}/gym/${g.id}`, "0.7", "weekly")),
+    ...gyms
+      .filter((g) => g.isActive !== false && !g.isTest)
+      .map((g) => entry(`${BASE}/gym/${g.id}`, "0.7", "weekly")),
     `</urlset>`,
   ];
 
