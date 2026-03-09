@@ -218,7 +218,7 @@ export const ALL_SPECIALTIES = [
   "Functional Training",
   "HIIT",
   "Spin / Cycling",
-  "Swimming",
+  "Swimming Classes",
   "Rock Climbing",
   "Rehab / Physio",
   "Seniors Fitness",
