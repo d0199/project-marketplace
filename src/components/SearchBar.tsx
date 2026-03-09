@@ -289,7 +289,7 @@ export default function SearchBar({
             type="button"
             onClick={handleLocate}
             disabled={locating}
-            className="px-3 py-3 border border-gray-300 hover:border-brand-orange hover:text-brand-orange text-gray-500 rounded-lg transition-colors disabled:opacity-50"
+            className="px-3 py-3 hover:text-brand-orange text-gray-500 transition-colors disabled:opacity-50"
             title="Use my location"
             aria-label="Use my location"
           >
