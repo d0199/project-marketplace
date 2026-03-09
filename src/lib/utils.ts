@@ -75,11 +75,10 @@ export const POSTCODE_META: Record<string, { name: string; slug: string; state: 
   "6112": { name: "Armadale",       slug: "armadale-6112",       state: "WA" },
   "6110": { name: "Gosnells",       slug: "gosnells-6110",       state: "WA" },
   "6109": { name: "Maddington",     slug: "maddington-6109",     state: "WA" },
-  // NSW — top 15 by population
+  // NSW — top by population (with gym coverage)
   "2148": { name: "Blacktown",      slug: "blacktown-2148",      state: "NSW" },
   "2750": { name: "Penrith",        slug: "penrith-2750",        state: "NSW" },
   "2170": { name: "Liverpool",      slug: "liverpool-2170",      state: "NSW" },
-  "2560": { name: "Campbelltown",   slug: "campbelltown-2560",   state: "NSW" },
   "2150": { name: "Parramatta",     slug: "parramatta-2150",     state: "NSW" },
   "2763": { name: "Quakers Hill",   slug: "quakers-hill-2763",   state: "NSW" },
   "2155": { name: "Kellyville",     slug: "kellyville-2155",     state: "NSW" },
@@ -91,13 +90,11 @@ export const POSTCODE_META: Record<string, { name: string; slug: string; state: 
   "2144": { name: "Auburn",         slug: "auburn-2144",         state: "NSW" },
   "2770": { name: "Mount Druitt",   slug: "mount-druitt-2770",   state: "NSW" },
   "2300": { name: "Newcastle",      slug: "newcastle-2300",      state: "NSW" },
-  // VIC — top 15 by population (deduped by postcode)
+  // VIC — top by population (with gym coverage)
   "3030": { name: "Point Cook",     slug: "point-cook-3030",     state: "VIC" },
   "3064": { name: "Craigieburn",    slug: "craigieburn-3064",    state: "VIC" },
-  "3810": { name: "Pakenham",       slug: "pakenham-3810",       state: "VIC" },
   "3024": { name: "Wyndham Vale",   slug: "wyndham-vale-3024",   state: "VIC" },
   "3978": { name: "Clyde North",    slug: "clyde-north-3978",    state: "VIC" },
-  "3429": { name: "Sunbury",        slug: "sunbury-3429",        state: "VIC" },
   "3337": { name: "Melton",         slug: "melton-3337",         state: "VIC" },
   "3029": { name: "Tarneit",        slug: "tarneit-3029",        state: "VIC" },
   "3752": { name: "South Morang",   slug: "south-morang-3752",   state: "VIC" },
@@ -107,7 +104,7 @@ export const POSTCODE_META: Record<string, { name: string; slug: string; state: 
   "3220": { name: "Geelong",        slug: "geelong-3220",        state: "VIC" },
   "3199": { name: "Frankston",      slug: "frankston-3199",      state: "VIC" },
   "3128": { name: "Box Hill",       slug: "box-hill-3128",       state: "VIC" },
-  // QLD — top 15 by population (deduped by postcode)
+  // QLD — top by population (with gym coverage)
   "4209": { name: "Coomera",        slug: "coomera-4209",        state: "QLD" },
   "4300": { name: "Springfield Lakes",slug:"springfield-lakes-4300",state:"QLD"},
   "4306": { name: "Ripley",         slug: "ripley-4306",         state: "QLD" },
@@ -119,11 +116,9 @@ export const POSTCODE_META: Record<string, { name: string; slug: string; state: 
   "4152": { name: "Carindale",      slug: "carindale-4152",      state: "QLD" },
   "4178": { name: "Wynnum",         slug: "wynnum-4178",         state: "QLD" },
   "4123": { name: "Rochedale South",slug:"rochedale-south-4123", state: "QLD" },
-  "4510": { name: "Caboolture",     slug: "caboolture-4510",     state: "QLD" },
-  "4504": { name: "Narangba",       slug: "narangba-4504",       state: "QLD" },
   "4509": { name: "Mango Hill",     slug: "mango-hill-4509",     state: "QLD" },
   "4000": { name: "Brisbane CBD",   slug: "brisbane-4000",       state: "QLD" },
-  // SA — top 15 by population
+  // SA — top by population (with gym coverage)
   "5162": { name: "Morphett Vale",  slug: "morphett-vale-5162",  state: "SA" },
   "5108": { name: "Salisbury",      slug: "salisbury-5108",      state: "SA" },
   "5092": { name: "Modbury",        slug: "modbury-5092",        state: "SA" },
@@ -131,11 +126,9 @@ export const POSTCODE_META: Record<string, { name: string; slug: string; state: 
   "5115": { name: "Munno Para",     slug: "munno-para-5115",     state: "SA" },
   "5095": { name: "Mawson Lakes",   slug: "mawson-lakes-5095",   state: "SA" },
   "5107": { name: "Parafield Gardens",slug:"parafield-gardens-5107",state:"SA"},
-  "5118": { name: "Gawler",         slug: "gawler-5118",         state: "SA" },
   "5096": { name: "Para Hills",     slug: "para-hills-5096",     state: "SA" },
   "5158": { name: "Hallett Cove",   slug: "hallett-cove-5158",   state: "SA" },
   "5125": { name: "Golden Grove",   slug: "golden-grove-5125",   state: "SA" },
-  "5173": { name: "Aldinga Beach",  slug: "aldinga-beach-5173",  state: "SA" },
   "5163": { name: "Hackham",        slug: "hackham-5163",        state: "SA" },
   "5112": { name: "Elizabeth",      slug: "elizabeth-5112",      state: "SA" },
   "5169": { name: "Seaford",        slug: "seaford-5169",        state: "SA" },
