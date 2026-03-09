@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
-import { sendSlackNotification } from "@/lib/slackNotify";
+import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 
 export default async function handler(
   req: NextApiRequest,
@@ -57,7 +57,7 @@ export default async function handler(
       claimant_email: email,
       claimant_phone: phone || "",
       message: message || "",
-      submitted_at: new Date().toISOString(),
+      submitted_at: nowAWST(),
     }),
   ]);
 

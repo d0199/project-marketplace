@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
-import { sendSlackNotification } from "@/lib/slackNotify";
+import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import type { Gym } from "@/types";
 
 export default async function handler(
@@ -58,7 +58,7 @@ export default async function handler(
         gym_id: id,
         gym_url: `https://www.mynextgym.com.au/gym/${id}`,
         owner_email: ownerEmail ?? "unknown",
-        submitted_at: new Date().toISOString(),
+        submitted_at: nowAWST(),
       }),
     ]);
 

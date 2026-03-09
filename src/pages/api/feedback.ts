@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { sendAdminAlert } from "@/lib/emailNotify";
-import { sendSlackNotification } from "@/lib/slackNotify";
+import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 
 const FEEDBACK_RECIPIENT = "admin@mynextgym.com.au";
 
@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!gymId || !issueType) return res.status(400).json({ error: "gymId and issueType are required" });
 
   const gymUrl = `https://www.mynextgym.com.au/gym/${gymId}`;
-  const submittedAt = new Date().toISOString();
+  const submittedAt = nowAWST();
 
   const emailBody = [
     `Listing feedback received`,
