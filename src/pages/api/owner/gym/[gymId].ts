@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
+import { sendSlackNotification } from "@/lib/slackNotify";
 import type { Gym } from "@/types";
 
 export default async function handler(
@@ -47,10 +48,19 @@ export default async function handler(
       status: "pending",
     });
 
-    await sendAdminAlert(
-      "Gym profile edit pending review",
-      `A gym owner has submitted profile changes that require moderation.\n\nGym: ${currentGym.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: https://www.mynextgym.com.au/admin`
-    );
+    await Promise.allSettled([
+      sendAdminAlert(
+        "Gym profile edit pending review",
+        `A gym owner has submitted profile changes that require moderation.\n\nGym: ${currentGym.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: https://www.mynextgym.com.au/admin`
+      ),
+      sendSlackNotification("moderation", {
+        gym_name: currentGym.name,
+        gym_id: id,
+        gym_url: `https://www.mynextgym.com.au/gym/${id}`,
+        owner_email: ownerEmail ?? "unknown",
+        submitted_at: new Date().toISOString(),
+      }),
+    ]);
 
     return res.status(200).json({ queued: true });
   }

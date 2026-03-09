@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
+import { sendSlackNotification } from "@/lib/slackNotify";
 
 export default async function handler(
   req: NextApiRequest,
@@ -46,7 +47,19 @@ export default async function handler(
     ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`
     : `A new claim has been submitted and is awaiting review.\n\nGym: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`;
 
-  await sendAdminAlert(alertSubject, alertBody);
+  await Promise.allSettled([
+    sendAdminAlert(alertSubject, alertBody),
+    sendSlackNotification("claim", {
+      type: isNewListing ? "New Listing" : "Claim",
+      gym_name: gymName || gymId,
+      gym_id: gymId,
+      claimant_name: name,
+      claimant_email: email,
+      claimant_phone: phone || "",
+      message: message || "",
+      submitted_at: new Date().toISOString(),
+    }),
+  ]);
 
   return res.status(200).json({ ok: true });
 }
