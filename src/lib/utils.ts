@@ -235,8 +235,10 @@ export function filterGyms(
   }
 
   // Filter by selected member offers (must have ALL selected)
+  // Only paid listings qualify — unpaid gyms are excluded even if they have the offer
   if (options.memberOffers && options.memberOffers.length > 0) {
     results = results.filter((g) =>
+      g.isPaid &&
       options.memberOffers!.every((o) => (g.memberOffers ?? []).includes(o))
     );
   }

@@ -54,6 +54,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex 
 
     if (selectedMemberOffers.length > 0) {
       filtered = filtered.filter((g) =>
+        g.isPaid &&
         selectedMemberOffers.every((o) => g.memberOffers?.includes(o))
       );
     }
