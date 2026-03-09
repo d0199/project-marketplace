@@ -136,6 +136,15 @@ const schema = a.schema({
       bookingClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
+
+  // Admin-managed picklists (e.g. "specialties", "amenities").
+  // Very few records — full scan is fine.
+  Dataset: a
+    .model({
+      name: a.string().required(),   // logical key, unique by convention
+      entries: a.string().array(),   // the picklist values
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

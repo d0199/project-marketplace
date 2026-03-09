@@ -4,6 +4,8 @@ import Link from "next/link";
 import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, ALL_SPECIALTIES, POSTCODE_COORDS } from "@/lib/utils";
 
+function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
+
 interface Props {
   gym: Gym;
   gymId?: string;
@@ -25,6 +27,16 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
   const [form, setForm] = useState<Gym>({ ...gym });
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([...ALL_SPECIALTIES]);
+  const [specSearch, setSpecSearch] = useState("");
+
+  // Fetch specialties from dataset API (fallback to hardcoded list)
+  useEffect(() => {
+    fetch("/api/datasets/specialties")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setAvailableSpecialties(data.entries); })
+      .catch(() => {});
+  }, []);
 
   // Sync admin-only flags into form state when the panel updates them
   useEffect(() => {
@@ -333,12 +345,12 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
         </div>
       </section>
 
-      {/* Specialties — admin only */}
+      {/* Specialties — admin only, select from dataset */}
       {isAdmin && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
           Specialties
         </h2>
-        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines this gym is known for. Choose from the list or add a custom entry.</p>
+        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines this gym is known for. Search and select from the approved list. Manage the list in Admin &rarr; Datasets.</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {(form.specialties ?? []).map((s) => (
             <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
@@ -353,55 +365,43 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             </span>
           ))}
         </div>
-        <div className="flex gap-2 mb-3">
-          <select
-            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm bg-white"
-            value=""
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val && !(form.specialties ?? []).includes(val)) {
-                setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), val] }));
-              }
-            }}
-          >
-            <option value="">Select a specialty...</option>
-            {[...ALL_SPECIALTIES].filter((s) => !(form.specialties ?? []).includes(s)).map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex gap-2">
+        <div className="relative">
           <input
             type="text"
-            id="specialty-input"
-            placeholder="Or type a custom specialty"
-            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const input = e.currentTarget;
-                const val = input.value.trim();
-                if (val && !(form.specialties ?? []).includes(val)) {
-                  setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), val] }));
-                  input.value = "";
-                }
-              }
-            }}
+            value={specSearch}
+            onChange={(e) => setSpecSearch(e.target.value)}
+            placeholder="Search specialties..."
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
           />
-          <button
-            type="button"
-            onClick={() => {
-              const input = document.getElementById("specialty-input") as HTMLInputElement;
-              const val = input?.value.trim();
-              if (val && !(form.specialties ?? []).includes(val)) {
-                setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), val] }));
-                input.value = "";
-              }
-            }}
-            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            Add
-          </button>
+          {specSearch.trim().length >= 1 && (() => {
+            const q = normalize(specSearch);
+            const matches = availableSpecialties
+              .filter((s) => !(form.specialties ?? []).includes(s))
+              .filter((s) => normalize(s).includes(q))
+              .slice(0, 10);
+            if (matches.length === 0) return (
+              <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 p-3 text-sm text-gray-400">
+                No matching specialties. Add new entries in Datasets tab.
+              </div>
+            );
+            return (
+              <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 max-h-48 overflow-y-auto">
+                {matches.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), s] }));
+                      setSpecSearch("");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </section>}
 

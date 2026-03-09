@@ -100,7 +100,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users" | "leads">("claims");
+  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users" | "leads" | "datasets">("claims");
   const [adminEmail, setAdminEmail] = useState("");
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const setClaimsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, claims: n })), []);
@@ -185,7 +185,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b bg-white px-6">
         <nav className="flex gap-6">
-          {(["claims", "moderation", "gyms", "users", "leads"] as const).map((t) => (
+          {(["claims", "moderation", "gyms", "users", "leads", "datasets"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -211,6 +211,7 @@ export default function AdminPage() {
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
         {tab === "users" && <UsersTab />}
         {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
+        {tab === "datasets" && <DatasetsTab />}
       </div>
     </div>
   );
@@ -2233,6 +2234,252 @@ function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) 
           </div>
         </div>
         </>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Datasets tab
+// ---------------------------------------------------------------------------
+interface DatasetRecord {
+  id: string;
+  name: string;
+  entries: string[];
+}
+
+function DatasetsTab() {
+  const [datasets, setDatasets] = useState<DatasetRecord[]>([]);
+  const [selected, setSelected] = useState<DatasetRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<string[]>([]);
+  const [newEntry, setNewEntry] = useState("");
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [newDatasetName, setNewDatasetName] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await adminFetch("/api/admin/datasets");
+      const data = await r.json();
+      setDatasets(Array.isArray(data) ? data : []);
+    } catch { setDatasets([]); }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  function selectDataset(ds: DatasetRecord | null) {
+    setSelected(ds);
+    setEntries(ds ? [...ds.entries] : []);
+    setNewEntry("");
+    setEditIdx(null);
+  }
+
+  function addEntry() {
+    const val = newEntry.trim();
+    if (!val || entries.includes(val)) return;
+    setEntries((prev) => [...prev, val]);
+    setNewEntry("");
+  }
+
+  function removeEntry(idx: number) {
+    setEntries((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function startEdit(idx: number) {
+    setEditIdx(idx);
+    setEditValue(entries[idx]);
+  }
+
+  function saveEdit() {
+    if (editIdx === null) return;
+    const val = editValue.trim();
+    if (!val) return;
+    setEntries((prev) => prev.map((e, i) => (i === editIdx ? val : e)));
+    setEditIdx(null);
+    setEditValue("");
+  }
+
+  async function saveDataset() {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await adminFetch("/api/admin/datasets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selected.id, entries }),
+      });
+      setSelected({ ...selected, entries: [...entries] });
+      setDatasets((prev) => prev.map((d) => (d.id === selected.id ? { ...d, entries: [...entries] } : d)));
+    } finally { setSaving(false); }
+  }
+
+  async function deleteDataset() {
+    if (!selected || !confirm(`Delete dataset "${selected.name}"? This cannot be undone.`)) return;
+    await adminFetch(`/api/admin/datasets?id=${selected.id}`, { method: "DELETE" });
+    setSelected(null);
+    setEntries([]);
+    load();
+  }
+
+  async function createDataset() {
+    const name = newDatasetName.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!name) return;
+    setCreating(true);
+    try {
+      const r = await adminFetch("/api/admin/datasets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, entries: [] }),
+      });
+      if (r.ok) {
+        const ds = await r.json();
+        setDatasets((prev) => [...prev, ds]);
+        selectDataset(ds);
+        setNewDatasetName("");
+      } else {
+        const err = await r.json();
+        alert(err.error || "Failed to create dataset");
+      }
+    } finally { setCreating(false); }
+  }
+
+  const dirty = selected && JSON.stringify(entries) !== JSON.stringify(selected.entries);
+
+  if (loading) return <p className="text-gray-400 py-8 text-center">Loading datasets...</p>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Select dataset</label>
+          <select
+            className="px-3 py-2 border rounded-lg text-sm bg-white min-w-[200px] focus:outline-none focus:ring-2 focus:ring-brand-orange"
+            value={selected?.id ?? ""}
+            onChange={(e) => {
+              const ds = datasets.find((d) => d.id === e.target.value) ?? null;
+              selectDataset(ds);
+            }}
+          >
+            <option value="">Choose...</option>
+            {datasets.map((ds) => (
+              <option key={ds.id} value={ds.id}>{ds.name} ({ds.entries.length} entries)</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-end gap-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New dataset</label>
+            <input
+              type="text"
+              value={newDatasetName}
+              onChange={(e) => setNewDatasetName(e.target.value)}
+              placeholder="e.g. class-types"
+              className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); createDataset(); } }}
+            />
+          </div>
+          <button
+            onClick={createDataset}
+            disabled={creating || !newDatasetName.trim()}
+            className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          >
+            Create
+          </button>
+        </div>
+      </div>
+
+      {selected && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">{selected.name}</h3>
+            <div className="flex items-center gap-2">
+              {dirty && (
+                <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
+              )}
+              <button
+                onClick={saveDataset}
+                disabled={saving || !dirty}
+                className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={deleteDataset}
+                className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+
+          {/* Add entry */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newEntry}
+              onChange={(e) => setNewEntry(e.target.value)}
+              placeholder="Add new entry..."
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addEntry(); } }}
+            />
+            <button
+              onClick={addEntry}
+              disabled={!newEntry.trim() || entries.includes(newEntry.trim())}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              Add
+            </button>
+          </div>
+
+          {/* Entries list */}
+          {entries.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No entries yet. Add one above.</p>
+          ) : (
+            <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
+              {entries.map((entry, idx) => (
+                <div key={idx} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 group">
+                  {editIdx === idx ? (
+                    <>
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                        onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditIdx(null); }}
+                        autoFocus
+                      />
+                      <button onClick={saveEdit} className="text-xs text-green-600 hover:text-green-700 font-medium">Save</button>
+                      <button onClick={() => setEditIdx(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-sm text-gray-800">{entry}</span>
+                      <button
+                        onClick={() => startEdit(idx)}
+                        className="text-xs text-gray-400 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => removeEntry(idx)}
+                        className="text-xs text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Remove
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs text-gray-400 mt-3">{entries.length} entries total</p>
+        </div>
       )}
     </div>
   );
