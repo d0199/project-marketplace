@@ -9,6 +9,7 @@ import AmenityBadge from "@/components/AmenityBadge";
 import ImageCarousel from "@/components/ImageCarousel";
 import type { Gym } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 import FeedbackModal from "@/components/FeedbackModal";
@@ -23,8 +24,18 @@ const DAYS = [
   "sunday",
 ] as const;
 
+interface PTSummary {
+  id: string;
+  name: string;
+  specialties: string[];
+  images: string[];
+  pricePerSession?: number;
+  sessionDuration?: number;
+}
+
 interface Props {
   gym: Gym;
+  personalTrainers: PTSummary[];
 }
 
 const SCHEMA_DAY_MAP: Record<string, string> = {
@@ -129,7 +140,7 @@ interface ContactForm {
   message: string;
 }
 
-export default function GymProfilePage({ gym }: Props) {
+export default function GymProfilePage({ gym, personalTrainers }: Props) {
   const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -382,6 +393,48 @@ export default function GymProfilePage({ gym }: Props) {
                 )}
               </section>
             )}
+
+            {/* Personal Trainers */}
+            {personalTrainers.length > 0 && (
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Personal Trainers</h2>
+                <div className="space-y-3">
+                  {personalTrainers.map((trainer) => (
+                    <Link
+                      key={trainer.id}
+                      href={`/pt/${trainer.id}`}
+                      className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition-colors group"
+                    >
+                      {trainer.images.length > 0 ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={trainer.images[0]} alt={trainer.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 group-hover:text-brand-orange">{trainer.name}</p>
+                        {trainer.specialties.length > 0 && (
+                          <p className="text-sm text-gray-500 truncate">{trainer.specialties.slice(0, 3).join(" · ")}</p>
+                        )}
+                      </div>
+                      {trainer.pricePerSession && (
+                        <div className="text-right shrink-0">
+                          <p className="font-semibold text-brand-orange">${+trainer.pricePerSession.toFixed(2)}</p>
+                          <p className="text-xs text-gray-400">/session</p>
+                        </div>
+                      )}
+                      <svg className="w-5 h-5 text-gray-400 group-hover:text-brand-orange shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -605,5 +658,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 }) => {
   const gym = await ownerStore.getById(params?.id as string);
   if (!gym || gym.isActive === false) return { redirect: { destination: "/", permanent: false } };
-  return { props: { gym } };
+
+  // Fetch personal trainers affiliated with this gym
+  const allPTs = await ptStore.getByGymId(params?.id as string);
+  const personalTrainers: PTSummary[] = allPTs
+    .filter((pt) => pt.isActive !== false)
+    .map((pt) => ({
+      id: pt.id,
+      name: pt.name,
+      specialties: pt.specialties,
+      images: pt.images,
+      pricePerSession: pt.pricePerSession,
+      sessionDuration: pt.sessionDuration,
+    }));
+
+  return { props: { gym, personalTrainers } };
 };
