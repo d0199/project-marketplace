@@ -879,6 +879,17 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [pageSize, setPageSize] = useState(25);
+  const [sortCol, setSortCol] = useState<string>("ID");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function handleSort(col: string) {
+    if (sortCol === col) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setSortDir("asc");
+    }
+  }
 
   const filteredGyms = gyms.filter((g) => {
     if (activeFilter === "active" && g.isActive === false) return false;
@@ -891,7 +902,25 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     if (planFilter === "free" && (g.isPaid || g.isFeatured)) return false;
     return true;
   });
-  const displayedGyms = pageSize === 0 ? filteredGyms : filteredGyms.slice(0, pageSize);
+
+  const sortedGyms = [...filteredGyms].sort((a, b) => {
+    let av = "", bv = "";
+    switch (sortCol) {
+      case "ID": av = a.id; bv = b.id; break;
+      case "Name": av = a.name.toLowerCase(); bv = b.name.toLowerCase(); break;
+      case "Owner": av = a.ownerId; bv = b.ownerId; break;
+      case "Suburb": av = a.address.suburb.toLowerCase(); bv = b.address.suburb.toLowerCase(); break;
+      case "Active": av = a.isActive !== false ? "1" : "0"; bv = b.isActive !== false ? "1" : "0"; break;
+      case "Flags": {
+        const flags = (g: Gym) => `${g.isFeatured ? "1" : "0"}${g.isTest ? "1" : "0"}${g.isPaid ? "1" : "0"}`;
+        av = flags(a); bv = flags(b); break;
+      }
+    }
+    const cmp = av.localeCompare(bv);
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const displayedGyms = pageSize === 0 ? sortedGyms : sortedGyms.slice(0, pageSize);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -1414,7 +1443,16 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   />
                 </th>
                 {["ID", "Name", "Owner", "Suburb", "Active", "Flags", "Actions"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                  <th
+                    key={h}
+                    className={`px-4 py-3 text-left font-medium ${h !== "Actions" ? "cursor-pointer select-none hover:text-gray-700" : ""}`}
+                    onClick={h !== "Actions" ? () => handleSort(h) : undefined}
+                  >
+                    {h}
+                    {sortCol === h && (
+                      <span className="ml-1">{sortDir === "asc" ? "▲" : "▼"}</span>
+                    )}
+                  </th>
                 ))}
               </tr>
             </thead>
