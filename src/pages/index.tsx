@@ -307,6 +307,7 @@ export default function HomePage() {
               </div>
               <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
               <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
+              <SpecialtyFilter selected={selectedSpecialties} onChange={setSelectedSpecialties} />
             </div>
 
             {!hasSearched ? (
