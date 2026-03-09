@@ -6,12 +6,14 @@ import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import LeadsTab from "@/components/LeadsTab";
 import AnalyticsTab from "@/components/AnalyticsTab";
-import type { OwnerSession, Gym } from "@/types";
+import GymAffiliationsTab from "@/components/GymAffiliationsTab";
+import PTAffiliationsTab from "@/components/PTAffiliationsTab";
+import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
-type Tab = "billing" | "leads" | "analytics";
+type Tab = "billing" | "leads" | "analytics" | "affiliations";
 type Interval = "month" | "year";
 type TierFilter = "all" | "free" | "paid" | "featured";
 
@@ -348,11 +350,13 @@ export default function BillingPage() {
   const router = useRouter();
   const [session, setSession] = useState<OwnerSession | null>(null);
   const [gyms, setGyms] = useState<Gym[]>([]);
+  const [pts, setPts] = useState<PersonalTrainer[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Tab
   const [tab, setTab] = useState<Tab>("billing");
   const [leadsNewCount, setLeadsNewCount] = useState(0);
+  const [affPendingCount, setAffPendingCount] = useState(0);
 
   // Billing tab controls
   const [interval, setInterval] = useState<Interval>("month");
@@ -385,7 +389,7 @@ export default function BillingPage() {
       .catch(() => router.replace("/owner"));
   }, [router]);
 
-  // ── Load gyms ─────────────────────────────────────────────────────────────
+  // ── Load gyms + PTs ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return;
     fetch(`/api/owner/gyms?ownerId=${session.ownerId}`)
@@ -394,6 +398,12 @@ export default function BillingPage() {
         setGyms(data);
         setLoading(false);
       });
+    fetch(`/api/owner/pts?ownerId=${session.ownerId}`)
+      .then((r) => r.json())
+      .then((data: PersonalTrainer[]) => {
+        if (Array.isArray(data)) setPts(data);
+      })
+      .catch(() => {});
   }, [session]);
 
   // ── Derived: available states for filter ──────────────────────────────────
@@ -555,6 +565,7 @@ export default function BillingPage() {
                 { key: "billing", label: "Billing" },
                 { key: "leads", label: "Leads" },
                 { key: "analytics", label: "Analytics" },
+                { key: "affiliations", label: "Affiliations" },
               ] as { key: Tab; label: string }[]
             ).map(({ key, label }) => (
               <button
@@ -568,6 +579,9 @@ export default function BillingPage() {
               >
                 {label}
                 {key === "leads" && leadsNewCount > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
+                )}
+                {key === "affiliations" && affPendingCount > 0 && (
                   <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
                 )}
               </button>
@@ -724,6 +738,36 @@ export default function BillingPage() {
         {/* ── Analytics tab ────────────────────────────────────────────────── */}
         {tab === "analytics" && session && (
           <AnalyticsTab ownerId={session.ownerId} gyms={gyms} />
+        )}
+
+        {/* ── Affiliations tab ───────────────────────────────────────────── */}
+        {tab === "affiliations" && session && (
+          <div className="space-y-8">
+            {gyms.length > 0 && (
+              <section>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Gym Affiliations</h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Personal trainers can request to affiliate with your gyms. Approved PTs appear on your gym profile.
+                </p>
+                <GymAffiliationsTab gyms={gyms} onPendingCount={setAffPendingCount} />
+              </section>
+            )}
+            {pts.length > 0 && (
+              <section>
+                {gyms.length > 0 && <hr className="border-gray-200 my-8" />}
+                <h2 className="text-xl font-bold text-gray-900 mb-4">PT Affiliations</h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Search for gyms and request to be listed as an affiliated personal trainer.
+                </p>
+                <PTAffiliationsTab pts={pts} />
+              </section>
+            )}
+            {gyms.length === 0 && pts.length === 0 && (
+              <p className="text-gray-400 text-sm py-8 text-center">
+                No gyms or PT profiles found. Create a listing first.
+              </p>
+            )}
+          </div>
         )}
       </Layout>
     </>

@@ -167,6 +167,20 @@ const schema = a.schema({
     .secondaryIndexes((index) => [index("ownerId")])
     .authorization((allow) => [allow.publicApiKey()]),
 
+  Affiliation: a
+    .model({
+      ptId: a.string().required(),
+      ptName: a.string(),
+      gymId: a.string().required(),
+      gymName: a.string(),
+      requestedBy: a.string().required(), // "pt" or "gym"
+      status: a.string(),  // "pending" | "approved" | "rejected"
+      notes: a.string(),
+      requestedAt: a.string(),
+    })
+    .secondaryIndexes((index) => [index("ptId"), index("gymId")])
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // Daily stat buckets for time-series analytics.
   // id = gymId#YYYY-MM-DD (deterministic) so upserts work without a GSI.
   DailyGymStat: a
