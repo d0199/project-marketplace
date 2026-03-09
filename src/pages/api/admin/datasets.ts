@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
 import { datasetStore } from "@/lib/datasetStore";
 import { ownerStore } from "@/lib/ownerStore";
 
@@ -41,7 +41,12 @@ async function cleanupRemovedEntries(datasetName: string, removedEntries: string
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  // GET is available to all admins; mutations require super-admin
+  if (req.method === "GET") {
+    if (!(await requireAdmin(req, res))) return;
+  } else {
+    if (!(await requireSuperAdmin(req, res))) return;
+  }
 
   if (req.method === "GET") {
     const name = req.query.name as string | undefined;

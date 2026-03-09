@@ -44,14 +44,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "PATCH") {
-    const { password, ownerId, isAdmin } = req.body as {
+    const { password, ownerId, isAdmin, isSuperAdmin } = req.body as {
       password?: string;
       ownerId?: string;
       isAdmin?: string;
+      isSuperAdmin?: string;
     };
 
     try {
       const cognito = getCognitoAdmin();
+
+      // Protect admin@mynextgym.com.au — cannot revoke superadmin
+      if (isSuperAdmin !== undefined) {
+        const { UserAttributes = [] } = await cognito.send(
+          new AdminGetUserCommand({ UserPoolId: USER_POOL_ID, Username: username })
+        );
+        const userAttrs = Object.fromEntries(UserAttributes.map((a) => [a.Name, a.Value]));
+        const userEmail = (userAttrs.email ?? "").toLowerCase();
+        if (userEmail === "admin@mynextgym.com.au" && isSuperAdmin !== "true") {
+          return res.status(400).json({ error: "Cannot revoke super-admin from admin@mynextgym.com.au" });
+        }
+      }
 
       if (password) {
         await cognito.send(
@@ -67,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const attrs: { Name: string; Value: string }[] = [];
       if (ownerId !== undefined) attrs.push({ Name: "custom:ownerId", Value: ownerId });
       if (isAdmin !== undefined) attrs.push({ Name: "custom:isAdmin", Value: isAdmin });
+      if (isSuperAdmin !== undefined) attrs.push({ Name: "custom:isSuperAdmin", Value: isSuperAdmin });
 
       if (attrs.length > 0) {
         await cognito.send(

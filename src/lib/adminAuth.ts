@@ -57,3 +57,57 @@ export async function requireAdmin(
     return null;
   }
 }
+
+/**
+ * Validate that the request comes from a super-admin user.
+ * Same as requireAdmin but additionally checks `custom:isSuperAdmin === "true"`.
+ * Returns the admin email on success, or sends a 401/403 and returns null.
+ */
+export async function requireSuperAdmin(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<string | null> {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Missing authorization" });
+    return null;
+  }
+
+  const token = auth.slice(7);
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+    const username = payload.username ?? payload["cognito:username"] ?? payload.sub;
+
+    if (!username) {
+      res.status(401).json({ error: "Invalid token" });
+      return null;
+    }
+
+    const cognito = getCognitoAdmin();
+    const { UserAttributes = [] } = await cognito.send(
+      new AdminGetUserCommand({ UserPoolId: USER_POOL_ID, Username: username })
+    );
+    const attrs = Object.fromEntries(
+      UserAttributes.map((a) => [a.Name, a.Value])
+    );
+
+    if (attrs["custom:isAdmin"] !== "true") {
+      res.status(403).json({ error: "Forbidden" });
+      return null;
+    }
+
+    if (attrs["custom:isSuperAdmin"] !== "true") {
+      res.status(403).json({ error: "Super-admin access required" });
+      return null;
+    }
+
+    return attrs.email ?? username;
+  } catch (err) {
+    console.error("[adminAuth] validation failed:", err);
+    res.status(401).json({ error: "Invalid or expired token" });
+    return null;
+  }
+}

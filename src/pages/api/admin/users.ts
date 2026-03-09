@@ -30,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status: u.UserStatus,
           ownerId: attrs["custom:ownerId"] ?? "",
           isAdmin: attrs["custom:isAdmin"] ?? "",
+          isSuperAdmin: attrs["custom:isSuperAdmin"] ?? "",
           enabled: u.Enabled,
           createdAt: u.UserCreateDate,
         };
@@ -43,11 +44,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const { email, password, ownerId, isAdmin } = req.body as {
+    const { email, password, ownerId, isAdmin, isSuperAdmin } = req.body as {
       email: string;
       password: string;
       ownerId?: string;
       isAdmin?: boolean;
+      isSuperAdmin?: boolean;
     };
 
     if (!email || !password) {
@@ -62,6 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ];
       if (ownerId) userAttributes.push({ Name: "custom:ownerId", Value: ownerId });
       if (isAdmin) userAttributes.push({ Name: "custom:isAdmin", Value: "true" });
+      if (isSuperAdmin) userAttributes.push({ Name: "custom:isSuperAdmin", Value: "true" });
 
       await cognitoClient.send(
         new AdminCreateUserCommand({
