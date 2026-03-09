@@ -61,14 +61,27 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex 
     if (!sortBy) return filtered;
 
     const sorted = [...filtered];
+    const hasPublicPrice = (g: GymWithDistance) => g.priceVerified && g.pricePerWeek > 0;
     if (sortBy === "distance-asc")
       sorted.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
     else if (sortBy === "distance-desc")
       sorted.sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
     else if (sortBy === "price-asc")
-      sorted.sort((a, b) => a.pricePerWeek - b.pricePerWeek);
+      sorted.sort((a, b) => {
+        const aP = hasPublicPrice(a), bP = hasPublicPrice(b);
+        if (aP && !bP) return -1;
+        if (!aP && bP) return 1;
+        if (!aP && !bP) return 0;
+        return a.pricePerWeek - b.pricePerWeek;
+      });
     else if (sortBy === "price-desc")
-      sorted.sort((a, b) => b.pricePerWeek - a.pricePerWeek);
+      sorted.sort((a, b) => {
+        const aP = hasPublicPrice(a), bP = hasPublicPrice(b);
+        if (aP && !bP) return -1;
+        if (!aP && bP) return 1;
+        if (!aP && !bP) return 0;
+        return b.pricePerWeek - a.pricePerWeek;
+      });
     return sorted;
   }, [gyms, selectedAmenities, selectedMemberOffers, sortBy]);
 
