@@ -27,6 +27,85 @@ interface Props {
   gym: Gym;
 }
 
+const SCHEMA_DAY_MAP: Record<string, string> = {
+  monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday",
+  thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday",
+};
+
+function parseHoursRange(dayName: string, value: string) {
+  // Try to parse "6:00 AM - 9:00 PM" or "06:00 - 21:00" into Schema.org format
+  const match = value.match(/(\d{1,2}[:.]\d{2}\s*(?:AM|PM)?)\s*[-–]\s*(\d{1,2}[:.]\d{2}\s*(?:AM|PM)?)/i);
+  if (!match) return null;
+
+  function to24(t: string): string {
+    t = t.trim().replace(".", ":");
+    const ampm = t.match(/(AM|PM)$/i);
+    if (!ampm) return t.length === 4 ? "0" + t : t;
+    const [h_, m] = t.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
+    let h = h_;
+    if (ampm[1].toUpperCase() === "PM" && h !== 12) h += 12;
+    if (ampm[1].toUpperCase() === "AM" && h === 12) h = 0;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+
+  return {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: `https://schema.org/${dayName}`,
+    opens: to24(match[1]),
+    closes: to24(match[2]),
+  };
+}
+
+function buildJsonLd(gym: Gym) {
+  const url = `https://www.mynextgym.com.au/gym/${gym.id}`;
+
+  const openingHours = Object.entries(gym.hours)
+    .filter(([, v]) => v && v.toLowerCase() !== "closed")
+    .map(([day, value]) => parseHoursRange(SCHEMA_DAY_MAP[day] ?? day, value!))
+    .filter(Boolean);
+
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": ["SportsActivityLocation", "HealthClub"],
+    name: gym.name,
+    description: gym.description,
+    url,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: gym.address.street,
+      addressLocality: gym.address.suburb,
+      addressRegion: gym.address.state,
+      postalCode: gym.address.postcode,
+      addressCountry: "AU",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: gym.lat,
+      longitude: gym.lng,
+    },
+  };
+
+  if (gym.phone) jsonLd.telephone = gym.phone;
+  if (gym.email) jsonLd.email = gym.email;
+  if (gym.website) jsonLd.sameAs = gym.website;
+  if (gym.images.length > 0) jsonLd.image = gym.images;
+  if (openingHours.length > 0) jsonLd.openingHoursSpecification = openingHours;
+
+  if (gym.priceVerified && gym.pricePerWeek > 0) {
+    jsonLd.priceRange = `$${gym.pricePerWeek}/week`;
+  }
+
+  if (gym.amenities.length > 0) {
+    jsonLd.amenityFeature = gym.amenities.map((a) => ({
+      "@type": "LocationFeatureSpecification",
+      name: a,
+      value: true,
+    }));
+  }
+
+  return jsonLd;
+}
+
 function track(gymId: string, event: string) {
   fetch(`/api/stats/${gymId}`, {
     method: "POST",
@@ -111,6 +190,10 @@ export default function GymProfilePage({ gym }: Props) {
         <meta name="description" content={gym.description} />
         {gym.isTest && <meta name="robots" content="noindex, nofollow" />}
         <link rel="canonical" href={`https://www.mynextgym.com.au/gym/${gym.id}`} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(gym)) }}
+        />
       </Head>
       <Layout>
         {/* Breadcrumb */}
