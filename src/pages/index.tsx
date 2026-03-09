@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
+import SpecialtyFilter from "@/components/SpecialtyFilter";
 import GymCard from "@/components/GymCard";
 import { POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export default function HomePage() {
   const [searchLabel, setSearchLabel] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
   const [sortBy, setSortBy] = useState<SortOption | null>(null);
@@ -102,6 +104,13 @@ export default function HomePage() {
       );
     }
 
+    // Specialty filter (paid only)
+    if (selectedSpecialties.length > 0) {
+      filtered = filtered.filter((g) =>
+        g.isPaid && selectedSpecialties.every((s) => (g.specialties ?? []).includes(s))
+      );
+    }
+
     // Sort
     if (!sortBy) return filtered; // API already ranked them
     const sorted = [...filtered];
@@ -119,10 +128,10 @@ export default function HomePage() {
       return b.pricePerWeek - a.pricePerWeek;
     });
     return sorted;
-  }, [cache, hasSearched, radiusKm, selectedAmenities, selectedMemberOffers, sortBy]);
+  }, [cache, hasSearched, radiusKm, selectedAmenities, selectedMemberOffers, selectedSpecialties, sortBy]);
 
   // Reset page when filters change
-  useEffect(() => { setPage(1); }, [selectedAmenities, selectedMemberOffers, radiusKm, sortBy]);
+  useEffect(() => { setPage(1); }, [selectedAmenities, selectedMemberOffers, selectedSpecialties, radiusKm, sortBy]);
 
   function handleSearch(pc: string, label?: string) {
     setPostcode(pc);
@@ -270,6 +279,7 @@ export default function HomePage() {
             </div>
             <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
             <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
+            <SpecialtyFilter selected={selectedSpecialties} onChange={setSelectedSpecialties} />
           </div>
 
           {/* Results */}

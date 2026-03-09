@@ -28,6 +28,7 @@ const PAID_FEATURES = [
   "Instagram & Facebook links",
   "Hours comment / notes",
   "Member offers section",
+  "Specialties tags",
 ];
 
 const FEATURED_FEATURES = [
@@ -175,6 +176,7 @@ function GymRow({
               <li className="text-gray-300">✗ Contact form</li>
               <li className="text-gray-300">✗ Social links</li>
               <li className="text-gray-300">✗ Member offers</li>
+              <li className="text-gray-300">✗ Specialties</li>
               <li className="text-gray-300">✗ Featured placement</li>
             </ul>
             {currentPlan && (
