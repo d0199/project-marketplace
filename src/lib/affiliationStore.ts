@@ -99,9 +99,13 @@ function toAffiliation(r: AffRecord): Affiliation {
   };
 }
 
+function isModelAvailable(): boolean {
+  return isAmplifyConfigured() && !!dataClient.models.Affiliation;
+}
+
 export const affiliationStore = {
   async getByPtId(ptId: string): Promise<Affiliation[]> {
-    if (!isAmplifyConfigured()) return seedAffiliations.filter((a) => a.ptId === ptId);
+    if (!isModelAvailable()) return seedAffiliations.filter((a) => a.ptId === ptId);
     const results: AffRecord[] = [];
     let nextToken: string | null | undefined;
     do {
@@ -116,7 +120,7 @@ export const affiliationStore = {
   },
 
   async getByGymId(gymId: string): Promise<Affiliation[]> {
-    if (!isAmplifyConfigured()) return seedAffiliations.filter((a) => a.gymId === gymId);
+    if (!isModelAvailable()) return seedAffiliations.filter((a) => a.gymId === gymId);
     const results: AffRecord[] = [];
     let nextToken: string | null | undefined;
     do {
@@ -131,7 +135,7 @@ export const affiliationStore = {
   },
 
   async getById(id: string): Promise<Affiliation | undefined> {
-    if (!isAmplifyConfigured()) return seedAffiliations.find((a) => a.id === id);
+    if (!isModelAvailable()) return seedAffiliations.find((a) => a.id === id);
     const { data } = await dataClient.models.Affiliation.get({ id });
     return data ? toAffiliation(data) : undefined;
   },

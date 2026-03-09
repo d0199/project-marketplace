@@ -129,38 +129,58 @@ function invalidateCache() {
 }
 
 // ---------------------------------------------------------------------------
+// Safety check — PersonalTrainer model may not be deployed yet
+// ---------------------------------------------------------------------------
+function isModelAvailable(): boolean {
+  return isAmplifyConfigured() && !!dataClient.models.PersonalTrainer;
+}
+
+// ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
 export const ptStore = {
   async getAll(): Promise<PersonalTrainer[]> {
-    if (!isAmplifyConfigured()) return seedPTs;
+    if (!isModelAvailable()) return seedPTs;
     const now = Date.now();
     if (_allCache && now - _allCacheTime < ALL_CACHE_TTL) return _allCache;
-    const pts = (await listAllPTs()).map(toPT);
-    _allCache = pts;
-    _allCacheTime = now;
-    return pts;
+    try {
+      const pts = (await listAllPTs()).map(toPT);
+      _allCache = pts;
+      _allCacheTime = now;
+      return pts;
+    } catch (err) {
+      console.error("[ptStore.getAll] error, falling back to seed:", err);
+      return seedPTs;
+    }
   },
 
   async getById(id: string): Promise<PersonalTrainer | undefined> {
-    if (!isAmplifyConfigured()) return seedPTs.find((p) => p.id === id);
-    const { data } = await dataClient.models.PersonalTrainer.get({ id });
-    return data ? toPT(data) : undefined;
+    if (!isModelAvailable()) return seedPTs.find((p) => p.id === id);
+    try {
+      const { data } = await dataClient.models.PersonalTrainer.get({ id });
+      return data ? toPT(data) : undefined;
+    } catch {
+      return seedPTs.find((p) => p.id === id);
+    }
   },
 
   async getByOwner(ownerId: string): Promise<PersonalTrainer[]> {
-    if (!isAmplifyConfigured()) return seedPTs.filter((p) => p.ownerId === ownerId);
-    const results: PTRecord[] = [];
-    let nextToken: string | null | undefined;
-    do {
-      const res = await dataClient.models.PersonalTrainer.listPersonalTrainerByOwnerId(
-        { ownerId },
-        { limit: 1000, nextToken }
-      );
-      results.push(...(res.data ?? []));
-      nextToken = res.nextToken;
-    } while (nextToken);
-    return results.map(toPT);
+    if (!isModelAvailable()) return seedPTs.filter((p) => p.ownerId === ownerId);
+    try {
+      const results: PTRecord[] = [];
+      let nextToken: string | null | undefined;
+      do {
+        const res = await dataClient.models.PersonalTrainer.listPersonalTrainerByOwnerId(
+          { ownerId },
+          { limit: 1000, nextToken }
+        );
+        results.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+      } while (nextToken);
+      return results.map(toPT);
+    } catch {
+      return seedPTs.filter((p) => p.ownerId === ownerId);
+    }
   },
 
   async getByGymId(gymId: string): Promise<PersonalTrainer[]> {
