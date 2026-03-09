@@ -55,6 +55,43 @@ export interface Gym {
   imageFocalPoints?: number[];
 }
 
+export interface PersonalTrainer {
+  id: string;
+  ownerId: string;
+  isActive?: boolean;
+  isTest?: boolean;
+  isFeatured?: boolean;
+  isPaid?: boolean;
+  stripeSubscriptionId?: string;
+  stripePlan?: "paid" | "featured";
+  createdBy?: string;
+  name: string;
+  description: string;
+  address: Address;
+  phone: string;
+  email: string;
+  website: string;
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  bookingUrl?: string;
+  lat: number;
+  lng: number;
+  images: string[];
+  imageFocalPoints?: number[];
+  // PT-specific fields
+  gymIds: string[];
+  specialties: string[];
+  qualifications: string[];
+  experienceYears?: number;
+  pricePerSession?: number;
+  sessionDuration?: number; // minutes
+  pricingNotes?: string;
+  availability?: string;
+  gender?: string;
+  languages?: string[];
+}
+
 export interface Lead {
   id: string;
   gymId: string;

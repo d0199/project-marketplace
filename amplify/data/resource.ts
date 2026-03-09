@@ -123,6 +123,50 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
+  PersonalTrainer: a
+    .model({
+      ownerId: a.string().required(),
+      name: a.string().required(),
+      isActive: a.boolean(),
+      isTest: a.boolean(),
+      isFeatured: a.boolean(),
+      isPaid: a.boolean(),
+      stripeSubscriptionId: a.string(),
+      stripePlan: a.string(),
+      createdBy: a.string(),
+      description: a.string(),
+      images: a.string().array(),
+      imageFocalPoints: a.integer().array(),
+      lat: a.float().required(),
+      lng: a.float().required(),
+      // address (flattened)
+      addressStreet: a.string(),
+      addressSuburb: a.string(),
+      addressState: a.string(),
+      addressPostcode: a.string(),
+      // contact
+      phone: a.string(),
+      email: a.string(),
+      website: a.string(),
+      instagram: a.string(),
+      facebook: a.string(),
+      tiktok: a.string(),
+      bookingUrl: a.string(),
+      // PT-specific
+      gymIds: a.string().array(),
+      specialties: a.string().array(),
+      qualifications: a.string().array(),
+      experienceYears: a.integer(),
+      pricePerSession: a.float(),
+      sessionDuration: a.integer(),
+      pricingNotes: a.string(),
+      availability: a.string(),
+      gender: a.string(),
+      languages: a.string().array(),
+    })
+    .secondaryIndexes((index) => [index("ownerId")])
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // Daily stat buckets for time-series analytics.
   // id = gymId#YYYY-MM-DD (deterministic) so upserts work without a GSI.
   DailyGymStat: a

@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
-import { getCurrentUser, fetchUserAttributes, fetchAuthSession, signOut } from "aws-amplify/auth";
+import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import type { Gym, GymEdit } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
+import PTsTab from "@/components/admin/PTsTab";
 import { ALL_AMENITIES, ALL_SPECIALTIES, AMENITY_ICONS } from "@/lib/utils";
+import { adminFetch } from "@/lib/adminFetch";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -62,21 +64,6 @@ const EMPTY_GYM: Gym = {
 };
 
 // ---------------------------------------------------------------------------
-// Authenticated fetch — sends Cognito access token with every admin API call
-// ---------------------------------------------------------------------------
-async function adminFetch(url: string, init?: RequestInit): Promise<Response> {
-  const session = await fetchAuthSession();
-  const token = session.tokens?.accessToken?.toString();
-  return fetch(url, {
-    ...init,
-    headers: {
-      ...init?.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Helper components
 // ---------------------------------------------------------------------------
 function Badge({ status }: { status: string }) {
@@ -101,7 +88,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users" | "leads" | "datasets">("claims");
+  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "pts" | "users" | "leads" | "datasets">("claims");
   const [adminEmail, setAdminEmail] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
@@ -188,7 +175,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b bg-white px-6">
         <nav className="flex gap-6">
-          {(["claims", "moderation", "gyms", "users", "leads", "datasets"] as const).map((t) => (
+          {(["claims", "moderation", "gyms", "pts", "users", "leads", "datasets"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -198,7 +185,7 @@ export default function AdminPage() {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t === "moderation" ? "Moderation" : t === "leads" ? "Leads" : t}
+              {t === "moderation" ? "Moderation" : t === "leads" ? "Leads" : t === "pts" ? "PTs" : t}
               {(pendingCounts[t] ?? 0) > 0 && (
                 <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
               )}
@@ -212,6 +199,7 @@ export default function AdminPage() {
         {tab === "claims" && <ClaimsTab onPendingCount={setClaimsPending} />}
         {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
+        {tab === "pts" && <PTsTab adminEmail={adminEmail} />}
         {tab === "users" && <UsersTab isSuperAdmin={isSuperAdmin} />}
         {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
         {tab === "datasets" && <DatasetsTab isSuperAdmin={isSuperAdmin} />}
