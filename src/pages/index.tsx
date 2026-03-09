@@ -163,7 +163,7 @@ export default function HomePage({ gyms }: Props) {
                   ),
                 },
                 {
-                  key: "24/7 access", label: "24/7 access",
+                  key: "24/7 access", label: "24/7",
                   icon: (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
                       <circle cx="12" cy="12" r="9" />
@@ -172,7 +172,7 @@ export default function HomePage({ gyms }: Props) {
                   ),
                 },
                 {
-                  key: "personal training", label: "personal training",
+                  key: "personal training", label: "PT",
                   icon: (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
                       <circle cx="12" cy="5" r="2" />
@@ -182,7 +182,7 @@ export default function HomePage({ gyms }: Props) {
                   ),
                 },
                 {
-                  key: "childcare", label: "childcare",
+                  key: "childcare", label: "crèche",
                   icon: (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
                       <circle cx="12" cy="6" r="2.5" />

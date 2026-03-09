@@ -120,7 +120,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex 
                 gymIndex={gymIndex}
               />
             </div>
-            <div className="flex items-end gap-8 sm:gap-12 mt-6">
+            <div className="flex items-end justify-evenly w-full max-w-2xl mt-6">
               {([
                 {
                   key: "pool", label: "pool",
@@ -152,11 +152,31 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex 
                   ),
                 },
                 {
-                  key: "24/7 access", label: "24/7 access",
+                  key: "24/7 access", label: "24/7",
                   icon: (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
                       <circle cx="12" cy="12" r="9" />
                       <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "personal training", label: "PT",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <circle cx="12" cy="5" r="2" />
+                      <path d="M12 9v6M9 12h6" strokeLinecap="round" />
+                      <path d="M6 8l2 2M18 8l-2 2M8 19l2-4M16 19l-2-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "childcare", label: "crèche",
+                  icon: (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                      <circle cx="12" cy="6" r="2.5" />
+                      <path d="M9 11c-2 .5-3 2-3 4v1h12v-1c0-2-1-3.5-3-4" strokeLinecap="round" />
+                      <path d="M8 20c0-1.5 4-2.5 4-2.5s4 1 4 2.5" strokeLinecap="round" />
                     </svg>
                   ),
                 },
