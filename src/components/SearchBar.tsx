@@ -159,6 +159,14 @@ export default function SearchBar({
         try {
           const { latitude, longitude, accuracy } = pos.coords;
           console.log("[GeoLocate] coords:", latitude, longitude, "accuracy:", accuracy, "m");
+
+          // Accuracy > 5 km means IP-based fallback — too unreliable
+          if (accuracy > 5000) {
+            setLocating(false);
+            setError("Location too imprecise. Please enter your suburb or postcode instead.");
+            return;
+          }
+
           const nearest = findNearestPostcode(latitude, longitude);
           console.log("[GeoLocate] nearest:", nearest);
           setLocating(false);
