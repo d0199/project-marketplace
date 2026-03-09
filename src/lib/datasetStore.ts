@@ -28,8 +28,8 @@ const FALLBACK_DATASETS: Record<string, string[]> = {
 
 export const datasetStore = {
   async getAll(): Promise<Dataset[]> {
-    const fallback = Object.entries(FALLBACK_DATASETS).map(([name, entries], i) => ({
-      id: `fallback-${i}`,
+    const fallback = Object.entries(FALLBACK_DATASETS).map(([name, entries]) => ({
+      id: `fallback-${name}`,
       name,
       entries,
     }));
@@ -42,7 +42,14 @@ export const datasetStore = {
         results.push(...(res.data ?? []));
         nextToken = res.nextToken;
       } while (nextToken);
-      return results.length > 0 ? results.map(toDataset) : fallback;
+
+      if (results.length === 0) return fallback;
+
+      // Merge: use DynamoDB records, fill in any missing fallback datasets
+      const dbDatasets = results.map(toDataset);
+      const dbNames = new Set(dbDatasets.map((d) => d.name));
+      const missing = fallback.filter((f) => !dbNames.has(f.name));
+      return [...dbDatasets, ...missing];
     } catch (err) {
       console.error("[datasetStore.getAll] DynamoDB error, using fallback:", err);
       return fallback;

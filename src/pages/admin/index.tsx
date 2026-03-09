@@ -2440,13 +2440,17 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     if (!selected) return;
     setSaving(true);
     try {
-      await adminFetch("/api/admin/datasets", {
+      const r = await adminFetch("/api/admin/datasets", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: selected.id, entries }),
       });
-      setSelected({ ...selected, entries: [...entries] });
-      setDatasets((prev) => prev.map((d) => (d.id === selected.id ? { ...d, entries: [...entries] } : d)));
+      const result = await r.json();
+      // If a fallback was promoted to DynamoDB, use the real ID going forward
+      const newId = result.id ?? selected.id;
+      const updated = { ...selected, id: newId, entries: [...entries] };
+      setSelected(updated);
+      setDatasets((prev) => prev.map((d) => (d.id === selected.id ? updated : d)));
     } finally { setSaving(false); }
   }
 

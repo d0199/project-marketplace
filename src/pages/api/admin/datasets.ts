@@ -75,7 +75,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const current = allDatasets.find((d) => d.id === id);
     const newEntries: string[] = entries ?? [];
 
-    await datasetStore.update(id, newEntries);
+    // If this is a fallback dataset (not yet in DynamoDB), create it first
+    let realId = id;
+    if (id.startsWith("fallback-") && current) {
+      const created = await datasetStore.create(current.name, newEntries);
+      realId = created.id;
+    } else {
+      await datasetStore.update(id, newEntries);
+    }
 
     let gymsUpdated = 0;
     if (current) {
@@ -84,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       gymsUpdated = await cleanupRemovedEntries(current.name, removed);
     }
 
-    return res.json({ ok: true, gymsUpdated });
+    return res.json({ ok: true, id: realId, gymsUpdated });
   }
 
   if (req.method === "DELETE") {
