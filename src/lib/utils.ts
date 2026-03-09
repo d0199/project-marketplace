@@ -303,22 +303,40 @@ function gymTier(gym: Gym): number {
 
 /**
  * Apply ranking on top of an already-sorted results array.
- * Featured gyms float to the top (rotated by rotationSeed so all get equal exposure).
+ * Featured gyms float to the top — max 3 pinned slots per postcode,
+ * rotated by rotationSeed (15-minute window) so all get equal exposure.
  * Non-featured gyms are then sorted by quality tier; existing order is preserved
  * within each tier (stable sort).
- *
- * rotationSeed: use Math.floor(Date.now() / (8 * 60 * 60 * 1000)) for 8-hour rotation.
  */
 export function rankGyms(
   gyms: GymWithDistance[],
   rotationSeed: number
 ): GymWithDistance[] {
-  const featured = gyms.filter((g) => g.isFeatured);
-  const rest = gyms.filter((g) => !g.isFeatured);
+  const MAX_FEATURED_SLOTS = 3;
 
-  // Rotate featured array so a different gym leads each rotation window
-  const offset = featured.length > 0 ? rotationSeed % featured.length : 0;
-  const rotatedFeatured = [...featured.slice(offset), ...featured.slice(0, offset)];
+  // Group featured gyms by postcode, rotate each group, cap at 3
+  const featured = gyms.filter((g) => g.isFeatured);
+  const byPostcode = new Map<string, GymWithDistance[]>();
+  for (const g of featured) {
+    const pc = g.address?.postcode ?? "";
+    if (!byPostcode.has(pc)) byPostcode.set(pc, []);
+    byPostcode.get(pc)!.push(g);
+  }
+
+  const pinnedSet = new Set<string>();
+  const pinned: GymWithDistance[] = [];
+  for (const [, group] of byPostcode) {
+    const offset = group.length > 0 ? rotationSeed % group.length : 0;
+    const rotated = [...group.slice(offset), ...group.slice(0, offset)];
+    const capped = rotated.slice(0, MAX_FEATURED_SLOTS);
+    for (const g of capped) {
+      pinned.push(g);
+      pinnedSet.add(g.id);
+    }
+  }
+
+  // Everything not pinned goes into the rest pool (including overflow featured)
+  const rest = gyms.filter((g) => !pinnedSet.has(g.id));
 
   // Stable sort rest by tier (preserves within-tier order from user's sort)
   const sortedRest = rest
@@ -326,5 +344,5 @@ export function rankGyms(
     .sort((a, b) => b.tier - a.tier || a.i - b.i)
     .map(({ g }) => g);
 
-  return [...rotatedFeatured, ...sortedRest];
+  return [...pinned, ...sortedRest];
 }

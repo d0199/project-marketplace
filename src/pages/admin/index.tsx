@@ -1671,15 +1671,29 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   <input
                     type="checkbox"
                     checked={panel.gym.isFeatured ?? false}
-                    onChange={(e) =>
+                    onChange={async (e) => {
+                      if (e.target.checked) {
+                        // Check postcode slot availability before enabling
+                        const pc = panel.gym.address?.postcode;
+                        if (pc) {
+                          try {
+                            const r = await adminFetch(`/api/billing/featured-slots?postcode=${pc}&gymId=${panel.gym.id}`);
+                            const data = await r.json();
+                            if (!data.available) {
+                              showToast(`Featured slots full for postcode ${pc} (${data.count}/3)`);
+                              return;
+                            }
+                          } catch { /* allow if check fails */ }
+                        }
+                      }
                       setPanel((p) =>
                         p ? { ...p, gym: { ...p.gym, isFeatured: e.target.checked } } : p
-                      )
-                    }
+                      );
+                    }}
                     className="w-4 h-4 accent-brand-orange"
                   />
                   <span className="text-sm font-medium text-gray-700">
-                    Featured listing <span className="text-gray-400 font-normal">(pinned to top of results — max 3, rotates evenly)</span>
+                    Featured listing <span className="text-gray-400 font-normal">(pinned to top of results — max 3 per postcode, rotates every 15 min)</span>
                   </span>
                 </label>
                 <label className="flex items-center gap-2 mt-2 cursor-pointer">

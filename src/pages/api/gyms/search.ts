@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   let results: GymWithDistance[];
   if (!sortBy) {
-    const rotationSeed = Math.floor(Date.now() / (8 * 60 * 60 * 1000));
+    const rotationSeed = Math.floor(Date.now() / (15 * 60 * 1000));
     results = rankGyms(filtered, rotationSeed);
   } else {
     results = [...filtered];

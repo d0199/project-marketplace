@@ -105,6 +105,22 @@ function GymRow({
     gym.stripePlan ?? (gym.isFeatured ? "featured" : gym.isPaid ? "paid" : null);
   const hasBillingAccount = !!gym.stripeSubscriptionId;
 
+  // Check featured slot availability for this gym's postcode
+  const [featuredAvailable, setFeaturedAvailable] = useState(true);
+  const [slotsUsed, setSlotsUsed] = useState(0);
+  useEffect(() => {
+    if (currentPlan === "featured") return; // already featured, no need to check
+    const pc = gym.address?.postcode;
+    if (!pc) return;
+    fetch(`/api/billing/featured-slots?postcode=${pc}&gymId=${gym.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setFeaturedAvailable(data.available);
+        setSlotsUsed(data.count);
+      })
+      .catch(() => {});
+  }, [gym.id, gym.address?.postcode, currentPlan]);
+
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
       {/* Gym header — always visible */}
@@ -298,7 +314,7 @@ function GymRow({
                     Complimentary
                   </div>
                 )
-              ) : (
+              ) : featuredAvailable ? (
                 <button
                   onClick={() => onUpgrade(gym, "featured")}
                   disabled={busy === `${gym.id}-featured`}
@@ -306,6 +322,15 @@ function GymRow({
                 >
                   {busy === `${gym.id}-featured` ? "Loading…" : "Upgrade to Featured"}
                 </button>
+              ) : (
+                <div className="text-center">
+                  <div className="w-full text-sm py-2 text-gray-400 bg-gray-100 rounded-lg font-medium">
+                    Slots Full ({slotsUsed}/3)
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    All featured slots for {gym.address.postcode} are taken
+                  </p>
+                </div>
               )}
             </div>
           </div>
