@@ -295,7 +295,7 @@ export default function SearchBar({
             type="button"
             onClick={handleLocate}
             disabled={locating}
-            className="px-3 py-3 hover:text-brand-orange text-gray-500 transition-colors disabled:opacity-50"
+            className="px-3 py-3 hover:text-brand-orange text-white/55 hover:text-white/90 transition-colors disabled:opacity-50"
             title="Use my location"
             aria-label="Use my location"
           >
@@ -316,7 +316,7 @@ export default function SearchBar({
             )}
           </button>
         </div>
-        {error && <p className="mt-1 text-sm font-bold text-gray-500">{error}</p>}
+        {error && <p className="mt-1 text-sm font-bold text-white">{error}</p>}
       </form>
 
       {hasDropdown && (
