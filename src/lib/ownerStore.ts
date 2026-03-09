@@ -139,12 +139,30 @@ async function listAllGyms(
 }
 
 // ---------------------------------------------------------------------------
+// In-memory cache for getAll() — avoids repeated full DynamoDB scans.
+// TTL keeps data fresh; invalidated on update/create/delete.
+// ---------------------------------------------------------------------------
+let _allCache: Gym[] | null = null;
+let _allCacheTime = 0;
+const ALL_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
+function invalidateCache() {
+  _allCache = null;
+  _allCacheTime = 0;
+}
+
+// ---------------------------------------------------------------------------
 // Store — falls back to gyms.json until the Amplify backend is deployed
 // ---------------------------------------------------------------------------
 export const ownerStore = {
   async getAll(): Promise<Gym[]> {
     if (!isAmplifyConfigured()) return seedGyms;
-    return (await listAllGyms()).map(toGym);
+    const now = Date.now();
+    if (_allCache && now - _allCacheTime < ALL_CACHE_TTL) return _allCache;
+    const gyms = (await listAllGyms()).map(toGym);
+    _allCache = gyms;
+    _allCacheTime = now;
+    return gyms;
   },
 
   async getById(id: string): Promise<Gym | undefined> {
@@ -174,6 +192,7 @@ export const ownerStore = {
     const { data, errors } = await dataClient.models.Gym.update(fromGym(gym));
     if (errors?.length) console.error("[ownerStore.update] errors:", JSON.stringify(errors));
     if (!data) console.error("[ownerStore.update] no data returned");
+    invalidateCache();
   },
 
   // Targeted billing update — only touches fields that exist in the deployed schema.
@@ -229,11 +248,13 @@ export const ownerStore = {
       imageFocalPoints: gym.imageFocalPoints,
     });
     if (!data) throw new Error("Failed to create gym");
+    invalidateCache();
     return toGym(data);
   },
 
   async delete(id: string): Promise<void> {
     if (!isAmplifyConfigured()) return;
     await dataClient.models.Gym.delete({ id });
+    invalidateCache();
   },
 };
