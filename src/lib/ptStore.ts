@@ -1,7 +1,11 @@
+import { createRequire } from "module";
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { PersonalTrainer } from "@/types";
 import { postcodeToState } from "./utils";
+
+const require = createRequire(import.meta.url);
+const seedPTs: PersonalTrainer[] = require("../../data/pts.json");
 
 // ---------------------------------------------------------------------------
 // Shape converters between the flat DynamoDB record and the nested PT type
@@ -129,7 +133,7 @@ function invalidateCache() {
 // ---------------------------------------------------------------------------
 export const ptStore = {
   async getAll(): Promise<PersonalTrainer[]> {
-    if (!isAmplifyConfigured()) return [];
+    if (!isAmplifyConfigured()) return seedPTs;
     const now = Date.now();
     if (_allCache && now - _allCacheTime < ALL_CACHE_TTL) return _allCache;
     const pts = (await listAllPTs()).map(toPT);
@@ -139,13 +143,13 @@ export const ptStore = {
   },
 
   async getById(id: string): Promise<PersonalTrainer | undefined> {
-    if (!isAmplifyConfigured()) return undefined;
+    if (!isAmplifyConfigured()) return seedPTs.find((p) => p.id === id);
     const { data } = await dataClient.models.PersonalTrainer.get({ id });
     return data ? toPT(data) : undefined;
   },
 
   async getByOwner(ownerId: string): Promise<PersonalTrainer[]> {
-    if (!isAmplifyConfigured()) return [];
+    if (!isAmplifyConfigured()) return seedPTs.filter((p) => p.ownerId === ownerId);
     const results: PTRecord[] = [];
     let nextToken: string | null | undefined;
     do {
