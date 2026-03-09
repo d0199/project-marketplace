@@ -63,7 +63,6 @@ export const datasetStore = {
     try {
       const { data } = await dataClient.models.Dataset.list({
         filter: { name: { eq: name } },
-        limit: 1,
       });
       return data?.[0] ? toDataset(data[0]) : fallback;
     } catch (err) {
