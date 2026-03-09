@@ -15,10 +15,10 @@ import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 const SENDER = "noreply@mynextgym.com.au";
 const REGION = "ap-southeast-2";
 
-export async function sendAdminAlert(subject: string, body: string): Promise<void> {
+export async function sendAdminAlert(subject: string, body: string, recipientOverride?: string): Promise<void> {
   // Env var preferred; falls back to hardcoded since Amplify Gen 2 SSR Lambda
   // does not receive Console env vars at runtime.
-  const recipient = process.env.ADMIN_ALERT_EMAIL ?? "davidlewis1909@gmail.com";
+  const recipient = recipientOverride ?? process.env.ADMIN_ALERT_EMAIL ?? "davidlewis1909@gmail.com";
 
   console.log("[emailNotify] called — recipient resolved:", !!recipient);
 

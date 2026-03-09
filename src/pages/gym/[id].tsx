@@ -11,6 +11,7 @@ import type { Gym } from "@/types";
 import { ownerStore } from "@/lib/ownerStore";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
+import FeedbackModal from "@/components/FeedbackModal";
 
 const DAYS = [
   "monday",
@@ -49,6 +50,7 @@ export default function GymProfilePage({ gym }: Props) {
   const [authChecked, setAuthChecked] = useState(false);
   const [contactForm, setContactForm] = useState<ContactForm>({ name: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // Admins and internal users on test gyms see all paid fields for maintenance
   const effectivePaid = gym.isPaid || isAdmin || (gym.isTest && isInternalUser);
@@ -469,8 +471,22 @@ export default function GymProfilePage({ gym }: Props) {
                 {gym.address.postcode}
               </address>
             </div>
+
+            {/* Feedback link */}
+            <div className="text-center mt-3">
+              <button
+                onClick={() => setShowFeedback(true)}
+                className="text-xs text-gray-400 hover:text-brand-orange transition-colors"
+              >
+                See something wrong? Let us know
+              </button>
+            </div>
           </aside>
         </div>
+
+        {showFeedback && (
+          <FeedbackModal gymId={gym.id} gymName={gym.name} onClose={() => setShowFeedback(false)} />
+        )}
       </Layout>
     </>
   );
