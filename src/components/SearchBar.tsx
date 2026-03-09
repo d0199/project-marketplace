@@ -286,6 +286,12 @@ export default function SearchBar({
             />
           </div>
           <button
+            type="submit"
+            className="px-6 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+          >
+            Search Gyms
+          </button>
+          <button
             type="button"
             onClick={handleLocate}
             disabled={locating}
@@ -308,12 +314,6 @@ export default function SearchBar({
                 <line x1="20" y1="12" x2="22" y2="12" />
               </svg>
             )}
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
-          >
-            Search Gyms
           </button>
         </div>
         {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
