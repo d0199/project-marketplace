@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,6 +15,8 @@ const DEFAULT_RADIUS = 10;
 const MIN_RADIUS = 1;
 const MAX_RADIUS = 50;
 
+type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
+
 export default function HomePage() {
   const router = useRouter();
   const [postcode, setPostcode] = useState("");
@@ -23,12 +25,15 @@ export default function HomePage() {
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
-  const [sortBy, setSortBy] = useState<"distance-asc" | "distance-desc" | "price-asc" | "price-desc" | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption | null>(null);
   const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
   const [pageSize, setPageSize] = useState(25);
   const [page, setPage] = useState(1);
-  const [results, setResults] = useState<GymWithDistance[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Cache: full unfiltered results for the current postcode (max radius, no filters)
+  const [cache, setCache] = useState<GymWithDistance[]>([]);
+  const cachedPostcode = useRef("");
 
   // Auto-search when arriving from suburb page with ?postcode=xxx
   useEffect(() => {
@@ -49,40 +54,75 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // Fetch results from API whenever search params change
-  const fetchResults = useCallback(async (
-    pc: string,
-    radius: number,
-    amenities: string[],
-    memberOffers: string[],
-    sort: string | null,
-    includeTest: boolean,
-  ) => {
+  // Fetch ALL gyms for a postcode (max radius, no filters) — only when postcode changes
+  const fetchAll = useCallback(async (pc: string, includeTest: boolean) => {
     if (!pc) return;
+    // Skip if we already have this postcode cached
+    if (cachedPostcode.current === `${pc}:${includeTest}`) return;
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set("postcode", pc);
-      params.set("radius", String(radius));
-      if (amenities.length) params.set("amenities", amenities.join(","));
-      if (memberOffers.length) params.set("memberOffers", memberOffers.join(","));
-      if (sort) params.set("sort", sort);
+      params.set("radius", String(MAX_RADIUS));
       if (includeTest) params.set("test", "1");
       const res = await fetch(`/api/gyms/search?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setResults(data);
+        setCache(data);
+        cachedPostcode.current = `${pc}:${includeTest}`;
       }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Re-fetch when filters change (only after initial search)
+  // Fetch when postcode changes (only trigger that hits the API)
   useEffect(() => {
     if (!hasSearched || !postcode) return;
-    fetchResults(postcode, radiusKm, selectedAmenities, selectedMemberOffers, sortBy, canSeeTestGyms);
-  }, [hasSearched, postcode, radiusKm, selectedAmenities, selectedMemberOffers, sortBy, canSeeTestGyms, fetchResults]);
+    fetchAll(postcode, canSeeTestGyms);
+  }, [hasSearched, postcode, canSeeTestGyms, fetchAll]);
+
+  // Client-side filtering + sorting from cache (instant)
+  const results = useMemo<GymWithDistance[]>(() => {
+    if (!hasSearched || cache.length === 0) return [];
+
+    let filtered = cache.filter((g) => (g.distanceKm ?? Infinity) <= radiusKm);
+
+    // Amenity filter
+    if (selectedAmenities.length > 0) {
+      filtered = filtered.filter((g) =>
+        selectedAmenities.every((a) => g.amenities.includes(a))
+      );
+    }
+
+    // Member offer filter (paid only)
+    if (selectedMemberOffers.length > 0) {
+      filtered = filtered.filter((g) =>
+        g.isPaid && selectedMemberOffers.every((o) => (g.memberOffers ?? []).includes(o))
+      );
+    }
+
+    // Sort
+    if (!sortBy) return filtered; // API already ranked them
+    const sorted = [...filtered];
+    const hasPublicPrice = (g: GymWithDistance) => g.priceVerified && g.pricePerWeek > 0;
+    if (sortBy === "distance-asc") sorted.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+    else if (sortBy === "distance-desc") sorted.sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
+    else if (sortBy === "price-asc") sorted.sort((a, b) => {
+      const aP = hasPublicPrice(a), bP = hasPublicPrice(b);
+      if (aP && !bP) return -1; if (!aP && bP) return 1; if (!aP && !bP) return 0;
+      return a.pricePerWeek - b.pricePerWeek;
+    });
+    else if (sortBy === "price-desc") sorted.sort((a, b) => {
+      const aP = hasPublicPrice(a), bP = hasPublicPrice(b);
+      if (aP && !bP) return -1; if (!aP && bP) return 1; if (!aP && !bP) return 0;
+      return b.pricePerWeek - a.pricePerWeek;
+    });
+    return sorted;
+  }, [cache, hasSearched, radiusKm, selectedAmenities, selectedMemberOffers, sortBy]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [selectedAmenities, selectedMemberOffers, radiusKm, sortBy]);
 
   function handleSearch(pc: string, label?: string) {
     setPostcode(pc);
