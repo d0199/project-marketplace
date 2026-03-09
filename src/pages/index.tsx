@@ -1,5 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
-import type { GetServerSideProps } from "next";
+import React, { useState, useCallback, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,19 +9,13 @@ import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
 import GymCard from "@/components/GymCard";
-import { filterGyms, rankGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
-import { ownerStore } from "@/lib/ownerStore";
-import type { Gym } from "@/types";
+import { POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 
 const DEFAULT_RADIUS = 10;
 const MIN_RADIUS = 1;
 const MAX_RADIUS = 50;
 
-interface Props {
-  gyms: Gym[];
-}
-
-export default function HomePage({ gyms }: Props) {
+export default function HomePage() {
   const router = useRouter();
   const [postcode, setPostcode] = useState("");
   const [searchLabel, setSearchLabel] = useState("");
@@ -34,8 +27,8 @@ export default function HomePage({ gyms }: Props) {
   const [canSeeTestGyms, setCanSeeTestGyms] = useState(false);
   const [pageSize, setPageSize] = useState(25);
   const [page, setPage] = useState(1);
-  // Rotation seed changes every 8 hours — stable for the session
-  const rotationSeed = useMemo(() => Math.floor(Date.now() / (8 * 60 * 60 * 1000)), []);
+  const [results, setResults] = useState<GymWithDistance[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Auto-search when arriving from suburb page with ?postcode=xxx
   useEffect(() => {
@@ -56,56 +49,40 @@ export default function HomePage({ gyms }: Props) {
       .catch(() => {});
   }, []);
 
+  // Fetch results from API whenever search params change
+  const fetchResults = useCallback(async (
+    pc: string,
+    radius: number,
+    amenities: string[],
+    memberOffers: string[],
+    sort: string | null,
+    includeTest: boolean,
+  ) => {
+    if (!pc) return;
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("postcode", pc);
+      params.set("radius", String(radius));
+      if (amenities.length) params.set("amenities", amenities.join(","));
+      if (memberOffers.length) params.set("memberOffers", memberOffers.join(","));
+      if (sort) params.set("sort", sort);
+      if (includeTest) params.set("test", "1");
+      const res = await fetch(`/api/gyms/search?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Gym index: lightweight list for name search
-  const gymIndex = useMemo(() =>
-    gyms
-      .filter((g) => g.isActive !== false && !g.isTest)
-      .map((g) => ({
-        id: g.id,
-        name: g.name,
-        suburb: g.address?.suburb || "",
-        state: g.address?.state || "",
-      })),
-    [gyms]
-  );
-
-  const visibleGyms = useMemo(
-    () => gyms
-      .filter((g) => g.isActive !== false)
-      .filter((g) => canSeeTestGyms || !g.isTest),
-    [gyms, canSeeTestGyms]
-  );
-
-  const results: GymWithDistance[] = useMemo(() => {
-    if (!hasSearched) return [];
-    const filtered = filterGyms(visibleGyms, {
-      postcode: postcode || undefined,
-      amenities: selectedAmenities,
-      memberOffers: selectedMemberOffers,
-      radiusKm,
-    });
-    if (!sortBy) return rankGyms(filtered, rotationSeed);
-    const sorted = [...filtered];
-    const hasPublicPrice = (g: GymWithDistance) => g.priceVerified && g.pricePerWeek > 0;
-    if (sortBy === "distance-asc") sorted.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
-    else if (sortBy === "distance-desc") sorted.sort((a, b) => (b.distanceKm ?? 0) - (a.distanceKm ?? 0));
-    else if (sortBy === "price-asc") sorted.sort((a, b) => {
-      const aP = hasPublicPrice(a), bP = hasPublicPrice(b);
-      if (aP && !bP) return -1;
-      if (!aP && bP) return 1;
-      if (!aP && !bP) return 0;
-      return a.pricePerWeek - b.pricePerWeek;
-    });
-    else if (sortBy === "price-desc") sorted.sort((a, b) => {
-      const aP = hasPublicPrice(a), bP = hasPublicPrice(b);
-      if (aP && !bP) return -1;
-      if (!aP && bP) return 1;
-      if (!aP && !bP) return 0;
-      return b.pricePerWeek - a.pricePerWeek;
-    });
-    return sorted;
-  }, [visibleGyms, postcode, selectedAmenities, selectedMemberOffers, hasSearched, radiusKm, sortBy, rotationSeed]);
+  // Re-fetch when filters change (only after initial search)
+  useEffect(() => {
+    if (!hasSearched || !postcode) return;
+    fetchResults(postcode, radiusKm, selectedAmenities, selectedMemberOffers, sortBy, canSeeTestGyms);
+  }, [hasSearched, postcode, radiusKm, selectedAmenities, selectedMemberOffers, sortBy, canSeeTestGyms, fetchResults]);
 
   function handleSearch(pc: string, label?: string) {
     setPostcode(pc);
@@ -142,7 +119,6 @@ export default function HomePage({ gyms }: Props) {
               <SearchBar
                 onSearch={handleSearch}
                 initialValue={postcode}
-                gymIndex={gymIndex}
               />
             </div>
 
@@ -291,6 +267,11 @@ export default function HomePage({ gyms }: Props) {
                 <p className="text-lg font-medium text-gray-500">Search by suburb, postcode or gym name</p>
                 <p className="text-sm mt-2">Try <strong className="text-gray-600">Perth</strong>, <strong className="text-gray-600">6000</strong> or your gym name</p>
               </div>
+            ) : loading ? (
+              <div className="text-center py-20 text-gray-400">
+                <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-brand-orange rounded-full animate-spin mb-4" />
+                <p className="text-lg font-medium text-gray-500">Searching gyms...</p>
+              </div>
             ) : results.length === 0 ? (
               <div className="text-center py-20 text-gray-400">
                 <p className="text-5xl mb-4">😕</p>
@@ -387,7 +368,3 @@ export default function HomePage({ gyms }: Props) {
     </>
   );
 }
-
-export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  return { props: { gyms: await ownerStore.getAll() } };
-};

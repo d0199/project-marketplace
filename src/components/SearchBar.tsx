@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import { POSTCODE_COORDS } from "@/lib/utils";
 
@@ -19,7 +19,6 @@ interface Props {
   initialValue?: string;
   onSearch: (postcode: string, label?: string) => void;
   suburbIndex?: SuburbSuggestion[];
-  gymIndex?: GymSuggestion[];
 }
 
 function normalize(s: string) {
@@ -30,7 +29,6 @@ export default function SearchBar({
   initialValue = "",
   onSearch,
   suburbIndex,
-  gymIndex = [],
 }: Props) {
   const router = useRouter();
   const [value, setValue] = useState(initialValue);
@@ -38,8 +36,10 @@ export default function SearchBar({
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [suburbMatches, setSuburbMatches] = useState<SuburbSuggestion[]>([]);
+  const [gymMatches, setGymMatches] = useState<GymSuggestion[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const gymAbortRef = useRef<AbortController | null>(null);
 
   // Close on outside click
   useEffect(() => {
@@ -89,22 +89,25 @@ export default function SearchBar({
     return () => clearTimeout(timer);
   }, [query, isPostcodeInput, suburbIndex]);
 
-  const gymMatches = useMemo<GymSuggestion[]>(() => {
-    if (query.length < 2 || isPostcodeInput) return [];
-    const words = normalize(query).split(/\s+/).filter(Boolean);
-    return gymIndex
-      .filter((g) => {
-        const combined = normalize(`${g.name} ${g.suburb} ${g.state}`);
-        return words.every((w) => combined.includes(w));
-      })
-      .sort((a, b) => {
-        const first = words[0];
-        const aS = normalize(a.name).startsWith(first) ? 0 : 1;
-        const bS = normalize(b.name).startsWith(first) ? 0 : 1;
-        return aS - bS || a.name.localeCompare(b.name);
-      })
-      .slice(0, 8);
-  }, [query, gymIndex, isPostcodeInput]);
+  // Fetch gym name suggestions from API (debounced)
+  useEffect(() => {
+    if (query.length < 2 || isPostcodeInput) {
+      setGymMatches([]);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      gymAbortRef.current?.abort();
+      const ctrl = new AbortController();
+      gymAbortRef.current = ctrl;
+      fetch(`/api/gyms/names?q=${encodeURIComponent(query)}`, { signal: ctrl.signal })
+        .then((r) => r.json())
+        .then((data: GymSuggestion[]) => setGymMatches(data))
+        .catch(() => {});
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [query, isPostcodeInput]);
 
   type Item =
     | { kind: "suburb"; data: SuburbSuggestion }

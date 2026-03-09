@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import SearchBar, { type GymSuggestion } from "@/components/SearchBar";
+import SearchBar from "@/components/SearchBar";
 import GymCard from "@/components/GymCard";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
@@ -24,10 +24,9 @@ interface Props {
   suburbName: string;
   slug: string;
   gyms: GymWithDistance[];
-  gymIndex: GymSuggestion[];
 }
 
-export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex }: Props) {
+export default function SuburbPage({ postcode, suburbName, slug, gyms }: Props) {
   const router = useRouter();
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
@@ -133,7 +132,6 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex 
             <div className="w-full max-w-xl">
               <SearchBar
                 onSearch={handleSearch}
-                gymIndex={gymIndex}
               />
             </div>
             <div className="flex items-end justify-evenly w-full max-w-2xl mt-6">
@@ -366,15 +364,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
   const gyms = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 });
 
-  // Build gym index
-  const gymIndex: GymSuggestion[] = allGyms
-    .filter((g) => g.isActive !== false && !g.isTest)
-    .map((g) => ({
-      id: g.id,
-      name: g.name,
-      suburb: g.address?.suburb || "",
-      state: g.address?.state || "",
-    }));
-
-  return { props: { postcode, suburbName, slug, gyms, gymIndex } };
+  return { props: { postcode, suburbName, slug, gyms } };
 };
