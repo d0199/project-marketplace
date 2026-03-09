@@ -269,7 +269,7 @@ export default function SearchBar({
     <div ref={containerRef} className="relative w-full">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-2">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <input
               type="text"
               value={value}
@@ -284,6 +284,7 @@ export default function SearchBar({
               placeholder="Enter postcode (e.g. 6000) or search for your suburb or gym"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-900 placeholder-gray-400"
             />
+            {error && <p className="absolute left-0 mt-1 text-sm font-bold text-white">{error}</p>}
           </div>
           <button
             type="submit"
@@ -316,7 +317,6 @@ export default function SearchBar({
             )}
           </button>
         </div>
-        {error && <p className="mt-1 text-sm font-bold text-white">{error}</p>}
       </form>
 
       {hasDropdown && (
