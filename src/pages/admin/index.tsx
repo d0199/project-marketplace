@@ -29,6 +29,7 @@ interface Claim {
   gymEmail?: string;
   gymSuburb?: string;
   gymPostcode?: string;
+  claimType?: string;
 }
 
 interface CognitoUser {
@@ -376,6 +377,9 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
                     <p className="font-semibold text-gray-900">{c.gymName || c.gymId}</p>
                     {c.isNewListing && (
                       <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-orange text-white">New Listing</span>
+                    )}
+                    {c.claimType === "pt" && (
+                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-600 text-white">PT Claim</span>
                     )}
                   </div>
                   <p className="text-xs text-gray-400">{c.isNewListing ? `${c.gymSuburb ?? ""} ${c.gymPostcode ?? ""}`.trim() : c.gymAddress}</p>

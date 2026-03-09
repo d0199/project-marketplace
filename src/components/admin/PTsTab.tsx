@@ -34,6 +34,8 @@ export default function PTsTab({ adminEmail }: Props) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
+  const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
+  const [editOwnerVal, setEditOwnerVal] = useState("");
 
   useEffect(() => { load(); }, []);
 
@@ -119,6 +121,26 @@ export default function PTsTab({ adminEmail }: Props) {
     load();
   }
 
+  async function saveOwnerId(ptId: string) {
+    const val = editOwnerVal.trim();
+    if (!val) return;
+    const pt = pts.find((p) => p.id === ptId);
+    if (!pt) return;
+    try {
+      await adminFetch(`/api/admin/pt/${ptId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pt, ownerId: val }),
+      });
+      showToast("Owner ID updated");
+      setEditOwnerFor(null);
+      setEditOwnerVal("");
+      load();
+    } catch {
+      showToast("Error updating Owner ID");
+    }
+  }
+
   return (
     <div>
       {/* Toast */}
@@ -194,9 +216,10 @@ export default function PTsTab({ adminEmail }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-500 border-b">
+                <th className="pb-2 font-medium">ID</th>
                 <th className="pb-2 font-medium">Name</th>
                 <th className="pb-2 font-medium">Suburb</th>
-                <th className="pb-2 font-medium">Email</th>
+                <th className="pb-2 font-medium">Owner</th>
                 <th className="pb-2 font-medium">Gyms</th>
                 <th className="pb-2 font-medium">Specialties</th>
                 <th className="pb-2 font-medium">Flags</th>
@@ -207,9 +230,35 @@ export default function PTsTab({ adminEmail }: Props) {
             <tbody>
               {filtered.map((pt) => (
                 <tr key={pt.id} className="border-b hover:bg-gray-50">
+                  <td className="py-2 pr-3 text-xs text-gray-400 font-mono">{pt.id}</td>
                   <td className="py-2 pr-3 font-medium text-gray-900 max-w-[200px] truncate">{pt.name || <span className="text-gray-400 italic">Unnamed</span>}</td>
                   <td className="py-2 pr-3 text-gray-600">{pt.address.suburb}</td>
-                  <td className="py-2 pr-3 text-gray-600 max-w-[180px] truncate">{pt.email}</td>
+                  <td className="py-2 pr-3 text-gray-600 text-xs">
+                    {editOwnerFor === pt.id ? (
+                      <span className="flex items-center gap-1">
+                        <input
+                          value={editOwnerVal}
+                          onChange={(e) => setEditOwnerVal(e.target.value)}
+                          className="w-28 px-1.5 py-0.5 border rounded text-xs"
+                          autoFocus
+                          onKeyDown={(e) => { if (e.key === "Enter") saveOwnerId(pt.id); if (e.key === "Escape") setEditOwnerFor(null); }}
+                        />
+                        <button onClick={() => saveOwnerId(pt.id)} className="text-green-600 hover:text-green-800 text-xs">Save</button>
+                        <button onClick={() => setEditOwnerFor(null)} className="text-gray-400 hover:text-gray-600 text-xs">Cancel</button>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <span className={pt.ownerId === "unclaimed" ? "text-gray-400 italic" : ""}>{pt.ownerId === "unclaimed" ? "Unclaimed" : pt.ownerId}</span>
+                        <button
+                          onClick={() => { setEditOwnerFor(pt.id); setEditOwnerVal(pt.ownerId === "unclaimed" ? "" : pt.ownerId); }}
+                          className="text-brand-orange hover:text-brand-orange-dark ml-1"
+                          title="Set Owner ID"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 pr-3 text-gray-600">{pt.gymIds.length}</td>
                   <td className="py-2 pr-3 text-gray-600 max-w-[200px] truncate">{pt.specialties.slice(0, 3).join(", ")}{pt.specialties.length > 3 ? "..." : ""}</td>
                   <td className="py-2 pr-3">
@@ -228,7 +277,8 @@ export default function PTsTab({ adminEmail }: Props) {
                     </button>
                   </td>
                   <td className="py-2">
-                    <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm">Edit</button>
+                    <a href={`/pt/${pt.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">View</a>
+                    <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm ml-3">Edit</button>
                     <button onClick={() => setConfirmDelete(pt.id)} className="text-red-500 hover:underline text-sm ml-3">Delete</button>
                   </td>
                 </tr>

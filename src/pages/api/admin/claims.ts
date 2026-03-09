@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { requireAdmin } from "@/lib/adminAuth";
 import { POSTCODE_COORDS } from "@/lib/utils";
@@ -112,7 +113,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           isNewUser = true;
         }
 
-        if (claim.isNewListing) {
+        const claimType = (claim as Record<string, unknown>).claimType as string | undefined;
+
+        if (claimType === "pt") {
+          // PT profile claim — assign ownership
+          const pt = await ptStore.getById(claim.gymId ?? "");
+          if (!pt) return res.status(404).json({ error: `PT not found: ${claim.gymId}` });
+
+          await ptStore.update({ ...pt, ownerId });
+          await dataClient.models.Claim.update({
+            id,
+            status: "approved",
+            notes: notes ?? (isNewUser
+              ? `Approved — PT profile claimed, new Cognito user created, ownerId: ${ownerId}`
+              : `Approved — PT profile claimed, added to existing user account, ownerId: ${ownerId}`),
+          });
+
+          return res.status(200).json({ ok: true, ownerId, isNewUser });
+        } else if (claim.isNewListing) {
           // New listing — create a gym record from submitted details
           const postcode = claim.gymPostcode ?? "";
           const coords = POSTCODE_COORDS[postcode];

@@ -11,8 +11,8 @@ export default async function handler(
 
   const {
     gymId, gymName, gymAddress, gymWebsite, name, email, phone, message,
-    isNewListing, gymPhone, gymEmail, gymSuburb, gymPostcode,
-  } = req.body as Record<string, string> & { isNewListing?: boolean };
+    isNewListing, gymPhone, gymEmail, gymSuburb, gymPostcode, claimType,
+  } = req.body as Record<string, string> & { isNewListing?: boolean; claimType?: string };
 
   if (!gymId || !name || !email) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -20,7 +20,7 @@ export default async function handler(
 
   if (!isAmplifyConfigured()) {
     console.log("[claim-request] backend not configured — logging only", {
-      gymId, gymName, name, email, isNewListing,
+      gymId, gymName, name, email, isNewListing, claimType,
     });
     return res.status(200).json({ ok: true });
   }
@@ -40,12 +40,15 @@ export default async function handler(
     gymEmail: gymEmail ?? "",
     gymSuburb: gymSuburb ?? "",
     gymPostcode: gymPostcode ?? "",
+    claimType: claimType ?? "gym",
   });
 
-  const alertSubject = isNewListing ? "New gym listing request" : "New gym claim submitted";
+  const isPT = claimType === "pt";
+  const entityLabel = isPT ? "PT profile" : "gym";
+  const alertSubject = isNewListing ? "New gym listing request" : `New ${entityLabel} claim submitted`;
   const alertBody = isNewListing
     ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`
-    : `A new claim has been submitted and is awaiting review.\n\nGym: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`;
+    : `A new ${entityLabel} claim has been submitted and is awaiting review.\n\n${isPT ? "PT" : "Gym"}: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`;
 
   await Promise.allSettled([
     sendAdminAlert(alertSubject, alertBody),

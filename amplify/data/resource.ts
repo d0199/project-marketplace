@@ -96,6 +96,7 @@ const schema = a.schema({
       gymEmail: a.string(),
       gymSuburb: a.string(),
       gymPostcode: a.string(),
+      claimType: a.string(),  // "gym" (default) | "pt"
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
