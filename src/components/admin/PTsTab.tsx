@@ -162,6 +162,18 @@ export default function PTsTab({ adminEmail }: Props) {
             <option value="paid">Paid</option>
             <option value="featured">Featured</option>
           </select>
+          <button
+            onClick={() => { setQ(""); setActiveFilter("all"); setPlanFilter("all"); }}
+            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+          >
+            Clear
+          </button>
+          <button
+            onClick={() => { setQ(""); setActiveFilter("active"); setPlanFilter("all"); }}
+            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+          >
+            Reset
+          </button>
           <span className="text-sm text-gray-500">{filtered.length} PTs</span>
         </div>
         <button

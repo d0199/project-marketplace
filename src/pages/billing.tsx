@@ -386,7 +386,19 @@ export default function BillingPage() {
           name: attributes.name ?? attributes.email ?? "",
         });
       })
-      .catch(() => router.replace("/owner"));
+      .catch(() => {
+        // Dev mode fallback — check for dev session in sessionStorage
+        if (process.env.NODE_ENV === "development") {
+          try {
+            const raw = sessionStorage.getItem("devSession");
+            if (raw) {
+              setSession(JSON.parse(raw));
+              return;
+            }
+          } catch { /* */ }
+        }
+        router.replace("/owner");
+      });
   }, [router]);
 
   // ── Load gyms + PTs ──────────────────────────────────────────────────────

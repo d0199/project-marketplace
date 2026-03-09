@@ -39,6 +39,8 @@ export default function OwnerPortalPage() {
 
   function switchView(v: View) { resetForm(); setView(v); }
 
+  const isDev = process.env.NODE_ENV === "development";
+
   useEffect(() => {
     getCurrentUser()
       .then(async () => {
@@ -52,6 +54,11 @@ export default function OwnerPortalPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
+
+  function devLogin(ownerId: string, email: string) {
+    sessionStorage.setItem("devSession", JSON.stringify({ ownerId, email, name: email.split("@")[0] }));
+    router.push("/billing");
+  }
 
 
   // ── Login ──────────────────────────────────────────────────────────────────
@@ -196,6 +203,17 @@ export default function OwnerPortalPage() {
         <Layout>
           <div className="max-w-md mx-auto mt-12">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+
+              {/* Dev login bypass */}
+              {isDev && view === "login" && (
+                <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs font-semibold text-yellow-800 mb-2">Dev Login</p>
+                  <div className="flex flex-col gap-1.5">
+                    <button onClick={() => devLogin("owner-1", "owner@mynextgym.com.au")} className="text-left text-xs px-2 py-1.5 bg-white border rounded hover:bg-yellow-100">owner-1 — Gyms + PTs (Sarah, Marcus)</button>
+                    <button onClick={() => devLogin("owner-2", "owner2@mynextgym.com.au")} className="text-left text-xs px-2 py-1.5 bg-white border rounded hover:bg-yellow-100">owner-2 — Gyms + PT (Emma)</button>
+                  </div>
+                </div>
+              )}
 
               {/* Header */}
               <div className="text-center mb-6">

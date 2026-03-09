@@ -108,7 +108,7 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   return (
     <>
       <Head>
-        <title>{pt.name} — Personal Trainer | mynextgym.com.au</title>
+        <title>{`${pt.name} — Personal Trainer | mynextgym.com.au`}</title>
         <meta name="description" content={metaDesc} />
         {pt.isTest && <meta name="robots" content="noindex, nofollow" />}
         <link rel="canonical" href={`https://www.mynextgym.com.au/pt/${pt.id}`} />
