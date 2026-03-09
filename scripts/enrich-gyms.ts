@@ -38,7 +38,7 @@ const MODEL      = "claude-sonnet-4-6";
 const DEFAULT_OUTPUT = `data/gyms_enriched_${new Date().toISOString().slice(0,10)}_${MODEL.replace(/[^a-z0-9]/g,"-")}.csv`;
 const MAX_RETRIES        = 3;
 const MAX_CONTINUATIONS  = 6;
-const DEFAULT_DELAY_S    = 2.0;
+const DEFAULT_DELAY_S    = 0.5;
 
 const OUTPUT_FIELDS = [
   "id", "name", "addressState", "website",
@@ -88,9 +88,9 @@ confidence levels:
 - "low"     = very little data, mostly inferred from gym type
 - "no_data" = website unreachable or no relevant content found`;
 
+// web_search_20250305: search snippets only (no full page downloads = faster + cheaper)
 const TOOLS = [
-  { type: "web_search_20260209", name: "web_search" },
-  { type: "web_fetch_20260209",  name: "web_fetch"  },
+  { type: "web_search_20250305", name: "web_search" },
 ] as any[];
 
 const DEFAULT_AMENITIES = {
@@ -176,8 +176,8 @@ async function callClaude(
   for (let i = 0; i < MAX_CONTINUATIONS; i++) {
     const response = await client.messages.create({
       model: MODEL,
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      max_tokens: 1024,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }] as any,
       tools: TOOLS as any,
       messages,
     });
