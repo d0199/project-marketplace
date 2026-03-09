@@ -209,6 +209,22 @@ export default function GymProfilePage({ gym }: Props) {
               </section>
             )}
 
+            {/* Specialties */}
+            {(gym.specialties?.length ?? 0) > 0 && (
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                  Specialties
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {gym.specialties!.map((s) => (
+                    <span key={s} className="inline-flex items-center px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Member Offers — paid listings only */}
             {effectivePaid && (gym.memberOffers?.length || gym.memberOffersNotes) && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">

@@ -78,7 +78,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
           {gym.description}
         </p>
 
-        <div className="flex flex-wrap gap-1 mb-4">
+        <div className="flex flex-wrap gap-1 mb-2">
           {shown.map((a) => (
             <AmenityBadge key={a} amenity={a} size="sm" />
           ))}
@@ -88,6 +88,21 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
             </span>
           )}
         </div>
+
+        {gym.specialties && gym.specialties.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {gym.specialties.slice(0, 3).map((s) => (
+              <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                {s}
+              </span>
+            ))}
+            {gym.specialties.length > 3 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                +{gym.specialties.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         <Link
           href={`/gym/${gym.id}`}

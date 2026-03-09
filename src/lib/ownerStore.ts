@@ -61,6 +61,7 @@ function toGym(r: GymRecord): Gym {
     ...(r.pricingNotes != null && { pricingNotes: r.pricingNotes }),
     amenitiesVerified: r.amenitiesVerified ?? false,
     ...(r.amenitiesNotes != null && { amenitiesNotes: r.amenitiesNotes }),
+    specialties: (r.specialties?.filter(Boolean) ?? []) as string[],
     images: (r.images?.filter(Boolean) ?? []) as string[],
     ...(r.imageFocalPoints != null && { imageFocalPoints: (r.imageFocalPoints.filter((v) => v != null) as number[]) }),
   };
@@ -111,6 +112,7 @@ function fromGym(gym: Gym) {
     pricingNotes: gym.pricingNotes,
     amenitiesVerified: gym.amenitiesVerified ?? false,
     amenitiesNotes: gym.amenitiesNotes,
+    specialties: gym.specialties,
     images: gym.images,
     imageFocalPoints: gym.imageFocalPoints,
   };
@@ -222,6 +224,7 @@ export const ownerStore = {
       memberScrollText: gym.memberScrollText,
       memberOffersTnC: gym.memberOffersTnC,
       pricePerWeek: gym.pricePerWeek,
+      specialties: gym.specialties,
       images: gym.images,
       imageFocalPoints: gym.imageFocalPoints,
     });

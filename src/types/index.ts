@@ -50,6 +50,7 @@ export interface Gym {
   amenitiesVerified?: boolean;
   amenitiesNotes?: string;
   pricePerWeek: number; // float — e.g. 24.9
+  specialties?: string[];
   images: string[];
   imageFocalPoints?: number[];
 }

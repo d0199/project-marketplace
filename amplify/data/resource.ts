@@ -59,6 +59,7 @@ const schema = a.schema({
       pricingNotes: a.string(),
       amenitiesVerified: a.boolean(),
       amenitiesNotes: a.string(),
+      specialties: a.string().array(),
     })
     // GSI on ownerId — makes getByOwner O(1) instead of a full table scan.
     .secondaryIndexes((index) => [index("ownerId")])

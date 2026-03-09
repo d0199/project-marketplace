@@ -332,6 +332,61 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
         </div>
       </section>
 
+      {/* Specialties */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+          Specialties
+        </h2>
+        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines your gym is known for (e.g. HYROX, Pilates, CrossFit, Olympic Lifting)</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {(form.specialties ?? []).map((s) => (
+            <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
+              {s}
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, specialties: (f.specialties ?? []).filter((x) => x !== s) }))}
+                className="ml-0.5 text-indigo-400 hover:text-indigo-700"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            id="specialty-input"
+            placeholder="Type a specialty and press Add"
+            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const input = e.currentTarget;
+                const val = input.value.trim();
+                if (val && !(form.specialties ?? []).includes(val)) {
+                  setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), val] }));
+                  input.value = "";
+                }
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const input = document.getElementById("specialty-input") as HTMLInputElement;
+              const val = input?.value.trim();
+              if (val && !(form.specialties ?? []).includes(val)) {
+                setForm((f) => ({ ...f, specialties: [...(f.specialties ?? []), val] }));
+                input.value = "";
+              }
+            }}
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Add
+          </button>
+        </div>
+      </section>
+
       {/* Member Offers — paid listings only */}
       {form.isPaid && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
