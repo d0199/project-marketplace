@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ALL_AMENITIES } from "@/lib/utils";
 import AmenityIcon from "./AmenityIcon";
 
@@ -10,12 +10,20 @@ interface Props {
 export default function AmenityFilter({ selected, onChange }: Props) {
   const [amenities, setAmenities] = useState<string[]>([...ALL_AMENITIES]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch("/api/datasets/amenities")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries?.length) setAmenities(data.entries); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [load]);
 
   function toggle(amenity: string) {
     if (selected.includes(amenity)) {

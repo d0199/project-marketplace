@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ALL_MEMBER_OFFERS } from "@/lib/utils";
 import { MemberOfferIcon } from "./AmenityIcon";
 
@@ -10,12 +10,20 @@ interface Props {
 export default function MemberOfferFilter({ selected, onChange }: Props) {
   const [offers, setOffers] = useState<string[]>([...ALL_MEMBER_OFFERS]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch("/api/datasets/member-offers")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries?.length) setOffers(data.entries); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [load]);
 
   function toggle(offer: string) {
     if (selected.includes(offer)) {

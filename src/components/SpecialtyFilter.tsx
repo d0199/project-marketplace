@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ALL_SPECIALTIES } from "@/lib/utils";
 
 interface Props {
@@ -9,12 +9,21 @@ interface Props {
 export default function SpecialtyFilter({ selected, onChange }: Props) {
   const [specialties, setSpecialties] = useState<string[]>([...ALL_SPECIALTIES]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch("/api/datasets/specialties")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries?.length) setSpecialties(data.entries); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Re-fetch when tab regains focus (picks up admin dataset changes)
+  useEffect(() => {
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [load]);
 
   function toggle(s: string) {
     if (selected.includes(s)) {
