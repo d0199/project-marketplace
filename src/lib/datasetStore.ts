@@ -1,6 +1,6 @@
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
-import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS } from "./utils";
+import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS, REPORT_ISSUE_TYPES } from "./utils";
 
 type DatasetRecord = Schema["Dataset"]["type"];
 
@@ -23,37 +23,46 @@ const FALLBACK_DATASETS: Record<string, string[]> = {
   specialties: [...ALL_SPECIALTIES],
   amenities: [...ALL_AMENITIES],
   "member-offers": [...ALL_MEMBER_OFFERS],
+  "report-issues": [...REPORT_ISSUE_TYPES],
 };
 
 export const datasetStore = {
   async getAll(): Promise<Dataset[]> {
-    if (!isAmplifyConfigured()) {
-      return Object.entries(FALLBACK_DATASETS).map(([name, entries], i) => ({
-        id: `fallback-${i}`,
-        name,
-        entries,
-      }));
+    const fallback = Object.entries(FALLBACK_DATASETS).map(([name, entries], i) => ({
+      id: `fallback-${i}`,
+      name,
+      entries,
+    }));
+    if (!isAmplifyConfigured()) return fallback;
+    try {
+      const results: DatasetRecord[] = [];
+      let nextToken: string | null | undefined;
+      do {
+        const res = await dataClient.models.Dataset.list({ limit: 100, nextToken });
+        results.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+      } while (nextToken);
+      return results.length > 0 ? results.map(toDataset) : fallback;
+    } catch (err) {
+      console.error("[datasetStore.getAll] DynamoDB error, using fallback:", err);
+      return fallback;
     }
-    const results: DatasetRecord[] = [];
-    let nextToken: string | null | undefined;
-    do {
-      const res = await dataClient.models.Dataset.list({ limit: 100, nextToken });
-      results.push(...(res.data ?? []));
-      nextToken = res.nextToken;
-    } while (nextToken);
-    return results.map(toDataset);
   },
 
   async getByName(name: string): Promise<Dataset | undefined> {
-    if (!isAmplifyConfigured()) {
-      const entries = FALLBACK_DATASETS[name];
-      return entries ? { id: "fallback", name, entries } : undefined;
+    const fallbackEntries = FALLBACK_DATASETS[name];
+    const fallback = fallbackEntries ? { id: `fallback-${name}`, name, entries: fallbackEntries } : undefined;
+    if (!isAmplifyConfigured()) return fallback;
+    try {
+      const { data } = await dataClient.models.Dataset.list({
+        filter: { name: { eq: name } },
+        limit: 1,
+      });
+      return data?.[0] ? toDataset(data[0]) : fallback;
+    } catch (err) {
+      console.error(`[datasetStore.getByName] DynamoDB error for "${name}", using fallback:`, err);
+      return fallback;
     }
-    const { data } = await dataClient.models.Dataset.list({
-      filter: { name: { eq: name } },
-      limit: 1,
-    });
-    return data?.[0] ? toDataset(data[0]) : undefined;
   },
 
   async create(name: string, entries: string[]): Promise<Dataset> {

@@ -232,6 +232,17 @@ export const ALL_SPECIALTIES = [
   "Parkour",
 ] as const;
 
+export const REPORT_ISSUE_TYPES = [
+  "Pricing is incorrect",
+  "Address is wrong",
+  "Amenities are incorrect",
+  "Opening hours are wrong",
+  "Contact info is incorrect",
+  "Gym is permanently closed",
+  "Duplicate listing",
+  "Other",
+] as const;
+
 export interface FilterOptions {
   postcode?: string;
   amenities: string[];

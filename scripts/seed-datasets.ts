@@ -6,7 +6,7 @@ import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
 import outputs from "../amplify_outputs.json";
-import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS } from "../src/lib/utils";
+import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS, REPORT_ISSUE_TYPES } from "../src/lib/utils";
 
 Amplify.configure(outputs as Parameters<typeof Amplify.configure>[0], { ssr: true });
 const client = generateClient<Schema>({ authMode: "apiKey" });
@@ -15,6 +15,7 @@ const DATASETS: Record<string, string[]> = {
   specialties: [...ALL_SPECIALTIES],
   amenities: [...ALL_AMENITIES],
   "member-offers": [...ALL_MEMBER_OFFERS],
+  "report-issues": [...REPORT_ISSUE_TYPES],
 };
 
 async function upsert(name: string, entries: string[]) {

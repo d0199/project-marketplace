@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const ISSUE_TYPES = [
+const DEFAULT_ISSUE_TYPES = [
   "Pricing is incorrect",
   "Address is wrong",
   "Amenities are incorrect",
@@ -9,7 +9,7 @@ const ISSUE_TYPES = [
   "Gym is permanently closed",
   "Duplicate listing",
   "Other",
-] as const;
+];
 
 interface Props {
   gymId: string;
@@ -18,11 +18,19 @@ interface Props {
 }
 
 export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
+  const [issueTypes, setIssueTypes] = useState<string[]>(DEFAULT_ISSUE_TYPES);
   const [issueType, setIssueType] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/datasets/report-issues")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.entries?.length) setIssueTypes(d.entries); })
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,7 +91,7 @@ export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
                   className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange"
                 >
                   <option value="">Select an issue...</option>
-                  {ISSUE_TYPES.map((t) => (
+                  {issueTypes.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
