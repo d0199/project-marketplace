@@ -157,7 +157,10 @@ export default function SearchBar({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         try {
-          const nearest = findNearestPostcode(pos.coords.latitude, pos.coords.longitude);
+          const { latitude, longitude, accuracy } = pos.coords;
+          console.log("[GeoLocate] coords:", latitude, longitude, "accuracy:", accuracy, "m");
+          const nearest = findNearestPostcode(latitude, longitude);
+          console.log("[GeoLocate] nearest:", nearest);
           setLocating(false);
           if (nearest) {
             setValue(nearest.postcode);
@@ -173,6 +176,7 @@ export default function SearchBar({
       },
       (err) => {
         setLocating(false);
+        console.log("[GeoLocate] error:", err.code, err.message);
         if (err.code === err.PERMISSION_DENIED) {
           setError("Location access denied. Please allow location access in your browser settings.");
         } else if (err.code === err.TIMEOUT) {
@@ -181,7 +185,7 @@ export default function SearchBar({
           setError("Unable to get your location. Please try again.");
         }
       },
-      { enableHighAccuracy: false, timeout: 15000 }
+      { enableHighAccuracy: true, timeout: 15000 }
     );
   }, [onSearch]);
 
