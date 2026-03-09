@@ -1,6 +1,44 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin } from "@/lib/adminAuth";
 import { datasetStore } from "@/lib/datasetStore";
+import { ownerStore } from "@/lib/ownerStore";
+
+/** Map dataset name → gym field that stores those values */
+const DATASET_TO_GYM_FIELD: Record<string, "amenities" | "specialties" | "memberOffers"> = {
+  amenities: "amenities",
+  specialties: "specialties",
+  "member-offers": "memberOffers",
+};
+
+/**
+ * When entries are removed from a dataset, strip those values from every gym
+ * that currently has them set.
+ */
+async function cleanupRemovedEntries(datasetName: string, removedEntries: string[]) {
+  if (removedEntries.length === 0) return 0;
+  const field = DATASET_TO_GYM_FIELD[datasetName];
+  if (!field) return 0;
+
+  const allGyms = await ownerStore.getAll();
+  const removedSet = new Set(removedEntries);
+  let updated = 0;
+
+  await Promise.all(
+    allGyms.map(async (gym) => {
+      const current: string[] = (gym[field] as string[] | undefined) ?? [];
+      const cleaned = current.filter((v) => !removedSet.has(v));
+      if (cleaned.length < current.length) {
+        await ownerStore.update({ ...gym, [field]: cleaned });
+        updated++;
+      }
+    })
+  );
+
+  if (updated > 0) {
+    console.log(`[datasets] Removed ${removedEntries.length} entries from "${datasetName}" — cleaned ${updated} gym(s)`);
+  }
+  return updated;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!(await requireAdmin(req, res))) return;
@@ -26,13 +64,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "PUT") {
     const { id, entries } = req.body;
     if (!id) return res.status(400).json({ error: "id is required" });
-    await datasetStore.update(id, entries ?? []);
-    return res.json({ ok: true });
+
+    // Find which entries were removed so we can clean them from gyms
+    const allDatasets = await datasetStore.getAll();
+    const current = allDatasets.find((d) => d.id === id);
+    const newEntries: string[] = entries ?? [];
+
+    await datasetStore.update(id, newEntries);
+
+    let gymsUpdated = 0;
+    if (current) {
+      const newSet = new Set(newEntries);
+      const removed = current.entries.filter((e) => !newSet.has(e));
+      gymsUpdated = await cleanupRemovedEntries(current.name, removed);
+    }
+
+    return res.json({ ok: true, gymsUpdated });
   }
 
   if (req.method === "DELETE") {
     const id = req.query.id as string;
     if (!id) return res.status(400).json({ error: "id is required" });
+
+    // Remove all values from gyms before deleting the dataset
+    const allDatasets = await datasetStore.getAll();
+    const ds = allDatasets.find((d) => d.id === id);
+    if (ds) {
+      await cleanupRemovedEntries(ds.name, ds.entries);
+    }
+
     await datasetStore.delete(id);
     return res.json({ ok: true });
   }
