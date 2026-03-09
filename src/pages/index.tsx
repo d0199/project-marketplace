@@ -125,9 +125,11 @@ export default function HomePage({ gyms }: Props) {
         <meta property="og:type" content="website" />
       </Head>
       <Layout hero={
-        <div className="relative overflow-hidden" style={{ height: 460 }}>
-          <Image src="/stock/Hero.jpg" alt="" fill className="object-cover" priority sizes="100vw" />
-          <div className="absolute inset-0 bg-black/60" />
+        <div className="relative" style={{ height: 460 }}>
+          <div className="absolute inset-0 overflow-hidden">
+            <Image src="/stock/Hero.jpg" alt="" fill className="object-cover" priority sizes="100vw" />
+            <div className="absolute inset-0 bg-black/60" />
+          </div>
           <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 drop-shadow-lg">
               Your Next Move Starts Here.

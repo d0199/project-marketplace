@@ -116,9 +116,11 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex 
         </nav>
 
         {/* Hero */}
-        <div className="relative rounded-2xl overflow-hidden mb-8" style={{ height: 340 }}>
-          <Image src="/stock/Hero.jpg" alt="" fill className="object-cover" priority sizes="100vw" />
-          <div className="absolute inset-0 bg-black/60" />
+        <div className="relative rounded-2xl mb-8" style={{ height: 340 }}>
+          <div className="absolute inset-0 rounded-2xl overflow-hidden">
+            <Image src="/stock/Hero.jpg" alt="" fill className="object-cover" priority sizes="100vw" />
+            <div className="absolute inset-0 bg-black/60" />
+          </div>
           <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-2 drop-shadow-lg">
               Gyms in {suburbName}
