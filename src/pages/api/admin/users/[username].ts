@@ -7,8 +7,11 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { ownerStore } from "@/lib/ownerStore";
+import { requireAdmin } from "@/lib/adminAuth";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!(await requireAdmin(req, res))) return;
+
   const username = String(req.query.username);
 
   if (req.method === "DELETE") {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import AmenityBadge from "@/components/AmenityBadge";
@@ -41,9 +42,11 @@ interface ContactForm {
 }
 
 export default function GymProfilePage({ gym }: Props) {
+  const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isInternalUser, setIsInternalUser] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [contactForm, setContactForm] = useState<ContactForm>({ name: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
@@ -58,12 +61,26 @@ export default function GymProfilePage({ gym }: Props) {
         setIsAdmin(attributes["custom:isAdmin"] === "true");
         const email = user.signInDetails?.loginId ?? attributes.email ?? "";
         setIsInternalUser(email.endsWith("@mynextgym.com.au"));
+        setAuthChecked(true);
       })
       .catch(() => {
         // Not signed in — isOwner/isAdmin/isInternalUser stay false
+        setAuthChecked(true);
       });
     track(gym.id, "pageViews");
   }, [gym.id, gym.ownerId]);
+
+  // Block non-internal users from viewing test gyms
+  useEffect(() => {
+    if (authChecked && gym.isTest && !isInternalUser) {
+      router.replace("/");
+    }
+  }, [authChecked, gym.isTest, isInternalUser, router]);
+
+  // Don't render test gym content until auth is verified
+  if (gym.isTest && !isInternalUser) {
+    return null;
+  }
 
   async function handleContactSubmit(e: React.FormEvent) {
     e.preventDefault();

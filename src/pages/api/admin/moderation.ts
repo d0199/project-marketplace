@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
+import { requireAdmin } from "@/lib/adminAuth";
 import type { Gym } from "@/types";
 
 async function listAllEdits() {
@@ -15,6 +16,8 @@ async function listAllEdits() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!(await requireAdmin(req, res))) return;
+
   if (!isAmplifyConfigured()) {
     return res.status(503).json({ error: "Backend not configured" });
   }

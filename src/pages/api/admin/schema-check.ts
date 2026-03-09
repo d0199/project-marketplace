@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
+import { requireAdmin } from "@/lib/adminAuth";
 
 // Debug endpoint — returns what the Amplify client knows about the Gym schema
 // and fetches one raw gym record so you can see which fields DynamoDB actually returns.
 // GET /api/admin/schema-check
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!(await requireAdmin(req, res))) return;
   if (req.method !== "GET") return res.status(405).end();
 
   const configured = isAmplifyConfigured();

@@ -16,7 +16,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
   return {
     props: {
       gyms: all
-        .filter((g) => g.isActive !== false)
+        .filter((g) => g.isActive !== false && !g.isTest)
         .map(({ id, name, address, website }) => ({ id, name, address, website })),
     },
   };

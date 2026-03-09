@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
+import { requireAdmin } from "@/lib/adminAuth";
 
 async function listAllLeads() {
   const results: Record<string, unknown>[] = [];
@@ -13,6 +14,8 @@ async function listAllLeads() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!(await requireAdmin(req, res))) return;
+
   if (!isAmplifyConfigured()) {
     return res.status(503).json({ error: "Backend not configured" });
   }

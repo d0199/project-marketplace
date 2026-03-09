@@ -7,6 +7,7 @@ import {
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { requireAdmin } from "@/lib/adminAuth";
 import { POSTCODE_COORDS } from "@/lib/utils";
 
 async function listAllClaims() {
@@ -21,6 +22,8 @@ async function listAllClaims() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!(await requireAdmin(req, res))) return;
+
   if (!isAmplifyConfigured()) {
     return res.status(503).json({ error: "Backend not configured" });
   }

@@ -1,8 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
+import { requireAdmin } from "@/lib/adminAuth";
 import type { Gym } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!(await requireAdmin(req, res))) return;
+
   if (req.method === "GET") {
     const q = String(req.query.q ?? "").toLowerCase().trim();
     const gyms = await ownerStore.getAll();

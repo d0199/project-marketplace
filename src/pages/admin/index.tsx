@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
-import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
+import { getCurrentUser, fetchUserAttributes, fetchAuthSession, signOut } from "aws-amplify/auth";
 import type { Gym, GymEdit } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
 import { ALL_AMENITIES, AMENITY_ICONS } from "@/lib/utils";
@@ -61,6 +61,21 @@ const EMPTY_GYM: Gym = {
 };
 
 // ---------------------------------------------------------------------------
+// Authenticated fetch — sends Cognito access token with every admin API call
+// ---------------------------------------------------------------------------
+async function adminFetch(url: string, init?: RequestInit): Promise<Response> {
+  const session = await fetchAuthSession();
+  const token = session.tokens?.accessToken?.toString();
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...init?.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Helper components
 // ---------------------------------------------------------------------------
 function Badge({ status }: { status: string }) {
@@ -95,8 +110,8 @@ export default function AdminPage() {
   // Pre-fetch pending counts so badges show immediately on all tabs
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/claims").then((r) => r.json()).catch(() => []),
-      fetch("/api/admin/moderation").then((r) => r.json()).catch(() => []),
+      adminFetch("/api/admin/claims").then((r) => r.json()).catch(() => []),
+      adminFetch("/api/admin/moderation").then((r) => r.json()).catch(() => []),
     ]).then(([claims, edits]) => {
       const claimsArr = Array.isArray(claims) ? claims as Claim[] : [];
       const editsArr = Array.isArray(edits) ? edits as GymEdit[] : [];
@@ -225,7 +240,7 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
 
   const load = useCallback(async () => {
     setLoading(true);
-    const r = await fetch("/api/admin/claims");
+    const r = await adminFetch("/api/admin/claims");
     const data = await r.json();
     setClaims(data);
     onPendingCount?.(data.filter((c: Claim) => c.status === "pending").length);
@@ -241,7 +256,7 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
 
   async function action(id: string, act: "approve" | "reject") {
     setBusy(id + act);
-    const r = await fetch(`/api/admin/claims?action=${act}&id=${id}`, {
+    const r = await adminFetch(`/api/admin/claims?action=${act}&id=${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes: notes[id] ?? "" }),
@@ -575,7 +590,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
 
   const load = useCallback(async () => {
     setLoading(true);
-    const r = await fetch("/api/admin/moderation");
+    const r = await adminFetch("/api/admin/moderation");
     if (r.ok) {
       const data = await r.json();
       setEdits(data);
@@ -593,7 +608,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
 
   async function action(id: string, act: "approve" | "reject") {
     setBusy(id + act);
-    const r = await fetch(`/api/admin/moderation?action=${act}&id=${id}`, {
+    const r = await adminFetch(`/api/admin/moderation?action=${act}&id=${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes: notes[id] ?? "" }),
@@ -613,7 +628,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
     setBusy("bulk");
     let ok = 0;
     for (const id of ids) {
-      const r = await fetch(`/api/admin/moderation?action=${act}&id=${id}`, {
+      const r = await adminFetch(`/api/admin/moderation?action=${act}&id=${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: "" }),
@@ -941,7 +956,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
             updated.images = [...updated.images, ...toAdd].slice(0, 6);
           }
         }
-        return fetch(`/api/admin/gym/${g.id}`, {
+        return adminFetch(`/api/admin/gym/${g.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updated),
@@ -961,7 +976,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     const targets = gyms.filter((g) => selected.has(g.id));
     await Promise.all(
       targets.map((g) =>
-        fetch(`/api/admin/gym/${g.id}`, {
+        adminFetch(`/api/admin/gym/${g.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...g, amenities: [] }),
@@ -978,7 +993,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
 
   const search = useCallback(async (query: string) => {
     setLoading(true);
-    const r = await fetch(`/api/admin/gyms?q=${encodeURIComponent(query)}`);
+    const r = await adminFetch(`/api/admin/gyms?q=${encodeURIComponent(query)}`);
     setGyms(await r.json());
     setSelected(new Set());
     setLoading(false);
@@ -988,7 +1003,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
 
   useEffect(() => {
     if (!initialGymId) return;
-    fetch(`/api/admin/gym/${initialGymId}`)
+    adminFetch(`/api/admin/gym/${initialGymId}`)
       .then((r) => r.json())
       .then((gym: Gym) => { if (gym?.id) setPanel({ gym, isNew: false }); })
       .catch(() => {});
@@ -1006,7 +1021,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       // ownerId typed in the separate input above doesn't reach the form's
       // onSave payload — override it from panel state here.
       const body = { ...updated, ownerId: panel.gym.ownerId, isTest: panel.gym.isTest ?? false, isFeatured: panel.gym.isFeatured ?? false, isActive: panel.gym.isActive !== false, isPaid: panel.gym.isPaid ?? false, createdBy: adminEmail };
-      const r = await fetch("/api/admin/gyms", {
+      const r = await adminFetch("/api/admin/gyms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -1019,7 +1034,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         showToast("Error creating gym.");
       }
     } else {
-      const r = await fetch(`/api/admin/gym/${updated.id}`, {
+      const r = await adminFetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false }),
@@ -1035,7 +1050,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   }
 
   async function handleDelete(id: string) {
-    const r = await fetch(`/api/admin/gym/${id}`, { method: "DELETE" });
+    const r = await adminFetch(`/api/admin/gym/${id}`, { method: "DELETE" });
     if (r.ok) {
       showToast("Gym deleted.");
       setConfirmDelete(null);
@@ -1048,7 +1063,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   async function handleUnclaim(id: string) {
     const gym = gyms.find((g) => g.id === id);
     if (!gym) return;
-    const r = await fetch(`/api/admin/gym/${id}`, {
+    const r = await adminFetch(`/api/admin/gym/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...gym, ownerId: "unclaimed" }),
@@ -1064,7 +1079,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
 
   async function toggleActive(g: Gym) {
     const updated = { ...g, isActive: g.isActive === false ? true : false };
-    const r = await fetch(`/api/admin/gym/${g.id}`, {
+    const r = await adminFetch(`/api/admin/gym/${g.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updated),
@@ -1690,7 +1705,7 @@ function UsersTab() {
   const search = useCallback(async (query: string) => {
     setLoading(true);
     try {
-      const r = await fetch(`/api/admin/users?q=${encodeURIComponent(query)}`);
+      const r = await adminFetch(`/api/admin/users?q=${encodeURIComponent(query)}`);
       const data = await r.json();
       if (r.ok && Array.isArray(data)) {
         setUsers(data);
@@ -1710,7 +1725,7 @@ function UsersTab() {
   useEffect(() => { search(""); }, [search]);
 
   async function createUser() {
-    const r = await fetch("/api/admin/users", {
+    const r = await adminFetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newForm),
@@ -1727,7 +1742,7 @@ function UsersTab() {
   }
 
   async function deleteUser(username: string) {
-    const r = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, { method: "DELETE" });
+    const r = await adminFetch(`/api/admin/users/${encodeURIComponent(username)}`, { method: "DELETE" });
     const body = await r.json().catch(() => ({}));
     if (r.ok) {
       const n = body.gymsReleased ?? 0;
@@ -1740,7 +1755,7 @@ function UsersTab() {
   }
 
   async function resetPassword(username: string) {
-    const r = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+    const r = await adminFetch(`/api/admin/users/${encodeURIComponent(username)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: resetPw }),
@@ -1756,7 +1771,7 @@ function UsersTab() {
   }
 
   async function setOwnerId(username: string) {
-    const r = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+    const r = await adminFetch(`/api/admin/users/${encodeURIComponent(username)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ownerId: editOwnerVal }),
@@ -2079,7 +2094,7 @@ function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) 
     (async () => {
       setLoading(true);
       try {
-        const r = await fetch("/api/admin/leads");
+        const r = await adminFetch("/api/admin/leads");
         if (r.ok) {
           const data = await r.json();
           setLeads(data);
