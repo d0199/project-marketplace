@@ -2379,6 +2379,7 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const [confirmInput, setConfirmInput] = useState("");
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2397,6 +2398,7 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     setEntries(ds ? [...ds.entries] : []);
     setNewEntry("");
     setEditIdx(null);
+    setStatusMsg(null);
   }
 
   function addEntry() {
@@ -2427,18 +2429,28 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   async function saveDataset() {
     if (!selected) return;
     setSaving(true);
+    setStatusMsg(null);
     try {
       const r = await adminFetch("/api/admin/datasets", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: selected.id, entries }),
       });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+        setStatusMsg({ type: "error", text: err.error || `Save failed (${r.status})` });
+        return;
+      }
       const result = await r.json();
       // If a fallback was promoted to DynamoDB, use the real ID going forward
       const newId = result.id ?? selected.id;
       const updated = { ...selected, id: newId, entries: [...entries] };
       setSelected(updated);
       setDatasets((prev) => prev.map((d) => (d.id === selected.id ? updated : d)));
+      const gymsNote = result.gymsUpdated > 0 ? ` (${result.gymsUpdated} gym${result.gymsUpdated === 1 ? "" : "s"} updated)` : "";
+      setStatusMsg({ type: "success", text: `Saved successfully${gymsNote}` });
+    } catch (err) {
+      setStatusMsg({ type: "error", text: `Save failed: ${err instanceof Error ? err.message : "Unknown error"}` });
     } finally { setSaving(false); }
   }
 
@@ -2659,7 +2671,10 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             <h3 className="text-lg font-semibold text-gray-900">{selected.name}</h3>
             {isSuperAdmin && (
               <div className="flex items-center gap-2">
-                {dirty && (
+                {statusMsg && (
+                  <span className={`text-xs font-medium ${statusMsg.type === "success" ? "text-green-600" : "text-red-600"}`}>{statusMsg.text}</span>
+                )}
+                {dirty && !statusMsg && (
                   <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
                 )}
                 <button

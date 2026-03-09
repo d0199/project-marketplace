@@ -6,6 +6,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const name = req.query.name as string;
   const ds = await datasetStore.getByName(name);
   if (!ds) return res.status(404).json({ error: "Not found" });
-  res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
+  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=30");
   res.json({ name: ds.name, entries: ds.entries });
 }

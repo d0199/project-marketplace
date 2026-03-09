@@ -70,28 +70,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { id, entries } = req.body;
     if (!id) return res.status(400).json({ error: "id is required" });
 
-    // Find which entries were removed so we can clean them from gyms
-    const allDatasets = await datasetStore.getAll();
-    const current = allDatasets.find((d) => d.id === id);
-    const newEntries: string[] = entries ?? [];
+    try {
+      // Find which entries were removed so we can clean them from gyms
+      const allDatasets = await datasetStore.getAll();
+      const current = allDatasets.find((d) => d.id === id);
+      const newEntries: string[] = entries ?? [];
 
-    // If this is a fallback dataset (not yet in DynamoDB), create it first
-    let realId = id;
-    if (id.startsWith("fallback-") && current) {
-      const created = await datasetStore.create(current.name, newEntries);
-      realId = created.id;
-    } else {
-      await datasetStore.update(id, newEntries);
+      // If this is a fallback dataset (not yet in DynamoDB), create it first
+      let realId = id;
+      if (id.startsWith("fallback-") && current) {
+        const created = await datasetStore.create(current.name, newEntries);
+        realId = created.id;
+      } else {
+        await datasetStore.update(id, newEntries);
+      }
+
+      let gymsUpdated = 0;
+      if (current) {
+        const newSet = new Set(newEntries);
+        const removed = current.entries.filter((e) => !newSet.has(e));
+        gymsUpdated = await cleanupRemovedEntries(current.name, removed);
+      }
+
+      return res.json({ ok: true, id: realId, gymsUpdated });
+    } catch (err) {
+      console.error("[datasets PUT] error:", err);
+      return res.status(500).json({ error: err instanceof Error ? err.message : "Failed to save dataset" });
     }
-
-    let gymsUpdated = 0;
-    if (current) {
-      const newSet = new Set(newEntries);
-      const removed = current.entries.filter((e) => !newSet.has(e));
-      gymsUpdated = await cleanupRemovedEntries(current.name, removed);
-    }
-
-    return res.json({ ok: true, id: realId, gymsUpdated });
   }
 
   if (req.method === "DELETE") {
