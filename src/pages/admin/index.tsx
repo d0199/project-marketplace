@@ -476,7 +476,7 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
 // Moderation Review tab
 // ---------------------------------------------------------------------------
 
-const DIFF_LABELS: Record<string, string> = {
+const DIFF_LABELS_GYM: Record<string, string> = {
   name: "Name", description: "Description", phone: "Phone",
   email: "Email", website: "Website", pricePerWeek: "Price/week",
   instagram: "Instagram", facebook: "Facebook",
@@ -490,25 +490,48 @@ const DIFF_LABELS: Record<string, string> = {
   memberOffersTnC: "Terms & Conditions",
 };
 
-function getFieldValue(gym: Gym, field: string): string {
+const DIFF_LABELS_PT: Record<string, string> = {
+  name: "Name", description: "Description", phone: "Phone",
+  email: "Email", website: "Website",
+  instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok",
+  bookingUrl: "Booking URL",
+  "address.street": "Address", "address.suburb": "Suburb", "address.postcode": "Postcode",
+  specialties: "Specialties", qualifications: "Qualifications",
+  experienceYears: "Experience", pricePerSession: "Price/session",
+  sessionDuration: "Session duration", pricingNotes: "Pricing notes",
+  availability: "Availability", gender: "Gender",
+  languages: "Languages", images: "Images",
+};
+
+const DIFF_LABELS: Record<string, string> = { ...DIFF_LABELS_GYM, ...DIFF_LABELS_PT };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getFieldValue(obj: any, field: string): string {
   if (field.startsWith("address.")) {
-    const k = field.split(".")[1] as keyof Gym["address"];
-    return String(gym.address?.[k] ?? "");
+    const k = field.split(".")[1];
+    return String(obj.address?.[k] ?? "");
   }
   if (field.startsWith("hours.")) {
-    const k = field.split(".")[1] as keyof Gym["hours"];
-    return String(gym.hours?.[k] ?? "");
+    const k = field.split(".")[1];
+    return String(obj.hours?.[k] ?? "");
   }
-  if (field === "amenities") return (gym.amenities ?? []).sort().join(", ") || "—";
-  if (field === "memberOffers") return (gym.memberOffers ?? []).sort().join(", ") || "—";
-  if (field === "images") return `${(gym.images ?? []).length} image(s)`;
-  if (field === "pricePerWeek") return gym.pricePerWeek ? `$${gym.pricePerWeek}/wk` : "—";
-  if (field === "memberOffersScroll") return gym.memberOffersScroll ? "Yes" : "No";
-  return String((gym as unknown as Record<string, unknown>)[field] ?? "");
+  if (field === "amenities") return (obj.amenities ?? []).sort().join(", ") || "—";
+  if (field === "memberOffers") return (obj.memberOffers ?? []).sort().join(", ") || "—";
+  if (field === "specialties") return (obj.specialties ?? []).sort().join(", ") || "—";
+  if (field === "qualifications") return (obj.qualifications ?? []).sort().join(", ") || "—";
+  if (field === "languages") return (obj.languages ?? []).sort().join(", ") || "—";
+  if (field === "images") return `${(obj.images ?? []).length} image(s)`;
+  if (field === "pricePerWeek") return obj.pricePerWeek ? `$${obj.pricePerWeek}/wk` : "—";
+  if (field === "pricePerSession") return obj.pricePerSession ? `$${obj.pricePerSession}` : "—";
+  if (field === "sessionDuration") return obj.sessionDuration ? `${obj.sessionDuration} min` : "—";
+  if (field === "experienceYears") return obj.experienceYears ? `${obj.experienceYears} yrs` : "—";
+  if (field === "memberOffersScroll") return obj.memberOffersScroll ? "Yes" : "No";
+  return String(obj[field] ?? "");
 }
 
-function computeDiff(current: Gym, proposed: Gym) {
-  return Object.keys(DIFF_LABELS).filter((field) => {
+function computeDiff(current: Record<string, unknown>, proposed: Record<string, unknown>, editType?: string) {
+  const labels = editType === "pt" ? DIFF_LABELS_PT : DIFF_LABELS_GYM;
+  return Object.keys(labels).filter((field) => {
     return getFieldValue(current, field) !== getFieldValue(proposed, field);
   });
 }
@@ -703,9 +726,10 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
       ) : (
         <div className="space-y-4">
           {displayedEdits.map((e) => {
-            const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) as Gym : null;
-            const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) as Gym : null;
-            const changedFields = current && proposed ? computeDiff(current, proposed) : [];
+            const isPTEdit = e.editType === "pt";
+            const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) : null;
+            const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) : null;
+            const changedFields = current && proposed ? computeDiff(current, proposed, e.editType) : [];
 
             return (
               <div
@@ -724,7 +748,10 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
                       />
                     )}
                     <div>
-                      <p className="font-semibold text-gray-900">{e.gymName || e.gymId}</p>
+                      <p className="font-semibold text-gray-900 flex items-center gap-2">
+                        {e.gymName || e.gymId}
+                        {isPTEdit && <span className="text-xs bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded">PT</span>}
+                      </p>
                       <p className="text-xs text-gray-400">ID: {e.gymId}</p>
                     </div>
                   </div>

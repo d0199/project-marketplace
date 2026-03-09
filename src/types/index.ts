@@ -115,10 +115,11 @@ export interface GymEdit {
   gymId: string;
   gymName?: string;
   ownerEmail?: string;
-  currentSnapshot?: string; // JSON string of Gym
-  proposedChanges?: string; // JSON string of Gym
+  currentSnapshot?: string; // JSON string of Gym or PersonalTrainer
+  proposedChanges?: string; // JSON string of Gym or PersonalTrainer
   status: string; // "pending" | "approved" | "rejected"
   notes?: string;
+  editType?: string; // "gym" (default) | "pt"
   createdAt?: string;
   updatedAt?: string;
 }

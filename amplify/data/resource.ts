@@ -101,13 +101,14 @@ const schema = a.schema({
 
   GymEdit: a
     .model({
-      gymId: a.string().required(),
+      gymId: a.string().required(),  // gymId or ptId depending on editType
       gymName: a.string(),        // denormalized for display
       ownerEmail: a.string(),     // submitter's email
-      currentSnapshot: a.string(), // JSON of gym at time of submission
-      proposedChanges: a.string(), // JSON of proposed full gym
+      currentSnapshot: a.string(), // JSON of gym/PT at time of submission
+      proposedChanges: a.string(), // JSON of proposed full gym/PT
       status: a.string(),          // "pending" | "approved" | "rejected"
       notes: a.string(),           // internal admin notes
+      editType: a.string(),        // "gym" (default) | "pt"
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

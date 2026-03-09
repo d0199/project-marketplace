@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 import { requireAdmin } from "@/lib/adminAuth";
-import type { Gym } from "@/types";
+import type { Gym, PersonalTrainer } from "@/types";
 
 async function listAllEdits() {
   const results: Record<string, unknown>[] = [];
@@ -57,8 +58,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!edit) return res.status(404).json({ error: "Edit not found" });
         if (!edit.proposedChanges) return res.status(400).json({ error: "No proposed changes stored" });
 
-        const proposed = JSON.parse(edit.proposedChanges as string) as Gym;
-        await ownerStore.update(proposed);
+        const isPTEdit = edit.editType === "pt";
+        if (isPTEdit) {
+          const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
+          await ptStore.update(proposed);
+        } else {
+          const proposed = JSON.parse(edit.proposedChanges as string) as Gym;
+          await ownerStore.update(proposed);
+        }
+
         await dataClient.models.GymEdit.update({
           id,
           status: "approved",
