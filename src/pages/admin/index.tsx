@@ -1654,7 +1654,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   </span>
                 </label>
               </div>
-              <OwnerGymForm gym={panel.gym} onSave={handleSave} />
+              <OwnerGymForm gym={panel.gym} onSave={handleSave} isAdmin />
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, PO
 interface Props {
   gym: Gym;
   gymId?: string;
+  isAdmin?: boolean;
   onSave: (updated: Gym) => Promise<string | undefined | void> | string | undefined | void;
 }
 
@@ -20,7 +21,7 @@ const DAYS: (keyof OpeningHours)[] = [
   "sunday",
 ];
 
-export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
+export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
   const [form, setForm] = useState<Gym>({ ...gym });
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -210,7 +211,7 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
       </section>
 
       {/* Social Media + Booking — paid listings only */}
-      {form.isPaid && <section>
+      {(form.isPaid || isAdmin) && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
           Social Media &amp; Booking
         </h2>
@@ -388,7 +389,7 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
       </section>
 
       {/* Member Offers — paid listings only */}
-      {form.isPaid && <section>
+      {(form.isPaid || isAdmin) && <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
           Member Offers
         </h2>
@@ -585,7 +586,7 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
             </div>
           ))}
         </div>
-        {form.isPaid && (
+        {(form.isPaid || isAdmin) && (
           <div className="mt-4">
             <label className="flex items-center gap-2 cursor-pointer mb-2">
               <input
