@@ -35,6 +35,7 @@ interface CognitoUser {
   status: string;
   ownerId: string;
   isAdmin: string;
+  isSuperAdmin: string;
   enabled: boolean;
   createdAt?: string;
 }
@@ -102,6 +103,7 @@ export default function AdminPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "users" | "leads" | "datasets">("claims");
   const [adminEmail, setAdminEmail] = useState("");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
   const setClaimsPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, claims: n })), []);
   const setModerationPending = useCallback((n: number) => setPendingCounts((p) => ({ ...p, moderation: n })), []);
@@ -129,6 +131,7 @@ export default function AdminPage() {
         const user = await getCurrentUser();
         const attrs = await fetchUserAttributes();
         setAdminEmail(user.signInDetails?.loginId ?? attrs.email ?? "");
+        setIsSuperAdmin(attrs["custom:isSuperAdmin"] === "true");
         if (attrs["custom:isAdmin"] !== "true") {
           setAccessDenied(true);
         } else {
@@ -209,9 +212,9 @@ export default function AdminPage() {
         {tab === "claims" && <ClaimsTab onPendingCount={setClaimsPending} />}
         {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
-        {tab === "users" && <UsersTab />}
+        {tab === "users" && <UsersTab isSuperAdmin={isSuperAdmin} />}
         {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
-        {tab === "datasets" && <DatasetsTab />}
+        {tab === "datasets" && <DatasetsTab isSuperAdmin={isSuperAdmin} />}
       </div>
     </div>
   );
@@ -1784,7 +1787,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
 // ---------------------------------------------------------------------------
 // Users tab
 // ---------------------------------------------------------------------------
-function UsersTab() {
+function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const [users, setUsers] = useState<CognitoUser[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1792,7 +1795,7 @@ function UsersTab() {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [gymFilter, setGymFilter] = useState<"all" | "with-gym" | "no-gym">("all");
   const [showNew, setShowNew] = useState(false);
-  const [newForm, setNewForm] = useState({ email: "", password: "", ownerId: "", isAdmin: false });
+  const [newForm, setNewForm] = useState({ email: "", password: "", ownerId: "", isAdmin: false, isSuperAdmin: false });
   const [resetFor, setResetFor] = useState<string | null>(null);
   const [resetPw, setResetPw] = useState("");
   const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
@@ -1836,7 +1839,7 @@ function UsersTab() {
     if (r.ok) {
       showToast("User created.");
       setShowNew(false);
-      setNewForm({ email: "", password: "", ownerId: "", isAdmin: false });
+      setNewForm({ email: "", password: "", ownerId: "", isAdmin: false, isSuperAdmin: false });
       search(q);
     } else {
       const body = await r.json().catch(() => ({}));
@@ -1886,6 +1889,25 @@ function UsersTab() {
       search(q);
     } else {
       showToast("Error updating Owner ID.");
+    }
+  }
+
+  async function toggleSuperAdmin(username: string, email: string, currentValue: boolean) {
+    if (email.toLowerCase() === "admin@mynextgym.com.au" && currentValue) {
+      showToast("Cannot revoke super-admin from admin@mynextgym.com.au", true);
+      return;
+    }
+    const r = await adminFetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isSuperAdmin: currentValue ? "" : "true" }),
+    });
+    if (r.ok) {
+      showToast(currentValue ? "Super-admin revoked." : "Super-admin granted.");
+      search(q);
+    } else {
+      const body = await r.json().catch(() => ({}));
+      showToast(`Error: ${body.error ?? r.statusText}`, true);
     }
   }
 
@@ -1962,7 +1984,7 @@ function UsersTab() {
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
               <tr>
-                {["Email", "Status", "Owner ID", "Admin", "Actions"].map((h) => (
+                {["Email", "Status", "Owner ID", "Admin", "Super", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                 ))}
               </tr>
@@ -1979,6 +2001,23 @@ function UsersTab() {
                     {u.isAdmin === "true" ? (
                       <span className="text-brand-orange font-semibold">Yes</span>
                     ) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {u.isSuperAdmin === "true" ? (
+                      <span className="text-purple-600 font-semibold">Yes</span>
+                    ) : "—"}
+                    {isSuperAdmin && u.isAdmin === "true" && (
+                      <button
+                        onClick={() => toggleSuperAdmin(u.username, u.email, u.isSuperAdmin === "true")}
+                        className={`ml-2 text-xs font-medium ${
+                          u.isSuperAdmin === "true"
+                            ? "text-red-400 hover:text-red-600"
+                            : "text-purple-400 hover:text-purple-600"
+                        }`}
+                      >
+                        {u.isSuperAdmin === "true" ? "Revoke" : "Grant"}
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {editOwnerFor === u.username ? (
@@ -2072,7 +2111,7 @@ function UsersTab() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No users found.
                   </td>
                 </tr>
@@ -2142,6 +2181,17 @@ function UsersTab() {
                 />
                 <span className="text-sm text-gray-700">Admin user</span>
               </label>
+              {isSuperAdmin && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newForm.isSuperAdmin}
+                    onChange={(e) => setNewForm((f) => ({ ...f, isSuperAdmin: e.target.checked }))}
+                    className="w-4 h-4 accent-purple-600"
+                  />
+                  <span className="text-sm text-gray-700">Super-admin</span>
+                </label>
+              )}
             </div>
             <div className="flex gap-3 justify-end mt-5">
               <button
@@ -2312,7 +2362,7 @@ interface DatasetRecord {
   entries: string[];
 }
 
-function DatasetsTab() {
+function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const [datasets, setDatasets] = useState<DatasetRecord[]>([]);
   const [selected, setSelected] = useState<DatasetRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -2323,6 +2373,10 @@ function DatasetsTab() {
   const [saving, setSaving] = useState(false);
   const [newDatasetName, setNewDatasetName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [confirmWord, setConfirmWord] = useState("");
+  const [confirmInput, setConfirmInput] = useState("");
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2382,8 +2436,8 @@ function DatasetsTab() {
     } finally { setSaving(false); }
   }
 
-  async function deleteDataset() {
-    if (!selected || !confirm(`Delete dataset "${selected.name}"? This cannot be undone.`)) return;
+  async function doDeleteDataset() {
+    if (!selected) return;
     await adminFetch(`/api/admin/datasets?id=${selected.id}`, { method: "DELETE" });
     setSelected(null);
     setEntries([]);
@@ -2414,10 +2468,138 @@ function DatasetsTab() {
 
   const dirty = selected && JSON.stringify(entries) !== JSON.stringify(selected.entries);
 
+  // Compute removed entries (present in original but missing from current)
+  const removedEntries = selected
+    ? selected.entries.filter((e) => !entries.includes(e))
+    : [];
+
+  // Generate a random 6-letter word for confirmation
+  function generateConfirmWord() {
+    const words = ["orange", "basket", "rocket", "castle", "forest", "planet", "bridge", "marble", "garden", "silver", "sunset", "breeze"];
+    return words[Math.floor(Math.random() * words.length)];
+  }
+
+  function requestSaveConfirm() {
+    if (removedEntries.length > 0) {
+      const word = generateConfirmWord();
+      setConfirmWord(word);
+      setConfirmInput("");
+      setShowSaveConfirm(true);
+    } else {
+      saveDataset();
+    }
+  }
+
+  function requestDeleteConfirm() {
+    const word = generateConfirmWord();
+    setConfirmWord(word);
+    setConfirmInput("");
+    setShowDeleteConfirm(true);
+  }
+
   if (loading) return <p className="text-gray-400 py-8 text-center">Loading datasets...</p>;
 
   return (
     <div className="space-y-6">
+      {/* Confirmation modal for save (when entries removed) */}
+      {showSaveConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Save</h3>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-amber-800 font-medium mb-1">Warning: Removing entries from listings</p>
+              <p className="text-sm text-amber-700">
+                {removedEntries.length} {removedEntries.length === 1 ? "entry" : "entries"} will be removed from <strong>all gym listings</strong> that currently use {removedEntries.length === 1 ? "it" : "them"}:
+              </p>
+              <ul className="mt-2 space-y-0.5 max-h-32 overflow-y-auto">
+                {removedEntries.map((e) => (
+                  <li key={e} className="text-sm text-amber-800 font-medium">&bull; {e}</li>
+                ))}
+              </ul>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Type <strong className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{confirmWord}</strong> to confirm:
+            </p>
+            <input
+              type="text"
+              value={confirmInput}
+              onChange={(e) => setConfirmInput(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange mb-4"
+              placeholder={`Type "${confirmWord}" to confirm`}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && confirmInput === confirmWord) {
+                  setShowSaveConfirm(false);
+                  saveDataset();
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowSaveConfirm(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowSaveConfirm(false); saveDataset(); }}
+                disabled={confirmInput !== confirmWord}
+                className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                Confirm Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation modal for delete */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Delete Dataset</h3>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-red-800 font-medium mb-1">This cannot be undone</p>
+              <p className="text-sm text-red-700">
+                Deleting &ldquo;{selected?.name}&rdquo; will remove all {selected?.entries.length ?? 0} entries from every gym listing that uses them.
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Type <strong className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{confirmWord}</strong> to confirm:
+            </p>
+            <input
+              type="text"
+              value={confirmInput}
+              onChange={(e) => setConfirmInput(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-4"
+              placeholder={`Type "${confirmWord}" to confirm`}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && confirmInput === confirmWord) {
+                  setShowDeleteConfirm(false);
+                  doDeleteDataset();
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowDeleteConfirm(false); doDeleteDataset(); }}
+                disabled={confirmInput !== confirmWord}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                Delete Dataset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-end gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Select dataset</label>
@@ -2435,74 +2617,86 @@ function DatasetsTab() {
             ))}
           </select>
         </div>
-        <div className="flex items-end gap-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New dataset</label>
-            <input
-              type="text"
-              value={newDatasetName}
-              onChange={(e) => setNewDatasetName(e.target.value)}
-              placeholder="e.g. class-types"
-              className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); createDataset(); } }}
-            />
+        {isSuperAdmin && (
+          <div className="flex items-end gap-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New dataset</label>
+              <input
+                type="text"
+                value={newDatasetName}
+                onChange={(e) => setNewDatasetName(e.target.value)}
+                placeholder="e.g. class-types"
+                className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); createDataset(); } }}
+              />
+            </div>
+            <button
+              onClick={createDataset}
+              disabled={creating || !newDatasetName.trim()}
+              className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              Create
+            </button>
           </div>
-          <button
-            onClick={createDataset}
-            disabled={creating || !newDatasetName.trim()}
-            className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
-          >
-            Create
-          </button>
-        </div>
+        )}
       </div>
+
+      {!isSuperAdmin && (
+        <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-4 py-3">
+          Dataset editing is restricted to super-admins. Contact admin@mynextgym.com.au for changes.
+        </p>
+      )}
 
       {selected && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">{selected.name}</h3>
-            <div className="flex items-center gap-2">
-              {dirty && (
-                <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
-              )}
-              <button
-                onClick={saveDataset}
-                disabled={saving || !dirty}
-                className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={deleteDataset}
-                className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors"
-              >
-                Delete
-              </button>
-            </div>
+            {isSuperAdmin && (
+              <div className="flex items-center gap-2">
+                {dirty && (
+                  <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
+                )}
+                <button
+                  onClick={requestSaveConfirm}
+                  disabled={saving || !dirty}
+                  className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={requestDeleteConfirm}
+                  className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Add entry */}
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={newEntry}
-              onChange={(e) => setNewEntry(e.target.value)}
-              placeholder="Add new entry..."
-              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addEntry(); } }}
-            />
-            <button
-              onClick={addEntry}
-              disabled={!newEntry.trim() || entries.includes(newEntry.trim())}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
-            >
-              Add
-            </button>
-          </div>
+          {/* Add entry — superadmin only */}
+          {isSuperAdmin && (
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newEntry}
+                onChange={(e) => setNewEntry(e.target.value)}
+                placeholder="Add new entry..."
+                className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addEntry(); } }}
+              />
+              <button
+                onClick={addEntry}
+                disabled={!newEntry.trim() || entries.includes(newEntry.trim())}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+          )}
 
           {/* Entries list */}
           {entries.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No entries yet. Add one above.</p>
+            <p className="text-sm text-gray-400 py-4 text-center">No entries yet.{isSuperAdmin ? " Add one above." : ""}</p>
           ) : (
             <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
               {entries.map((entry, idx) => (
@@ -2523,18 +2717,22 @@ function DatasetsTab() {
                   ) : (
                     <>
                       <span className="flex-1 text-sm text-gray-800">{entry}</span>
-                      <button
-                        onClick={() => startEdit(idx)}
-                        className="text-xs text-gray-400 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => removeEntry(idx)}
-                        className="text-xs text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        Remove
-                      </button>
+                      {isSuperAdmin && (
+                        <>
+                          <button
+                            onClick={() => startEdit(idx)}
+                            className="text-xs text-gray-400 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => removeEntry(idx)}
+                            className="text-xs text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
