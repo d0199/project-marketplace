@@ -295,7 +295,7 @@ export default function SearchBar({
             type="button"
             onClick={handleLocate}
             disabled={locating}
-            className="px-3 py-3 hover:text-brand-orange text-gray-500 transition-colors disabled:opacity-50 flex flex-col items-center"
+            className="px-3 py-3 hover:text-brand-orange text-gray-500 transition-colors disabled:opacity-50"
             title="Use my location"
             aria-label="Use my location"
           >
@@ -314,7 +314,6 @@ export default function SearchBar({
                 <line x1="20" y1="12" x2="22" y2="12" />
               </svg>
             )}
-            <span className="text-[10px] leading-tight">Use GPS</span>
           </button>
         </div>
         {error && <p className="mt-1 text-sm font-bold text-white">{error}</p>}
