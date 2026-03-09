@@ -29,7 +29,7 @@ function normalize(s: string) {
 export default function SearchBar({
   initialValue = "",
   onSearch,
-  suburbIndex = [],
+  suburbIndex,
   gymIndex = [],
 }: Props) {
   const router = useRouter();
@@ -37,7 +37,9 @@ export default function SearchBar({
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [suburbMatches, setSuburbMatches] = useState<SuburbSuggestion[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Close on outside click
   useEffect(() => {
@@ -51,18 +53,41 @@ export default function SearchBar({
   const query = value.trim();
   const isPostcodeInput = /^\d+$/.test(query);
 
-  const suburbMatches = useMemo<SuburbSuggestion[]>(() => {
-    if (query.length < 2 || isPostcodeInput) return [];
-    const q = normalize(query);
-    return suburbIndex
-      .filter((s) => normalize(s.name).includes(q))
-      .sort((a, b) => {
-        const aS = normalize(a.name).startsWith(q) ? 0 : 1;
-        const bS = normalize(b.name).startsWith(q) ? 0 : 1;
-        return aS - bS || a.name.localeCompare(b.name);
-      })
-      .slice(0, 5);
-  }, [query, suburbIndex, isPostcodeInput]);
+  // Fetch suburb suggestions from API (debounced)
+  useEffect(() => {
+    if (query.length < 2 || isPostcodeInput) {
+      setSuburbMatches([]);
+      return;
+    }
+
+    // If suburbIndex was passed as prop (e.g. from other pages), use it directly
+    if (suburbIndex) {
+      const q = normalize(query);
+      const matches = suburbIndex
+        .filter((s) => normalize(s.name).includes(q))
+        .sort((a, b) => {
+          const aS = normalize(a.name).startsWith(q) ? 0 : 1;
+          const bS = normalize(b.name).startsWith(q) ? 0 : 1;
+          return aS - bS || a.name.localeCompare(b.name);
+        })
+        .slice(0, 5);
+      setSuburbMatches(matches);
+      return;
+    }
+
+    // Debounce API calls
+    const timer = setTimeout(() => {
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      fetch(`/api/suburbs?q=${encodeURIComponent(query)}`, { signal: ctrl.signal })
+        .then((r) => r.json())
+        .then((data: SuburbSuggestion[]) => setSuburbMatches(data))
+        .catch(() => {});
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [query, isPostcodeInput, suburbIndex]);
 
   const gymMatches = useMemo<GymSuggestion[]>(() => {
     if (query.length < 2 || isPostcodeInput) return [];
@@ -121,12 +146,27 @@ export default function SearchBar({
       // Handle "Suburb, STATE" format (set by pickSuburb) — re-submitted via Search button
       const nameState = t.match(/^([^,]+),\s*([A-Za-z]{2,3})$/);
       if (nameState) {
-        const found = suburbIndex.find(
+        // Try local suburbIndex first, then fall back to API
+        const localMatch = suburbIndex?.find(
           (s) =>
             normalize(s.name) === normalize(nameState[1]) &&
             s.state.toUpperCase() === nameState[2].toUpperCase()
         );
-        if (found) { pickSuburb(found); return; }
+        if (localMatch) { pickSuburb(localMatch); return; }
+        // Try API lookup
+        fetch(`/api/suburbs?q=${encodeURIComponent(nameState[1])}`)
+          .then((r) => r.json())
+          .then((data: SuburbSuggestion[]) => {
+            const found = data.find(
+              (s) =>
+                normalize(s.name) === normalize(nameState![1]) &&
+                s.state.toUpperCase() === nameState![2].toUpperCase()
+            );
+            if (found) pickSuburb(found);
+            else setError("Enter a postcode, suburb or gym name.");
+          })
+          .catch(() => setError("Enter a postcode, suburb or gym name."));
+        return;
       }
       if (gymMatches.length > 0) {
         pickGym(gymMatches[0]);

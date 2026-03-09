@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
@@ -9,8 +10,7 @@ import SearchBar from "@/components/SearchBar";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
 import GymCard from "@/components/GymCard";
-import { filterGyms, rankGyms, POSTCODE_META, ALL_SUBURB_INDEX, type GymWithDistance } from "@/lib/utils";
-import type { SuburbSuggestion } from "@/components/SearchBar";
+import { filterGyms, rankGyms, POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
 
@@ -20,10 +20,9 @@ const MAX_RADIUS = 50;
 
 interface Props {
   gyms: Gym[];
-  suburbIndex: SuburbSuggestion[];
 }
 
-export default function HomePage({ gyms, suburbIndex }: Props) {
+export default function HomePage({ gyms }: Props) {
   const router = useRouter();
   const [postcode, setPostcode] = useState("");
   const [searchLabel, setSearchLabel] = useState("");
@@ -114,7 +113,7 @@ export default function HomePage({ gyms, suburbIndex }: Props) {
       </Head>
       <Layout hero={
         <div className="relative overflow-hidden" style={{ height: 460 }}>
-          <img src="/stock/Hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <Image src="/stock/Hero.jpg" alt="" fill className="object-cover" priority sizes="100vw" />
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 drop-shadow-lg">
@@ -128,7 +127,6 @@ export default function HomePage({ gyms, suburbIndex }: Props) {
               <SearchBar
                 onSearch={handleSearch}
                 initialValue={postcode}
-                suburbIndex={suburbIndex}
                 gymIndex={gymIndex}
               />
             </div>
@@ -376,5 +374,5 @@ export default function HomePage({ gyms, suburbIndex }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  return { props: { gyms: await ownerStore.getAll(), suburbIndex: ALL_SUBURB_INDEX } };
+  return { props: { gyms: await ownerStore.getAll() } };
 };

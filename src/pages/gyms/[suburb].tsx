@@ -2,16 +2,16 @@ import React, { useState, useMemo } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import SearchBar, { type SuburbSuggestion, type GymSuggestion } from "@/components/SearchBar";
+import SearchBar, { type GymSuggestion } from "@/components/SearchBar";
 import GymCard from "@/components/GymCard";
 import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
 import {
   POSTCODE_COORDS,
   POSTCODE_META,
-  ALL_SUBURB_INDEX,
   filterGyms,
   type GymWithDistance,
 } from "@/lib/utils";
@@ -24,11 +24,10 @@ interface Props {
   suburbName: string;
   slug: string;
   gyms: GymWithDistance[];
-  suburbIndex: SuburbSuggestion[];
   gymIndex: GymSuggestion[];
 }
 
-export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbIndex, gymIndex }: Props) {
+export default function SuburbPage({ postcode, suburbName, slug, gyms, gymIndex }: Props) {
   const router = useRouter();
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
@@ -104,7 +103,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbInd
 
         {/* Hero */}
         <div className="relative rounded-2xl overflow-hidden mb-8" style={{ height: 340 }}>
-          <img src="/stock/Hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <Image src="/stock/Hero.jpg" alt="" fill className="object-cover" priority sizes="100vw" />
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-2 drop-shadow-lg">
@@ -118,7 +117,6 @@ export default function SuburbPage({ postcode, suburbName, slug, gyms, suburbInd
             <div className="w-full max-w-xl">
               <SearchBar
                 onSearch={handleSearch}
-                suburbIndex={suburbIndex}
                 gymIndex={gymIndex}
               />
             </div>
@@ -332,9 +330,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
   const gyms = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 });
 
-  // Suburb index: full postcode database
-  const suburbIndex: SuburbSuggestion[] = ALL_SUBURB_INDEX;
-
   // Build gym index
   const gymIndex: GymSuggestion[] = allGyms
     .filter((g) => g.isActive !== false && !g.isTest)
@@ -345,5 +340,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
       state: g.address?.state || "",
     }));
 
-  return { props: { postcode, suburbName, slug, gyms, suburbIndex, gymIndex } };
+  return { props: { postcode, suburbName, slug, gyms, gymIndex } };
 };

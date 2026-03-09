@@ -57,7 +57,6 @@ export default function ImageCarousel({
             className={objectFit === "contain" ? "object-contain" : "object-cover"}
             style={objectFit === "cover" ? { objectPosition: `center ${focalPoints?.[i] ?? 50}%` } : undefined}
             sizes={sizes}
-            unoptimized
             priority={i === 0}
           />
         </div>

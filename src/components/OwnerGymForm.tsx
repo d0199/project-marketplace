@@ -433,7 +433,6 @@ export default function OwnerGymForm({ gym, gymId, onSave }: Props) {
                       fill
                       className="object-cover"
                       style={{ objectPosition: `center ${focalY}%` }}
-                      unoptimized
                       sizes="64px"
                     />
                   </div>
