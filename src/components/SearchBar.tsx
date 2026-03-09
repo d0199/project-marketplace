@@ -316,7 +316,7 @@ export default function SearchBar({
             )}
           </button>
         </div>
-        {error && <p className="mt-1 text-sm font-bold text-white">{error}</p>}
+        {error && <p className="mt-1 text-sm font-bold text-gray-300">{error}</p>}
       </form>
 
       {hasDropdown && (
