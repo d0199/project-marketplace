@@ -1,34 +1,44 @@
 #!/usr/bin/env npx tsx
 /**
- * Seed PersonalTrainer records from Google Places CSV into DynamoDB.
+ * Seed PersonalTrainer records from Google Places CSV into DynamoDB
+ * via direct AppSync GraphQL mutations.
  *
  * Usage:
- *   npx tsx scripts/seed-pts.ts                     # all rows
- *   npx tsx scripts/seed-pts.ts --state WA          # WA only
+ *   npx tsx scripts/seed-pts.ts --state WA
  *   npx tsx scripts/seed-pts.ts --state WA --limit 50
- *   npx tsx scripts/seed-pts.ts --dry-run            # print without writing
+ *   npx tsx scripts/seed-pts.ts --dry-run
  *
  * Safe to re-run: uses googlePlaceId-based deterministic IDs (pt-<hash>),
- * so duplicate creates will error harmlessly.
+ * so duplicate creates will error harmlessly (ConditionalCheckFailed).
  */
 
-import { Amplify } from "aws-amplify";
-import { generateClient } from "aws-amplify/data";
-import { createRequire } from "module";
 import { parse } from "csv-parse/sync";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import type { Schema } from "../amplify/data/resource.js";
+import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const outputs = require("../amplify_outputs.json");
 
-Amplify.configure(outputs);
-const client = generateClient<Schema>({ authMode: "apiKey" });
+const APPSYNC_URL: string = outputs.data?.url;
+const API_KEY: string = outputs.data?.api_key;
+
+if (!APPSYNC_URL || !API_KEY) {
+  console.error("Missing data.url or data.api_key in amplify_outputs.json");
+  process.exit(1);
+}
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const INPUT_CSV = path.resolve("data/pts_google_2026-03-10.csv");
+
+const CREATE_MUTATION = `
+  mutation CreatePT($input: CreatePersonalTrainerInput!) {
+    createPersonalTrainer(input: $input) {
+      id
+    }
+  }
+`;
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -49,13 +59,11 @@ function placeIdToPtId(googlePlaceId: string): string {
   return `pt-${hash}`;
 }
 
-/** Clean phone: remove spaces, keep +61 prefix */
 function cleanPhone(phone: string): string {
   if (!phone) return "";
   return phone.replace(/\s+/g, "").trim();
 }
 
-/** Format hours into the format used by the PT model */
 function formatAvailability(row: Record<string, string>): string {
   const days = [
     ["Mon", row.hoursMonday],
@@ -69,7 +77,6 @@ function formatAvailability(row: Record<string, string>): string {
 
   if (!days.length) return "";
 
-  // Group consecutive days with same hours
   const groups: { days: string[]; hours: string }[] = [];
   for (const [day, hours] of days) {
     const last = groups[groups.length - 1];
@@ -91,7 +98,6 @@ function formatAvailability(row: Record<string, string>): string {
     .join(", ");
 }
 
-/** Infer specialties from Google Places types */
 function inferSpecialties(types: string, primaryType: string, name: string): string[] {
   const specs: string[] = [];
   const lower = `${types} ${primaryType} ${name}`.toLowerCase();
@@ -110,10 +116,28 @@ function inferSpecialties(types: string, primaryType: string, name: string): str
   if (lower.includes("sport") || lower.includes("athletic"))
     specs.push("Sports Performance");
 
-  // Default if nothing matched
   if (!specs.length) specs.push("Personal Training");
-
   return specs;
+}
+
+async function gqlMutate(input: Record<string, any>): Promise<{ ok: boolean; error?: string }> {
+  const resp = await fetch(APPSYNC_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": API_KEY,
+    },
+    body: JSON.stringify({
+      query: CREATE_MUTATION,
+      variables: { input },
+    }),
+  });
+
+  const json = await resp.json();
+  if (json.errors?.length) {
+    return { ok: false, error: json.errors[0].message };
+  }
+  return { ok: true };
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -132,31 +156,24 @@ async function main() {
   );
   console.log(`Loaded ${allRows.length.toLocaleString()} rows from CSV`);
 
-  // Filter by state
   let rows = opts.state
     ? allRows.filter((r) => (r.addressState || "").toUpperCase() === opts.state)
     : allRows;
   if (opts.state)
     console.log(`Filtered to ${rows.length.toLocaleString()} rows in ${opts.state}`);
 
-  // Filter out non-operational businesses
   rows = rows.filter((r) => !r.businessStatus || r.businessStatus === "OPERATIONAL");
   console.log(`Operational: ${rows.length.toLocaleString()}`);
 
-  // Filter out rows without lat/lng
   rows = rows.filter((r) => r.lat && r.lng && parseFloat(r.lat) !== 0);
   console.log(`With coordinates: ${rows.length.toLocaleString()}`);
 
-  // Limit
   if (opts.limit) {
     rows = rows.slice(0, opts.limit);
     console.log(`Limited to first ${rows.length}`);
   }
 
-  if (!rows.length) {
-    console.log("Nothing to seed.");
-    return;
-  }
+  if (!rows.length) { console.log("Nothing to seed."); return; }
 
   if (opts.dryRun) {
     console.log(`\n[DRY RUN] Would seed ${rows.length} PTs. First 5:`);
@@ -168,7 +185,7 @@ async function main() {
     return;
   }
 
-  console.log(`\nSeeding ${rows.length} PTs into DynamoDB…\n`);
+  console.log(`\nSeeding ${rows.length} PTs via AppSync…\n`);
 
   let ok = 0;
   let skipped = 0;
@@ -183,57 +200,51 @@ async function main() {
     const availability = formatAvailability(r);
     const specialties = inferSpecialties(r.types || "", r.primaryType || "", r.name || "");
 
-    try {
-      const { errors } = await (client.models as any).PersonalTrainer.create({
-        id: ptId,
-        ownerId: "unclaimed",
-        name: r.name || "Unknown",
-        isActive: true,
-        isTest: false,
-        isFeatured: false,
-        isPaid: false,
-        createdBy: "google-places-seed",
-        description: r.description || `${r.name} in ${r.addressSuburb || r.addressState || "Australia"}.`,
-        images: [],
-        lat: parseFloat(r.lat),
-        lng: parseFloat(r.lng),
-        addressStreet: r.addressStreet || "",
-        addressSuburb: r.addressSuburb || "",
-        addressState: r.addressState || "",
-        addressPostcode: r.addressPostcode || "",
-        phone: cleanPhone(r.phone || r.internationalPhone || ""),
-        email: "", // Google Places doesn't provide email
-        website: r.website || "",
-        gymIds: [],
-        specialties,
-        qualifications: [],
-        availability: availability || undefined,
-        languages: ["English"],
-      });
+    const input: Record<string, any> = {
+      id: ptId,
+      ownerId: "unclaimed",
+      name: r.name || "Unknown",
+      isActive: true,
+      isTest: false,
+      isFeatured: false,
+      isPaid: false,
+      createdBy: "google-places-seed",
+      description: r.description || `${r.name} in ${r.addressSuburb || r.addressState || "Australia"}.`,
+      images: [],
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lng),
+      addressStreet: r.addressStreet || "",
+      addressSuburb: r.addressSuburb || "",
+      addressState: r.addressState || "",
+      addressPostcode: r.addressPostcode || "",
+      phone: cleanPhone(r.phone || r.internationalPhone || ""),
+      email: "",
+      website: r.website || "",
+      gymIds: [],
+      specialties,
+      qualifications: [],
+      languages: ["English"],
+    };
+    if (availability) input.availability = availability;
 
-      if (errors?.length) {
-        // "ConditionalCheckFailed" = already exists → skip
-        const isExists = errors.some((e: any) =>
-          e.message?.includes("Conditional") || e.message?.includes("already exists")
-        );
-        if (isExists) {
-          skipped++;
-          process.stdout.write(`${label} SKIP ${r.name}\r`);
-        } else {
-          failed++;
-          console.log(`${label} FAIL ${r.name}: ${errors.map((e: any) => e.message).join(", ")}`);
-        }
-      } else {
-        ok++;
-        process.stdout.write(`${label}  OK  ${r.name}\r`);
+    const result = await gqlMutate(input);
+
+    if (result.ok) {
+      ok++;
+      if (ok % 50 === 0 || i === rows.length - 1) {
+        process.stdout.write(`${label}  OK  ${r.name} (${ok} created)\n`);
       }
-    } catch (err: any) {
+    } else if (result.error?.includes("Conditional") || result.error?.includes("already exists")) {
+      skipped++;
+    } else {
       failed++;
-      console.log(`${label} ERR  ${r.name}: ${String(err).slice(0, 100)}`);
+      if (failed <= 10) {
+        console.log(`${label} FAIL ${r.name}: ${result.error?.slice(0, 120)}`);
+      }
     }
   }
 
-  console.log(`\n\n── Done ──`);
+  console.log(`\n── Done ──`);
   console.log(`  Created : ${ok}`);
   console.log(`  Skipped : ${skipped} (already exist)`);
   console.log(`  Failed  : ${failed}`);
