@@ -59,6 +59,8 @@
     "gymIds": ["gym-001", "gym-002"],
     "specialties": ["Sports Performance", "Boxing", "Rehabilitation", "Strength Training", "Athletic Conditioning"],
     "qualifications": ["Bachelor of Exercise Science", "Cert IV in Fitness", "Boxing Australia Coach Level 1", "First Aid CPR"],
+    "qualificationsVerified": true,
+    "qualificationsNotes": "Verified via AIF portal and Boxing Australia registry",
     "experienceYears": 12,
     "pricePerSession": 110,
     "sessionDuration": 60,

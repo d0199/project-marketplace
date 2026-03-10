@@ -77,6 +77,7 @@ function buildJsonLd(pt: PersonalTrainer) {
 export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [isInternalUser, setIsInternalUser] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -88,12 +89,14 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
         setIsAdmin(attributes["custom:isAdmin"] === "true");
         const email = user.signInDetails?.loginId ?? attributes.email ?? "";
         setIsInternalUser(email.endsWith("@mynextgym.com.au"));
+        const ownerId = attributes["custom:ownerId"] ?? "";
+        setIsOwner(ownerId === pt.ownerId);
         setAuthChecked(true);
       })
       .catch(() => {
         setAuthChecked(true);
       });
-  }, []);
+  }, [pt.ownerId]);
 
   // Block non-internal users from viewing test PTs
   useEffect(() => {
@@ -211,53 +214,44 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
             {/* Qualifications */}
             {pt.qualifications.length > 0 && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Qualifications</h2>
-                  {pt.qualificationsVerified && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Verified
-                    </span>
-                  )}
-                </div>
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Qualifications</h2>
                 <ul className="space-y-2">
                   {pt.qualifications.map((q) => (
                     <li key={q} className="flex items-center gap-2 text-sm text-gray-700">
-                      {pt.qualificationsVerified ? (
-                        <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4 shrink-0 text-gray-300" fill="none" viewBox="0 0 20 20" stroke="currentColor" strokeWidth={2}>
-                          <circle cx="10" cy="10" r="7" />
-                        </svg>
-                      )}
+                      <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                       {q}
                     </li>
                   ))}
                 </ul>
-                {pt.qualificationsNotes && (
-                  <p className="mt-3 text-xs text-gray-400 flex items-center gap-1">
-                    <svg className="w-3 h-3 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                {pt.qualificationsVerified ? (
+                  <p className="mt-3 text-xs text-green-600 flex items-center gap-1">
+                    <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {pt.qualificationsNotes}
+                    Verified
                   </p>
-                )}
-                {!pt.qualificationsVerified && (
-                  <button
-                    onClick={() => setShowVerifyModal(true)}
-                    className="mt-4 w-full text-center text-sm font-medium text-brand-orange border border-brand-orange rounded-lg py-2 hover:bg-orange-50 transition-colors"
-                  >
-                    Verify my qualifications
-                  </button>
+                ) : (
+                  <p className="mt-3 text-xs text-gray-400">
+                    Unverified
+                    {isOwner && (
+                      <>
+                        {" — "}
+                        <button
+                          onClick={() => setShowVerifyModal(true)}
+                          className="text-brand-orange hover:underline"
+                        >
+                          Verify my qualifications
+                        </button>
+                      </>
+                    )}
+                  </p>
                 )}
               </section>
             )}
 
-            {/* Qualification verification modal */}
+            {/* Qualification verification modal — owner only */}
             {showVerifyModal && (
               <QualificationVerifyModal
                 ptId={pt.id}
