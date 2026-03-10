@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
 import { POSTCODE_COORDS } from "@/lib/utils";
+import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 
 interface Props {
   adminEmail?: string;
@@ -851,20 +852,12 @@ function PTEditPanel({
 
           {/* Custom Enquiry Fields */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Custom Enquiry Fields <span className="text-xs font-normal text-gray-400">(JSON)</span></h3>
-            <textarea
-              className={inputCls}
-              rows={4}
-              value={JSON.stringify(pt.customLeadFields ?? [], null, 2)}
-              onChange={(e) => {
-                try {
-                  const parsed = JSON.parse(e.target.value);
-                  if (Array.isArray(parsed)) update({ customLeadFields: parsed });
-                } catch { /* invalid JSON, ignore */ }
-              }}
-              placeholder='[{"label":"Goal","type":"select","options":["Weight Loss","Muscle Gain"],"required":true}]'
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Custom Enquiry Fields</h3>
+            <p className="text-xs text-gray-500 mb-3">Add extra questions to your contact form. Prospects will see these when sending an enquiry.</p>
+            <CustomLeadFieldsEditor
+              fields={pt.customLeadFields ?? []}
+              onChange={(customLeadFields) => update({ customLeadFields })}
             />
-            <p className="text-xs text-gray-400 mt-1">Array of {`{label, type: "text"|"textarea"|"select", options?, required?}`}</p>
           </section>
         </div>
       </div>
