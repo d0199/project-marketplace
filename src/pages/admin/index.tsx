@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
+import { getUrl } from "aws-amplify/storage";
 import type { Gym, GymEdit } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
 import PTsTab from "@/components/admin/PTsTab";
@@ -872,13 +873,27 @@ function ModerationTab({ onPendingCount, adminEmail }: { onPendingCount?: (n: nu
                     {proposed.qualificationEvidenceFiles && (
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Uploaded files:</p>
-                        <ul className="text-sm text-gray-700 space-y-0.5">
+                        <ul className="text-sm text-gray-700 space-y-1">
                           {proposed.qualificationEvidenceFiles.split(",").map((key: string, i: number) => (
-                            <li key={i} className="flex items-center gap-1.5">
-                              <svg className="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                              </svg>
-                              <span className="truncate text-xs">{key.split("/").pop()}</span>
+                            <li key={i}>
+                              <button
+                                type="button"
+                                className="flex items-center gap-1.5 text-brand-orange hover:text-brand-orange-dark hover:underline"
+                                onClick={async () => {
+                                  try {
+                                    const result = await getUrl({ path: key, options: { expiresIn: 3600 } });
+                                    window.open(result.url.toString(), "_blank");
+                                  } catch (err) {
+                                    console.error("Failed to get file URL:", err);
+                                    alert("Unable to open file. The storage may not be configured.");
+                                  }
+                                }}
+                              >
+                                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                                <span className="truncate text-xs">{key.split("/").pop()}</span>
+                              </button>
                             </li>
                           ))}
                         </ul>
