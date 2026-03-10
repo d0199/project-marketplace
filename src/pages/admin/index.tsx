@@ -385,6 +385,26 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
                     {c.claimType === "pt" && (
                       <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-600 text-white">PT Claim</span>
                     )}
+                    {!c.isNewListing && c.gymId && c.gymId !== "new" && (
+                      <a
+                        href={c.claimType === "pt" ? `/pt/${c.gymId}` : `/gym/${c.gymId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-brand-orange hover:underline font-medium"
+                      >
+                        View profile &rarr;
+                      </a>
+                    )}
+                    {c.status === "approved" && c.isNewListing && c.gymId && c.gymId !== "new" && (
+                      <a
+                        href={c.claimType === "pt" ? `/pt/${c.gymId}` : `/gym/${c.gymId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-green-600 hover:underline font-medium"
+                      >
+                        View created profile &rarr;
+                      </a>
+                    )}
                   </div>
                   <p className="text-xs text-gray-400">{c.isNewListing ? `${c.gymSuburb ?? ""} ${c.gymPostcode ?? ""}`.trim() : c.gymAddress}</p>
                 </div>
@@ -412,6 +432,33 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
                   <p className="text-gray-800">{fmtDate(c.createdAt)}</p>
                 </div>
               </div>
+
+              {/* Listing details for new submissions */}
+              {c.isNewListing && (c.gymPhone || c.gymEmail || c.gymWebsite) && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-3 bg-blue-50 rounded-lg p-3">
+                  <div className="col-span-full">
+                    <p className="text-xs text-blue-600 font-semibold mb-1">Submitted listing details</p>
+                  </div>
+                  {c.gymPhone && (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">Listing phone</p>
+                      <p className="text-gray-800">{c.gymPhone}</p>
+                    </div>
+                  )}
+                  {c.gymEmail && (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">Listing email</p>
+                      <p className="text-gray-800 break-all">{c.gymEmail}</p>
+                    </div>
+                  )}
+                  {c.gymWebsite && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-gray-400 mb-0.5">Website</p>
+                      <a href={c.gymWebsite} target="_blank" rel="noopener noreferrer" className="text-brand-orange hover:underline text-sm break-all">{c.gymWebsite}</a>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Message */}
               {c.message && (
