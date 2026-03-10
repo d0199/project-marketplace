@@ -53,9 +53,9 @@ const PT_PRICES = {
 
 const PAID_FEATURES = [
   "Contact enquiry form",
-  "Instagram & Facebook links",
+  "Social media links",
   "Hours comment / notes",
-  "Member offers section",
+  "Member offers",
   "Specialties tags",
 ];
 
@@ -73,8 +73,8 @@ const PT_PAID_FEATURES = [
 ];
 
 const PT_FEATURED_FEATURES = [
+  "Pinned to top of search results",
   "Featured badge on profile",
-  "Priority in search results",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -286,7 +286,7 @@ function GymRow({
             </div>
             <ul className="space-y-1.5 text-xs text-gray-600 flex-1">
               <li>✓ Basic listing</li>
-              <li>✓ Search visibility</li>
+              <li>✓ Improved search visibility</li>
               {PAID_FEATURES.map((f) => (
                 <li key={f}>✓ {f}</li>
               ))}
@@ -352,7 +352,7 @@ function GymRow({
             </div>
             <ul className="space-y-1.5 text-xs text-gray-600 flex-1">
               <li>✓ Basic listing</li>
-              <li>✓ Search visibility</li>
+              <li>✓ Improved search visibility</li>
               {PAID_FEATURES.map((f) => (
                 <li key={f}>✓ {f}</li>
               ))}
@@ -518,12 +518,12 @@ function PTRow({
             </div>
             <div className="text-2xl font-bold text-gray-400 mb-3">$0</div>
             <ul className="space-y-1.5 text-xs text-gray-400 flex-1">
-              <li>✓ Basic profile</li>
+              <li>✓ Basic listing</li>
               <li>✓ Search visibility</li>
               <li className="text-gray-300">✗ Contact form</li>
               <li className="text-gray-300">✗ Social links</li>
-              <li className="text-gray-300">✗ Booking link</li>
-              <li className="text-gray-300">✗ Featured badge</li>
+              <li className="text-gray-300">✗ Specialties</li>
+              <li className="text-gray-300">✗ Featured placement</li>
             </ul>
             {currentPlan && (
               <div className="mt-4">
@@ -538,10 +538,10 @@ function PTRow({
             )}
           </div>
 
-          {/* Basic ($12) */}
+          {/* Paid ($12) */}
           <div className={`p-5 flex flex-col ${currentPlan === "paid" ? "bg-green-50" : ""}`}>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-semibold text-gray-700">Basic</span>
+              <span className="text-sm font-semibold text-gray-700">Paid</span>
               {currentPlan === "paid" && (
                 <span className="text-xs bg-green-200 text-green-800 font-semibold px-2 py-0.5 rounded-full">Current</span>
               )}
@@ -550,12 +550,12 @@ function PTRow({
               <PTPrice plan="paid" interval={interval} />
             </div>
             <ul className="space-y-1.5 text-xs text-gray-600 flex-1">
-              <li>✓ Basic profile</li>
-              <li>✓ Search visibility</li>
+              <li>✓ Basic listing</li>
+              <li>✓ Improved search visibility</li>
               {PT_PAID_FEATURES.map((f) => (
                 <li key={f}>✓ {f}</li>
               ))}
-              <li className="text-gray-300">✗ Featured badge</li>
+              <li className="text-gray-300">✗ Featured placement</li>
             </ul>
             <div className="mt-4">
               {currentPlan === "paid" ? (
@@ -592,7 +592,7 @@ function PTRow({
                   disabled={busy === `${pt.id}-paid`}
                   className="w-full text-sm py-2 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
                 >
-                  {busy === `${pt.id}-paid` ? "Loading…" : "Upgrade to Basic"}
+                  {busy === `${pt.id}-paid` ? "Loading…" : "Upgrade to Paid"}
                 </button>
               )}
             </div>
@@ -610,8 +610,8 @@ function PTRow({
               <PTPrice plan="featured" interval={interval} />
             </div>
             <ul className="space-y-1.5 text-xs text-gray-600 flex-1">
-              <li>✓ Basic profile</li>
-              <li>✓ Search visibility</li>
+              <li>✓ Basic listing</li>
+              <li>✓ Improved search visibility</li>
               {PT_PAID_FEATURES.map((f) => (
                 <li key={f}>✓ {f}</li>
               ))}
