@@ -205,7 +205,7 @@ export default function AdminPage() {
         {tab === "users" && <UsersTab isSuperAdmin={isSuperAdmin} />}
         {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
         {tab === "datasets" && <DatasetsTab isSuperAdmin={isSuperAdmin} />}
-        {tab === "flags" && <FeatureFlagsTab />}
+        {tab === "flags" && <FeatureFlagsTab isSuperAdmin={isSuperAdmin} />}
       </div>
     </div>
   );

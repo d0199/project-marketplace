@@ -258,9 +258,62 @@ export default function HomePage({ flags }: Props) {
     },
   ];
 
-  // PT hero specialty chips
-  const ptHeroSpecialties = [
-    "Strength Training", "Weight Loss", "Boxing", "Yoga", "HIIT", "Pilates", "Rehab", "Sports Performance",
+  // PT hero specialty icons — same visual pattern as gym amenity icons
+  const ptHeroIcons = [
+    {
+      key: "Weight Loss", label: "weight loss",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+          <path d="M12 3v18M8 7l4-4 4 4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 13a7 7 0 0014 0" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      key: "Strength Training", label: "strength",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+          <path d="M6 12h12" strokeLinecap="round" />
+          <path d="M3 9v6M6 9v6M18 9v6M21 9v6" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      key: "Boxing", label: "boxing",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+          <path d="M18 11V8a4 4 0 00-4-4H9a4 4 0 00-4 4v5a4 4 0 004 4h1l2 3 2-3h1a4 4 0 004-4v-2z" strokeLinejoin="round" />
+          <path d="M9 9h0M14 9h0" strokeLinecap="round" strokeWidth="2" />
+        </svg>
+      ),
+    },
+    {
+      key: "HIIT", label: "HIIT",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      key: "Yoga", label: "yoga",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+          <circle cx="12" cy="5" r="2" />
+          <path d="M12 9v5M8 21l4-7 4 7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 13l6 1 6-1" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      key: "Rehab", label: "rehab",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+          <path d="M9 12h6M12 9v6" strokeLinecap="round" />
+          <path d="M19.07 4.93a10 10 0 010 14.14M4.93 19.07a10 10 0 010-14.14" strokeLinecap="round" />
+        </svg>
+      ),
+    },
   ];
 
   // Sidebar radius widget (shared between desktop and mobile)
@@ -431,28 +484,26 @@ export default function HomePage({ flags }: Props) {
             )}
 
             {!isGymMode && flags.specialties && (
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-6 w-full max-w-2xl">
-                {ptHeroSpecialties.map((s) => {
-                  const active = selectedPTSpecialties.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() =>
-                        setSelectedPTSpecialties((prev) =>
-                          active ? prev.filter((x) => x !== s) : [...prev, s]
-                        )
-                      }
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                        active
-                          ? "bg-brand-orange border-brand-orange text-white scale-105"
-                          : "bg-white/10 border-white/25 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/40"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
+              <div className="flex items-end justify-evenly w-full max-w-2xl mt-7">
+                {ptHeroIcons.map(({ key, label, icon }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() =>
+                      setSelectedPTSpecialties((prev) =>
+                        prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key]
+                      )
+                    }
+                    className={`flex flex-col items-center gap-1.5 transition-all ${
+                      selectedPTSpecialties.includes(key)
+                        ? "text-brand-orange scale-110"
+                        : "text-white/55 hover:text-white/90"
+                    }`}
+                  >
+                    {icon}
+                    <span className="text-xs">{label}</span>
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -584,10 +635,10 @@ export default function HomePage({ flags }: Props) {
                       {suburbs.map((meta) => (
                         <li key={meta.slug}>
                           <Link
-                            href={`/gyms/${meta.slug}`}
+                            href={isGymMode ? `/gyms/${meta.slug}` : `/trainers/${meta.slug}`}
                             className="text-sm text-brand-orange hover:underline"
                           >
-                            {isGymMode ? "Gyms" : "Trainers"} in {meta.name}
+                            {isGymMode ? "Gyms" : "Personal trainers"} in {meta.name}
                           </Link>
                         </li>
                       ))}
