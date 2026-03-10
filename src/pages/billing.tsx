@@ -477,7 +477,7 @@ function PTRow({
             href={`/owner/pt/${pt.id}`}
             className="text-sm font-bold text-gray-700 hover:text-brand-orange transition-colors"
           >
-            Edit
+            Edit listing →
           </Link>
           <Link
             href={`/pt/${pt.id}`}
@@ -485,7 +485,7 @@ function PTRow({
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"
           >
-            View →
+            View profile →
           </Link>
           <button
             onClick={onToggleCollapse}

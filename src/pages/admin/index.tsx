@@ -1249,15 +1249,16 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     search(q);
   }
 
+  const [hasSearched, setHasSearched] = useState(false);
+
   const search = useCallback(async (query: string) => {
     setLoading(true);
     const r = await adminFetch(`/api/admin/gyms?q=${encodeURIComponent(query)}`);
     setGyms(await r.json());
     setSelected(new Set());
+    setHasSearched(true);
     setLoading(false);
   }, []);
-
-  useEffect(() => { search(""); }, [search]);
 
   useEffect(() => {
     if (!initialGymId) return;
@@ -1781,7 +1782,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
               {filteredGyms.length === 0 && (
                 <tr>
                   <td colSpan={8} className="text-center py-12">
-                    <p className="text-gray-400 text-sm">No gyms found.</p>
+                    <p className="text-gray-400 text-sm">{hasSearched ? "No gyms found." : "Search to load gyms."}</p>
                   </td>
                 </tr>
               )}

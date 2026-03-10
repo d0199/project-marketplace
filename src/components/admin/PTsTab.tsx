@@ -40,8 +40,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
   const [editOwnerVal, setEditOwnerVal] = useState("");
   const [confirmUnclaim, setConfirmUnclaim] = useState<string | null>(null);
-
-  useEffect(() => { load(); }, []);
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     if (!initialPtId) return;
@@ -58,6 +57,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
       const data = await r.json();
       if (Array.isArray(data)) setPts(data);
     } catch { /* */ }
+    setHasSearched(true);
     setLoading(false);
   }
 
@@ -217,6 +217,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
+          <form onSubmit={(e) => { e.preventDefault(); load(); }} className="flex gap-2">
           <input
             type="text"
             value={q}
@@ -224,6 +225,10 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
             placeholder="Search PTs..."
             className="px-3 py-2 border rounded-lg text-sm w-64"
           />
+          <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg">
+            Search
+          </button>
+          </form>
           <select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)} className="px-2 py-2 border rounded-lg text-sm">
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -261,7 +266,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
       {loading ? (
         <p className="text-gray-400 text-sm py-8 text-center">Loading...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-gray-400 text-sm py-8 text-center">No personal trainers found.</p>
+        <p className="text-gray-400 text-sm py-8 text-center">{hasSearched ? "No personal trainers found." : "Click Search to load PTs."}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
           <table className="w-full text-sm">
