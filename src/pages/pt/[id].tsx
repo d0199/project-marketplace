@@ -85,6 +85,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   const [contactForm, setContactForm] = useState<{ name: string; email: string; phone: string; message: string }>({ name: "", email: "", phone: "", message: "" });
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
@@ -390,7 +391,16 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                       <p className="font-semibold text-white">Message sent!</p>
                       <p className="text-orange-100 text-sm mt-1">They&apos;ll be in touch shortly.</p>
                     </div>
+                  ) : customFields.length > 0 ? (
+                    /* Has custom fields — show CTA button, form opens in modal */
+                    <button
+                      onClick={() => setShowContactModal(true)}
+                      className="w-full bg-white text-brand-orange font-semibold py-2.5 rounded-lg hover:bg-orange-50 transition-colors"
+                    >
+                      Send an Enquiry →
+                    </button>
                   ) : (
+                    /* Standard fields only — inline form */
                     <form onSubmit={handleContactSubmit} className="space-y-2">
                       <p className="text-orange-100 text-sm font-medium mb-2">Send an enquiry</p>
                       <input
@@ -421,41 +431,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                         onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
                         className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none resize-none"
                       />
-                      {/* Custom fields defined by PT */}
-                      {customFields.map((field) => (
-                        <div key={field.label}>
-                          {field.type === "select" ? (
-                            <select
-                              required={field.required}
-                              value={customValues[field.label] ?? ""}
-                              onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
-                            >
-                              <option value="">{field.label}{field.required ? " *" : ""}</option>
-                              {(field.options ?? []).map((opt) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          ) : field.type === "textarea" ? (
-                            <textarea
-                              required={field.required}
-                              rows={2}
-                              placeholder={`${field.label}${field.required ? " *" : ""}`}
-                              value={customValues[field.label] ?? ""}
-                              onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none resize-none"
-                            />
-                          ) : (
-                            <input
-                              required={field.required}
-                              placeholder={`${field.label}${field.required ? " *" : ""}`}
-                              value={customValues[field.label] ?? ""}
-                              onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
-                            />
-                          )}
-                        </div>
-                      ))}
                       {contactStatus === "error" && (
                         <p className="text-orange-100 text-xs">Something went wrong. Please try again.</p>
                       )}
@@ -578,6 +553,109 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
             )}
           </aside>
         </div>
+        {/* Enquiry modal — shown when PT has custom fields */}
+        {showContactModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowContactModal(false)}>
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              {contactStatus === "sent" ? (
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-semibold text-gray-900">Message sent!</p>
+                  <p className="text-gray-500 text-sm mt-1">{pt.name} will be in touch shortly.</p>
+                  <button onClick={() => setShowContactModal(false)} className="mt-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Close</button>
+                </div>
+              ) : (
+                <form onSubmit={handleContactSubmit} className="space-y-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-base font-semibold text-gray-900">Send {pt.name} an enquiry</h3>
+                    <button type="button" onClick={() => setShowContactModal(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+                  </div>
+                  <input
+                    required
+                    placeholder="Your name"
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  />
+                  <input
+                    required
+                    type="email"
+                    placeholder="Your email"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  />
+                  <input
+                    placeholder="Phone (optional)"
+                    value={contactForm.phone}
+                    onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  />
+                  <textarea
+                    rows={3}
+                    placeholder="Your message…"
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+                  />
+                  {/* Custom fields defined by PT */}
+                  {customFields.map((field) => (
+                    <div key={field.label}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}{field.required ? " *" : ""}</label>
+                      {field.type === "select" ? (
+                        <select
+                          required={field.required}
+                          value={customValues[field.label] ?? ""}
+                          onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                        >
+                          <option value="">Select…</option>
+                          {(field.options ?? []).map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === "textarea" ? (
+                        <textarea
+                          required={field.required}
+                          rows={2}
+                          placeholder={field.label}
+                          value={customValues[field.label] ?? ""}
+                          onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+                        />
+                      ) : (
+                        <input
+                          required={field.required}
+                          placeholder={field.label}
+                          value={customValues[field.label] ?? ""}
+                          onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                        />
+                      )}
+                    </div>
+                  ))}
+                  {contactStatus === "error" && (
+                    <p className="text-red-500 text-xs">Something went wrong. Please try again.</p>
+                  )}
+                  <div className="flex gap-3 justify-end pt-2">
+                    <button type="button" onClick={() => setShowContactModal(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
+                    <button
+                      type="submit"
+                      disabled={contactStatus === "sending"}
+                      className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {contactStatus === "sending" ? "Sending…" : "Send Enquiry"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </Layout>
     </>
   );

@@ -372,15 +372,18 @@ function LanguageInput({ onAdd }: { onAdd: (val: string) => void }) {
   );
 }
 
+const MAX_CUSTOM_FIELDS = 3;
+
 function CustomLeadFieldsEditor({ fields, onChange }: { fields: CustomLeadField[]; onChange: (fields: CustomLeadField[]) => void }) {
   const [newLabel, setNewLabel] = useState("");
   const [newType, setNewType] = useState<CustomLeadField["type"]>("text");
   const [newOptions, setNewOptions] = useState("");
   const [newRequired, setNewRequired] = useState(false);
+  const atLimit = fields.length >= MAX_CUSTOM_FIELDS;
 
   function addField() {
     const label = newLabel.trim();
-    if (!label) return;
+    if (!label || atLimit) return;
     if (fields.some((f) => f.label === label)) return;
     const field: CustomLeadField = { label, type: newType, required: newRequired };
     if (newType === "select" && newOptions.trim()) {
@@ -431,43 +434,47 @@ function CustomLeadFieldsEditor({ fields, onChange }: { fields: CustomLeadField[
       )}
 
       {/* Add new field */}
-      <div className="border border-dashed border-gray-300 rounded-lg p-3 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            className={inputCls}
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="Field label (e.g. Fitness Goal)"
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addField(); } }}
-          />
-          <select className={inputCls} value={newType} onChange={(e) => setNewType(e.target.value as CustomLeadField["type"])}>
-            <option value="text">Text (short)</option>
-            <option value="textarea">Text (long)</option>
-            <option value="select">Dropdown</option>
-          </select>
+      {atLimit ? (
+        <p className="text-xs text-gray-400">Maximum of {MAX_CUSTOM_FIELDS} custom fields reached.</p>
+      ) : (
+        <div className="border border-dashed border-gray-300 rounded-lg p-3 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              className={inputCls}
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Field label (e.g. Fitness Goal)"
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addField(); } }}
+            />
+            <select className={inputCls} value={newType} onChange={(e) => setNewType(e.target.value as CustomLeadField["type"])}>
+              <option value="text">Text (short)</option>
+              <option value="textarea">Text (long)</option>
+              <option value="select">Dropdown</option>
+            </select>
+          </div>
+          {newType === "select" && (
+            <input
+              className={inputCls}
+              value={newOptions}
+              onChange={(e) => setNewOptions(e.target.value)}
+              placeholder="Options (comma-separated, e.g. Weight Loss, Muscle Gain, General Fitness)"
+            />
+          )}
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={newRequired} onChange={(e) => setNewRequired(e.target.checked)} className="w-4 h-4 accent-brand-orange" />
+              <span className="text-sm text-gray-600">Required</span>
+            </label>
+            <button
+              onClick={addField}
+              disabled={!newLabel.trim()}
+              className="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              + Add Field ({fields.length}/{MAX_CUSTOM_FIELDS})
+            </button>
+          </div>
         </div>
-        {newType === "select" && (
-          <input
-            className={inputCls}
-            value={newOptions}
-            onChange={(e) => setNewOptions(e.target.value)}
-            placeholder="Options (comma-separated, e.g. Weight Loss, Muscle Gain, General Fitness)"
-          />
-        )}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={newRequired} onChange={(e) => setNewRequired(e.target.checked)} className="w-4 h-4 accent-brand-orange" />
-            <span className="text-sm text-gray-600">Required</span>
-          </label>
-          <button
-            onClick={addField}
-            disabled={!newLabel.trim()}
-            className="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium disabled:opacity-50"
-          >
-            + Add Field
-          </button>
-        </div>
-      </div>
+      )}
 
       {fields.length === 0 && (
         <p className="text-xs text-gray-400">
