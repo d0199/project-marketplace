@@ -442,12 +442,18 @@ function PTRow({
         <div className="flex items-center gap-3">
           <PlanBadge plan={currentPlan} />
           <Link
+            href={`/owner/pt/${pt.id}`}
+            className="text-sm font-bold text-gray-700 hover:text-brand-orange transition-colors"
+          >
+            Edit
+          </Link>
+          <Link
             href={`/pt/${pt.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"
           >
-            View profile →
+            View →
           </Link>
           <button
             onClick={onToggleCollapse}

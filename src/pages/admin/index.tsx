@@ -125,6 +125,7 @@ export default function AdminPage() {
           setAccessDenied(true);
         } else {
           if (router.query.gym) setTab("gyms");
+          if (router.query.pt) setTab("pts");
           setReady(true);
         }
       } catch {
@@ -158,6 +159,7 @@ export default function AdminPage() {
   }
 
   const initialGymId = typeof router.query.gym === "string" ? router.query.gym : undefined;
+  const initialPtId = typeof router.query.pt === "string" ? router.query.pt : undefined;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -201,7 +203,7 @@ export default function AdminPage() {
         {tab === "claims" && <ClaimsTab onPendingCount={setClaimsPending} />}
         {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
-        {tab === "pts" && <PTsTab adminEmail={adminEmail} />}
+        {tab === "pts" && <PTsTab adminEmail={adminEmail} initialPtId={initialPtId} />}
         {tab === "users" && <UsersTab isSuperAdmin={isSuperAdmin} />}
         {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
         {tab === "datasets" && <DatasetsTab isSuperAdmin={isSuperAdmin} />}

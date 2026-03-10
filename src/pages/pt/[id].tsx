@@ -109,6 +109,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   if (pt.isTest && !isInternalUser) return null;
 
   const hasImages = pt.images.length > 0;
+  const isUnclaimed = pt.ownerId === "unclaimed" || pt.ownerId === "owner-3";
   const metaDesc = pt.description || `${pt.name} — Personal Trainer in ${pt.address.suburb}, ${pt.address.state}`;
 
   return (
@@ -136,9 +137,17 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
               title={pt.name}
               text={`Check out ${pt.name} — Personal Trainer in ${pt.address.suburb} on mynextgym.com.au`}
             />
+            {isOwner && (
+              <Link
+                href={`/owner/pt/${pt.id}`}
+                className="bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
+              >
+                Edit Profile
+              </Link>
+            )}
             {isAdmin && (
               <Link
-                href={`/admin?tab=pts`}
+                href={`/admin?pt=${pt.id}`}
                 className="bg-brand-black hover:bg-gray-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
               >
                 Admin Edit
@@ -379,7 +388,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
             </div>
 
             {/* Contact */}
-            {(pt.phone || pt.instagram || pt.facebook || pt.tiktok) && (
+            {(pt.phone || pt.instagram || pt.facebook || pt.tiktok || isUnclaimed) && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
                 <ul className="space-y-2 text-sm text-gray-700">
@@ -416,6 +425,16 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                     </li>
                   )}
                 </ul>
+                {isUnclaimed && (
+                  <div className={`${pt.phone || pt.instagram || pt.facebook || pt.tiktok ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
+                    <Link
+                      href="/claim-pt"
+                      className="text-sm text-brand-orange hover:underline"
+                    >
+                      Claim this profile for free →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

@@ -5,6 +5,7 @@ import { POSTCODE_COORDS } from "@/lib/utils";
 
 interface Props {
   adminEmail?: string;
+  initialPtId?: string;
 }
 
 const EMPTY_PT: PersonalTrainer = {
@@ -25,7 +26,7 @@ const EMPTY_PT: PersonalTrainer = {
   qualifications: [],
 };
 
-export default function PTsTab({ adminEmail }: Props) {
+export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const [pts, setPts] = useState<PersonalTrainer[]>([]);
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
@@ -38,6 +39,14 @@ export default function PTsTab({ adminEmail }: Props) {
   const [editOwnerVal, setEditOwnerVal] = useState("");
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!initialPtId) return;
+    adminFetch(`/api/admin/pt/${initialPtId}`)
+      .then((r) => r.json())
+      .then((pt: PersonalTrainer) => { if (pt?.id) setPanel({ pt, isNew: false }); })
+      .catch(() => {});
+  }, [initialPtId]);
 
   async function load() {
     setLoading(true);
