@@ -1801,23 +1801,10 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   <input
                     type="checkbox"
                     checked={panel.gym.isFeatured ?? false}
-                    onChange={async (e) => {
-                      if (e.target.checked) {
-                        // Check postcode slot availability before enabling
-                        const pc = panel.gym.address?.postcode;
-                        if (pc) {
-                          try {
-                            const r = await adminFetch(`/api/billing/featured-slots?postcode=${pc}&gymId=${panel.gym.id}`);
-                            const data = await r.json();
-                            if (!data.available) {
-                              showToast(`Featured slots full for postcode ${pc} (${data.count}/3)`);
-                              return;
-                            }
-                          } catch { /* allow if check fails */ }
-                        }
-                      }
+                    onChange={(e) => {
+                      const checked = e.target.checked;
                       setPanel((p) =>
-                        p ? { ...p, gym: { ...p.gym, isFeatured: e.target.checked } } : p
+                        p ? { ...p, gym: { ...p.gym, isFeatured: checked } } : p
                       );
                     }}
                     className="w-4 h-4 accent-brand-orange"
