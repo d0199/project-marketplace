@@ -154,7 +154,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
     <div>
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-brand-orange text-white px-4 py-2 rounded-lg shadow-lg text-sm">
+        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.includes("Error") || toast.includes("failed") ? "bg-red-600" : "bg-green-600"}`}>
           {toast}
         </div>
       )}
@@ -163,10 +163,11 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm">
-            <p className="font-semibold mb-4">Delete this PT?</p>
-            <div className="flex gap-3">
-              <button onClick={() => handleDelete(confirmDelete)} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">Delete</button>
-              <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 bg-gray-100 rounded-lg text-sm">Cancel</button>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Personal Trainer</h3>
+            <p className="text-sm text-gray-600 mb-5">Are you sure you want to delete this PT? This action cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Cancel</button>
+              <button onClick={() => handleDelete(confirmDelete)} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">Delete</button>
             </div>
           </div>
         </div>
@@ -221,28 +222,28 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
       ) : filtered.length === 0 ? (
         <p className="text-gray-400 text-sm py-8 text-center">No personal trainers found.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b">
-                <th className="pb-2 font-medium">ID</th>
-                <th className="pb-2 font-medium">Name</th>
-                <th className="pb-2 font-medium">Suburb</th>
-                <th className="pb-2 font-medium">Owner</th>
-                <th className="pb-2 font-medium">Gyms</th>
-                <th className="pb-2 font-medium">Specialties</th>
-                <th className="pb-2 font-medium">Flags</th>
-                <th className="pb-2 font-medium">Active</th>
-                <th className="pb-2 font-medium"></th>
+              <tr className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
+                <th className="px-4 py-3 font-medium">ID</th>
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Suburb</th>
+                <th className="px-4 py-3 font-medium">Owner</th>
+                <th className="px-4 py-3 font-medium">Gyms</th>
+                <th className="px-4 py-3 font-medium">Specialties</th>
+                <th className="px-4 py-3 font-medium">Flags</th>
+                <th className="px-4 py-3 font-medium">Active</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((pt) => (
                 <tr key={pt.id} className="border-b hover:bg-gray-50">
-                  <td className="py-2 pr-3 text-xs text-gray-400 font-mono">{pt.id}</td>
-                  <td className="py-2 pr-3 font-medium text-gray-900 max-w-[200px] truncate">{pt.name || <span className="text-gray-400 italic">Unnamed</span>}</td>
-                  <td className="py-2 pr-3 text-gray-600">{pt.address.suburb}</td>
-                  <td className="py-2 pr-3 text-gray-600 text-xs">
+                  <td className="px-4 py-3 text-xs text-gray-400 font-mono">{pt.id}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px] truncate">{pt.name || <span className="text-gray-400 italic">Unnamed</span>}</td>
+                  <td className="px-4 py-3 text-gray-600">{pt.address.suburb}</td>
+                  <td className="px-4 py-3 text-gray-600 text-xs">
                     {editOwnerFor === pt.id ? (
                       <span className="flex items-center gap-1">
                         <input
@@ -268,27 +269,27 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
                       </span>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-gray-600">{pt.gymIds.length}</td>
-                  <td className="py-2 pr-3 text-gray-600 max-w-[200px] truncate">{pt.specialties.slice(0, 3).join(", ")}{pt.specialties.length > 3 ? "..." : ""}</td>
-                  <td className="py-2 pr-3">
+                  <td className="px-4 py-3 text-gray-600">{pt.gymIds.length}</td>
+                  <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">{pt.specialties.slice(0, 3).join(", ")}{pt.specialties.length > 3 ? "..." : ""}</td>
+                  <td className="px-4 py-3">
                     <span className="flex gap-1">
                       {pt.isFeatured && <span className="text-yellow-500" title="Featured">★</span>}
                       {pt.isPaid && <span className="text-green-500" title="Paid">$</span>}
                       {pt.isTest && <span className="text-purple-500" title="Test">T</span>}
                     </span>
                   </td>
-                  <td className="py-2 pr-3">
+                  <td className="px-4 py-3">
                     <button
                       onClick={() => toggleActive(pt)}
-                      className={`px-2 py-0.5 rounded text-xs font-medium ${pt.isActive !== false ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${pt.isActive !== false ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
                     >
                       {pt.isActive !== false ? "Active" : "Inactive"}
                     </button>
                   </td>
-                  <td className="py-2">
-                    <a href={`/pt/${pt.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">View</a>
-                    <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm ml-3">Edit</button>
-                    <button onClick={() => setConfirmDelete(pt.id)} className="text-red-500 hover:underline text-sm ml-3">Delete</button>
+                  <td className="px-4 py-3">
+                    <a href={`/pt/${pt.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                    <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm font-medium ml-3">Edit</button>
+                    <button onClick={() => setConfirmDelete(pt.id)} className="text-red-500 hover:underline text-sm font-medium ml-3">Delete</button>
                   </td>
                 </tr>
               ))}
@@ -421,7 +422,7 @@ function PTEditPanel({
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/30 flex justify-end" onClick={() => setPanel(null)}>
+    <div className="fixed inset-0 z-40 bg-black/40 flex justify-end" onClick={() => setPanel(null)}>
       <div className="w-full max-w-2xl bg-white h-full overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold text-gray-900">
