@@ -64,8 +64,12 @@ export default function FeedbackModal({ gymId, gymName, listingType = "gym", onC
         onClick={(e) => e.stopPropagation()}
       >
         {submitted ? (
-          <div className="text-center py-4">
-            <div className="text-4xl mb-3">&#10003;</div>
+          <div className="text-center py-6">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Thanks for your feedback</h3>
             <p className="text-sm text-gray-500 mb-4">We&apos;ll review your report and update the listing if needed.</p>
             <button
