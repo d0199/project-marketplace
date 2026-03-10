@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     sendSlackNotification("moderation", {
       gym_name: `Bulk edit (${affectedGyms.length} gyms)`,
       gym_id: affectedGyms[0].id,
-      gym_url: "${BASE_URL}/admin",
+      gym_url: `${BASE_URL}/admin`,
       owner_email: ownerEmail ?? "unknown",
       submitted_at: nowAWST(),
     }),

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
+import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import { BASE_URL } from "@/lib/siteUrl";
 import type { PersonalTrainer } from "@/types";
 
@@ -48,10 +49,19 @@ export default async function handler(
       editType: "pt",
     });
 
-    await sendAdminAlert(
-      "PT profile edit pending review",
-      `A PT owner has submitted profile changes that require moderation.\n\nPT: ${currentPT.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`
-    ).catch(() => {});
+    await Promise.allSettled([
+      sendAdminAlert(
+        "PT profile edit pending review",
+        `A PT owner has submitted profile changes that require moderation.\n\nPT: ${currentPT.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`
+      ),
+      sendSlackNotification("moderation", {
+        gym_name: currentPT.name,
+        gym_id: id,
+        gym_url: `${BASE_URL}/pt/${id}`,
+        owner_email: ownerEmail ?? "unknown",
+        submitted_at: nowAWST(),
+      }),
+    ]);
 
     return res.status(200).json({ queued: true });
   }
