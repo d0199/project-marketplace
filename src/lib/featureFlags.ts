@@ -13,21 +13,25 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 export interface FeatureFlags {
   /** Show the Gyms / Personal Trainers toggle on the search page */
   ptSearch: boolean;
-  /** Show specialty quick-filter chips in the hero */
-  heroSpecialties: boolean;
+  /** Show specialty filters (hero chips + sidebar) */
+  specialties: boolean;
   /** Show member-offer filter in the sidebar */
   memberOffers: boolean;
-  /** Show amenity quick-filter icons in the hero */
-  heroAmenities: boolean;
+  /** Show amenity filters (hero icons + sidebar) */
+  amenities: boolean;
   /** Show the radius slider in the sidebar */
   radiusSlider: boolean;
+
+  // Legacy keys — kept so existing DynamoDB records don't break reads
+  heroSpecialties?: boolean;
+  heroAmenities?: boolean;
 }
 
 const DEFAULTS: FeatureFlags = {
   ptSearch: false,
-  heroSpecialties: true,
+  specialties: true,
   memberOffers: true,
-  heroAmenities: true,
+  amenities: true,
   radiusSlider: true,
 };
 
@@ -54,9 +58,10 @@ export const featureFlagStore = {
       if (data) {
         cached = {
           ptSearch: data.ptSearch ?? DEFAULTS.ptSearch,
-          heroSpecialties: data.heroSpecialties ?? DEFAULTS.heroSpecialties,
+          // New keys with fallback to legacy keys
+          specialties: data.specialties ?? data.heroSpecialties ?? DEFAULTS.specialties,
           memberOffers: data.memberOffers ?? DEFAULTS.memberOffers,
-          heroAmenities: data.heroAmenities ?? DEFAULTS.heroAmenities,
+          amenities: data.amenities ?? data.heroAmenities ?? DEFAULTS.amenities,
           radiusSlider: data.radiusSlider ?? DEFAULTS.radiusSlider,
         };
       } else {

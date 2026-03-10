@@ -3,9 +3,9 @@ import { adminFetch } from "@/lib/adminFetch";
 
 interface FeatureFlags {
   ptSearch: boolean;
-  heroSpecialties: boolean;
+  specialties: boolean;
   memberOffers: boolean;
-  heroAmenities: boolean;
+  amenities: boolean;
   radiusSlider: boolean;
 }
 
@@ -22,18 +22,18 @@ const FLAGS: FlagMeta[] = [
     description: "Show the Gyms / Personal Trainers toggle on the search page. When off, only gym search is available.",
   },
   {
-    key: "heroAmenities",
-    label: "Hero Amenity Icons",
-    description: "Show amenity quick-filter icons (pool, sauna, 24/7, etc.) in the hero section.",
+    key: "amenities",
+    label: "Amenities",
+    description: "Show amenity filters — hero icons (pool, sauna, 24/7, etc.) and sidebar filter. When off, amenities are hidden from search entirely.",
   },
   {
-    key: "heroSpecialties",
-    label: "Hero Specialty Chips",
-    description: "Show specialty quick-select chips (HYROX, CrossFit, etc.) in the hero section.",
+    key: "specialties",
+    label: "Specialties",
+    description: "Show specialty filters — hero chips and sidebar filter. When off, specialties are hidden from search entirely.",
   },
   {
     key: "memberOffers",
-    label: "Member Offers Filter",
+    label: "Member Offers",
     description: "Show the member offers filter in the search sidebar.",
   },
   {

@@ -205,10 +205,13 @@ const schema = a.schema({
   FeatureFlag: a
     .model({
       ptSearch: a.boolean(),
-      heroSpecialties: a.boolean(),
+      specialties: a.boolean(),
       memberOffers: a.boolean(),
-      heroAmenities: a.boolean(),
+      amenities: a.boolean(),
       radiusSlider: a.boolean(),
+      // Legacy — kept for backwards compat with existing records
+      heroSpecialties: a.boolean(),
+      heroAmenities: a.boolean(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

@@ -289,11 +289,15 @@ export default function HomePage({ flags }: Props) {
   // Gym sidebar filters
   const GymSidebarFilters = () => (
     <>
-      <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
+      {flags.amenities && (
+        <AmenityFilter selected={selectedAmenities} onChange={setSelectedAmenities} />
+      )}
       {flags.memberOffers && (
         <MemberOfferFilter selected={selectedMemberOffers} onChange={setSelectedMemberOffers} />
       )}
-      <SpecialtyFilter selected={selectedSpecialties} onChange={setSelectedSpecialties} />
+      {flags.specialties && (
+        <SpecialtyFilter selected={selectedSpecialties} onChange={setSelectedSpecialties} />
+      )}
     </>
   );
 
@@ -402,7 +406,7 @@ export default function HomePage({ flags }: Props) {
             </div>
 
             {/* Hero quick filters */}
-            {isGymMode && flags.heroAmenities && (
+            {isGymMode && flags.amenities && (
               <div className="flex items-end justify-evenly w-full max-w-2xl mt-7">
                 {heroAmenityIcons.map(({ key, label, icon }) => (
                   <button
@@ -426,7 +430,7 @@ export default function HomePage({ flags }: Props) {
               </div>
             )}
 
-            {!isGymMode && flags.heroSpecialties && (
+            {!isGymMode && flags.specialties && (
               <div className="flex flex-wrap items-center justify-center gap-2 mt-6 w-full max-w-2xl">
                 {ptHeroSpecialties.map((s) => {
                   const active = selectedPTSpecialties.includes(s);
