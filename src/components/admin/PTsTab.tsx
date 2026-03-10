@@ -611,13 +611,26 @@ function PTEditPanel({
 
           {/* Qualifications */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Qualifications</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Qualifications</h3>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pt.qualificationsVerified ?? false}
+                  onChange={(e) => update({ qualificationsVerified: e.target.checked })}
+                  className="w-4 h-4 accent-green-600"
+                />
+                <span className={`text-xs font-semibold ${pt.qualificationsVerified ? "text-green-700" : "text-gray-400"}`}>
+                  {pt.qualificationsVerified ? "Verified" : "Unverified"}
+                </span>
+              </label>
+            </div>
             {pt.qualifications.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
                 {pt.qualifications.map((qual) => (
-                  <span key={qual} className="inline-flex items-center gap-1 bg-blue-50 rounded-full px-3 py-1 text-sm text-blue-800">
+                  <span key={qual} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm ${pt.qualificationsVerified ? "bg-green-50 text-green-800" : "bg-blue-50 text-blue-800"}`}>
                     {qual}
-                    <button onClick={() => removeQualification(qual)} className="text-blue-400 hover:text-red-500 ml-1">&times;</button>
+                    <button onClick={() => removeQualification(qual)} className={`${pt.qualificationsVerified ? "text-green-400" : "text-blue-400"} hover:text-red-500 ml-1`}>&times;</button>
                   </span>
                 ))}
               </div>
@@ -626,6 +639,21 @@ function PTEditPanel({
               <input className={inputCls} value={newQualification} onChange={(e) => setNewQualification(e.target.value)} placeholder="e.g. Cert III Fitness, Cert IV PT" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addQualification(); } }} />
               <button onClick={addQualification} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
             </div>
+            <div className="mt-3">
+              <label className={labelCls}>Verification notes</label>
+              <input
+                className={inputCls}
+                value={pt.qualificationsNotes ?? ""}
+                onChange={(e) => update({ qualificationsNotes: e.target.value })}
+                placeholder="e.g. Verified via AIF portal 2026-03-10"
+              />
+            </div>
+            {pt.qualificationEvidence && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs font-semibold text-amber-800 mb-1">Evidence submitted by PT:</p>
+                <p className="text-sm text-amber-900 whitespace-pre-wrap">{pt.qualificationEvidence}</p>
+              </div>
+            )}
           </section>
 
           {/* Languages */}

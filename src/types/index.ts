@@ -83,6 +83,9 @@ export interface PersonalTrainer {
   gymIds: string[];
   specialties: string[];
   qualifications: string[];
+  qualificationsVerified?: boolean;
+  qualificationsNotes?: string;
+  qualificationEvidence?: string; // URL or text description of evidence submitted
   experienceYears?: number;
   pricePerSession?: number;
   sessionDuration?: number; // minutes
