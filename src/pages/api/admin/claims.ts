@@ -115,8 +115,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const claimType = (claim as Record<string, unknown>).claimType as string | undefined;
 
-        if (claimType === "pt") {
-          // PT profile claim — assign ownership
+        if (claimType === "pt" && claim.isNewListing) {
+          // New PT listing — create a PT record from submitted details
+          const postcode = claim.gymPostcode ?? "";
+          const coords = POSTCODE_COORDS[postcode];
+          const [lat, lng] = coords ?? [-31.9505, 115.8605]; // Perth default
+
+          const newPt = await ptStore.create({
+            ownerId,
+            createdBy: email,
+            name: claim.gymName ?? "",
+            description: claim.message ?? "",
+            address: {
+              street: "",
+              suburb: claim.gymSuburb ?? "",
+              state: postcode ? (parseInt(postcode) < 3000 ? "NSW" : parseInt(postcode) < 4000 ? "VIC" : parseInt(postcode) < 5000 ? "QLD" : parseInt(postcode) < 6000 ? "SA" : parseInt(postcode) < 7000 ? "WA" : "TAS") : "WA",
+              postcode,
+            },
+            lat,
+            lng,
+            phone: claim.gymPhone || claim.claimantPhone || "",
+            email: claim.gymEmail || email,
+            website: claim.gymWebsite ?? "",
+            images: [],
+            specialties: [],
+            qualifications: [],
+            languages: ["English"],
+            isActive: false, // admin activates once profile is complete
+          });
+
+          await dataClient.models.Claim.update({
+            id,
+            status: "approved",
+            gymId: newPt.id,
+            notes: notes ?? (isNewUser
+              ? `Approved — PT created (${newPt.id}), new Cognito user created, ownerId: ${ownerId}`
+              : `Approved — PT created (${newPt.id}), added to existing user account, ownerId: ${ownerId}`),
+          });
+
+          return res.status(200).json({ ok: true, ownerId, isNewUser, ptId: newPt.id });
+        } else if (claimType === "pt") {
+          // Existing PT profile claim — assign ownership
           const pt = await ptStore.getById(claim.gymId ?? "");
           if (!pt) return res.status(404).json({ error: `PT not found: ${claim.gymId}` });
 
