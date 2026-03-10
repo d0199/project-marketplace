@@ -211,14 +211,14 @@ export const ptStore = {
   },
 
   async update(pt: PersonalTrainer): Promise<void> {
-    if (!isAmplifyConfigured()) return;
+    if (!isModelAvailable()) return;
     const { errors } = await dataClient.models.PersonalTrainer.update(fromPT(pt));
     if (errors?.length) console.error("[ptStore.update] errors:", JSON.stringify(errors));
     invalidateCache();
   },
 
   async create(pt: Omit<PersonalTrainer, "id">): Promise<PersonalTrainer> {
-    if (!isAmplifyConfigured()) throw new Error("Backend not configured");
+    if (!isModelAvailable()) throw new Error("PersonalTrainer model not available");
     const { data } = await dataClient.models.PersonalTrainer.create({
       ownerId: pt.ownerId,
       isActive: pt.isActive ?? true,
@@ -266,7 +266,7 @@ export const ptStore = {
   },
 
   async delete(id: string): Promise<void> {
-    if (!isAmplifyConfigured()) return;
+    if (!isModelAvailable()) return;
     await dataClient.models.PersonalTrainer.delete({ id });
     invalidateCache();
   },
