@@ -56,10 +56,12 @@ export default function SearchBar({
   const abortRef = useRef<AbortController | null>(null);
   const gymAbortRef = useRef<AbortController | null>(null);
 
-  // Close on outside click
+  // Close dropdown on outside click; dismiss error on any click
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
       if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+      // Dismiss error on any click anywhere on the page
+      setError("");
     }
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
@@ -279,7 +281,7 @@ export default function SearchBar({
                 setOpen(true);
                 setActiveIdx(-1);
               }}
-              onFocus={() => { if (items.length > 0) setOpen(true); }}
+              onFocus={() => { setError(""); if (items.length > 0) setOpen(true); }}
               onKeyDown={handleKeyDown}
               placeholder="Enter postcode (e.g. 6000) or search for your suburb or gym"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-900 placeholder-gray-400"
