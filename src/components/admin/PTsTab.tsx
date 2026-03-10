@@ -37,6 +37,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
   const [editOwnerVal, setEditOwnerVal] = useState("");
+  const [confirmUnclaim, setConfirmUnclaim] = useState<string | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -150,6 +151,27 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
     }
   }
 
+  async function handleUnclaim(id: string) {
+    const pt = pts.find((p) => p.id === id);
+    if (!pt) return;
+    try {
+      const r = await adminFetch(`/api/admin/pt/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pt, ownerId: "unclaimed" }),
+      });
+      if (r.ok) {
+        showToast("PT reverted to unclaimed.");
+        setConfirmUnclaim(null);
+        load();
+      } else {
+        showToast("Error unclaiming PT.");
+      }
+    } catch {
+      showToast("Error unclaiming PT.");
+    }
+  }
+
   return (
     <div>
       {/* Toast */}
@@ -168,6 +190,23 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
             <div className="flex gap-3 justify-end">
               <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Cancel</button>
               <button onClick={() => handleDelete(confirmDelete)} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unclaim confirmation */}
+      {confirmUnclaim && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Revert PT to unclaimed?</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              PT <span className="font-mono font-medium">{confirmUnclaim}</span> will be set to <span className="font-medium">unclaimed</span>.
+            </p>
+            <p className="text-sm text-gray-400 mb-5">The owner&apos;s Cognito account is not affected — only this PT is released.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirmUnclaim(null)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Cancel</button>
+              <button onClick={() => handleUnclaim(confirmUnclaim)} className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700">Unclaim</button>
             </div>
           </div>
         </div>
@@ -289,6 +328,9 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
                   <td className="px-4 py-3">
                     <a href={`/pt/${pt.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
                     <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm font-medium ml-3">Edit</button>
+                    {pt.ownerId !== "unclaimed" && (
+                      <button onClick={() => setConfirmUnclaim(pt.id)} className="text-yellow-600 hover:underline text-sm font-medium ml-3">Unclaim</button>
+                    )}
                     <button onClick={() => setConfirmDelete(pt.id)} className="text-red-500 hover:underline text-sm font-medium ml-3">Delete</button>
                   </td>
                 </tr>

@@ -201,7 +201,7 @@ export default function AdminPage() {
       {/* Content */}
       <div className="p-6 max-w-7xl mx-auto">
         {tab === "claims" && <ClaimsTab onPendingCount={setClaimsPending} />}
-        {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} />}
+        {tab === "moderation" && <ModerationTab onPendingCount={setModerationPending} adminEmail={adminEmail} />}
         {tab === "gyms" && <GymsTab initialGymId={initialGymId} adminEmail={adminEmail} />}
         {tab === "pts" && <PTsTab adminEmail={adminEmail} initialPtId={initialPtId} />}
         {tab === "users" && <UsersTab isSuperAdmin={isSuperAdmin} />}
@@ -505,10 +505,15 @@ const DIFF_LABELS_PT: Record<string, string> = {
   bookingUrl: "Booking URL",
   "address.street": "Address", "address.suburb": "Suburb", "address.postcode": "Postcode",
   specialties: "Specialties", qualifications: "Qualifications",
+  qualificationsVerified: "Qualifications verified",
+  qualificationEvidence: "Qualification evidence",
+  memberOffers: "Member offers", memberOffersNotes: "Benefits / affiliations",
+  memberOffersTnC: "Terms & Conditions",
   experienceYears: "Experience", pricePerSession: "Price/session",
   sessionDuration: "Session duration", pricingNotes: "Pricing notes",
   availability: "Availability", gender: "Gender",
   languages: "Languages", images: "Images",
+  gymIds: "Affiliated gyms", customLeadFields: "Custom enquiry fields",
 };
 
 const DIFF_LABELS: Record<string, string> = { ...DIFF_LABELS_GYM, ...DIFF_LABELS_PT };
@@ -534,6 +539,14 @@ function getFieldValue(obj: any, field: string): string {
   if (field === "sessionDuration") return obj.sessionDuration ? `${obj.sessionDuration} min` : "—";
   if (field === "experienceYears") return obj.experienceYears ? `${obj.experienceYears} yrs` : "—";
   if (field === "memberOffersScroll") return obj.memberOffersScroll ? "Yes" : "No";
+  if (field === "qualificationsVerified") return obj.qualificationsVerified ? "Verified" : "Unverified";
+  if (field === "gymIds") return (obj.gymIds ?? []).join(", ") || "—";
+  if (field === "customLeadFields") {
+    const fields = obj.customLeadFields;
+    if (!fields || (Array.isArray(fields) && fields.length === 0)) return "—";
+    if (typeof fields === "string") return fields;
+    return (fields as { label: string }[]).map((f) => f.label).join(", ");
+  }
   return String(obj[field] ?? "");
 }
 
@@ -600,7 +613,7 @@ function BulkBar({ filtered, selected, setSelected, busy, bulkAction }: {
   );
 }
 
-function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) {
+function ModerationTab({ onPendingCount, adminEmail }: { onPendingCount?: (n: number) => void; adminEmail?: string }) {
   const [edits, setEdits] = useState<GymEdit[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -634,7 +647,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
     const r = await adminFetch(`/api/admin/moderation?action=${act}&id=${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: notes[id] ?? "" }),
+      body: JSON.stringify({ notes: notes[id] ?? "", adminEmail: adminEmail ?? "" }),
     });
     const body = await r.json().catch(() => ({}));
     if (r.ok) {
@@ -654,7 +667,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
       const r = await adminFetch(`/api/admin/moderation?action=${act}&id=${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: "" }),
+        body: JSON.stringify({ notes: "", adminEmail: adminEmail ?? "" }),
       });
       if (r.ok) ok++;
     }
@@ -739,7 +752,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
             const isBulkEdit = e.editType === "bulk";
             const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) : null;
             const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) : null;
-            const changedFields = current && proposed && !isVerification && !isBulkEdit ? computeDiff(current, proposed, e.editType) : [];
+            const changedFields = current && proposed && !isBulkEdit ? computeDiff(current, proposed, isVerification ? "pt" : e.editType) : [];
 
             return (
               <div
@@ -915,7 +928,9 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
                     <p className="text-xs text-gray-400 mb-0.5">Notes</p>
                     <p className="text-sm text-gray-700 bg-gray-50 rounded p-2">{e.notes}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {e.status === "approved" ? "Approved" : "Rejected"}: {fmtDate(e.updatedAt)}
+                      {e.status === "approved" ? "Approved" : "Rejected"}
+                      {e.reviewedBy ? ` by ${e.reviewedBy}` : ""}
+                      {" · "}{fmtDate(e.reviewedAt || e.updatedAt)}
                     </p>
                   </div>
                 ) : null}

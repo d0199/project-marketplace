@@ -38,13 +38,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "PATCH") {
     const { action, id } = req.query as { action: string; id: string };
-    const { notes } = req.body as { notes?: string };
+    const { notes, adminEmail } = req.body as { notes?: string; adminEmail?: string };
 
     if (!id) return res.status(400).json({ error: "Missing id" });
 
+    const reviewedAt = new Date().toISOString();
+
     if (action === "reject") {
       try {
-        await dataClient.models.GymEdit.update({ id, status: "rejected", notes: notes ?? "" });
+        await dataClient.models.GymEdit.update({
+          id,
+          status: "rejected",
+          notes: notes ?? "",
+          reviewedBy: adminEmail ?? "",
+          reviewedAt,
+        });
         return res.status(200).json({ ok: true });
       } catch (err) {
         console.error("[admin/moderation reject]", err);
@@ -105,7 +113,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await dataClient.models.GymEdit.update({
           id,
           status: "approved",
-          notes: notes ?? `Approved by admin`,
+          notes: notes ?? "Approved by admin",
+          reviewedBy: adminEmail ?? "",
+          reviewedAt,
         });
 
         return res.status(200).json({ ok: true });

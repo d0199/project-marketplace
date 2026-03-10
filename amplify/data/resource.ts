@@ -109,7 +109,9 @@ const schema = a.schema({
       proposedChanges: a.string(), // JSON of proposed full gym/PT
       status: a.string(),          // "pending" | "approved" | "rejected"
       notes: a.string(),           // internal admin notes
-      editType: a.string(),        // "gym" (default) | "pt"
+      editType: a.string(),        // "gym" (default) | "pt" | "bulk" | "pt-verification"
+      reviewedBy: a.string(),      // admin email who approved/rejected
+      reviewedAt: a.string(),      // ISO timestamp of review
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

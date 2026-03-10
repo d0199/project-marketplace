@@ -135,7 +135,9 @@ export interface GymEdit {
   proposedChanges?: string; // JSON string of Gym or PersonalTrainer
   status: string; // "pending" | "approved" | "rejected"
   notes?: string;
-  editType?: string; // "gym" (default) | "pt"
+  editType?: string; // "gym" (default) | "pt" | "bulk" | "pt-verification"
+  reviewedBy?: string; // admin email who approved/rejected
+  reviewedAt?: string; // ISO timestamp of review
   createdAt?: string;
   updatedAt?: string;
 }
