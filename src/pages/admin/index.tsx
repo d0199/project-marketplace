@@ -362,11 +362,11 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
         </button>
       </div>
       {loading ? (
-        <p className="text-gray-500 text-sm">Loading…</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading…</p></div>
       ) : claims.length === 0 ? (
-        <p className="text-gray-500 text-sm">No claims yet.</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">No claims yet.</p></div>
       ) : filteredClaims.length === 0 ? (
-        <p className="text-gray-500 text-sm">No claims match your filter.</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">No claims match your filter.</p></div>
       ) : (
         <div className="space-y-4">
           {displayedClaims.map((c) => (
@@ -728,9 +728,9 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
       {BulkBar({ filtered, selected, setSelected, busy, bulkAction })}
 
       {loading ? (
-        <p className="text-gray-500 text-sm">Loading…</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading…</p></div>
       ) : filtered.length === 0 ? (
-        <p className="text-gray-500 text-sm">{edits.length === 0 ? "No moderation reviews yet." : "No results match your filter."}</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">{edits.length === 0 ? "No moderation reviews yet." : "No results match your filter."}</p></div>
       ) : (
         <div className="space-y-4">
           {displayedEdits.map((e) => {
@@ -1278,7 +1278,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   return (
     <div>
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+        <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white bg-green-600">
           {toast}
         </div>
       )}
@@ -1610,12 +1610,12 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       )}
 
       {loading ? (
-        <p className="text-gray-500 text-sm">Loading…</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading…</p></div>
       ) : (
         <>
-        <div className="overflow-x-auto rounded-lg border bg-white">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
               <tr>
                 <th className="px-4 py-3">
                   <input
@@ -1677,27 +1677,27 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                       href={`/gym/${g.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-500 hover:underline text-xs font-medium mr-3"
+                      className="text-blue-600 hover:underline text-sm font-medium"
                     >
                       View
                     </a>
                     <button
                       onClick={() => setPanel({ gym: g, isNew: false })}
-                      className="text-brand-orange hover:underline text-xs font-medium mr-3"
+                      className="text-brand-orange hover:underline text-sm font-medium ml-3"
                     >
                       Edit
                     </button>
                     {g.ownerId !== "unclaimed" && g.ownerId !== "owner-3" && (
                       <button
                         onClick={() => setConfirmUnclaim(g.id)}
-                        className="text-amber-500 hover:underline text-xs font-medium mr-3"
+                        className="text-amber-500 hover:underline text-sm font-medium ml-3"
                       >
                         Unclaim
                       </button>
                     )}
                     <button
                       onClick={() => setConfirmDelete(g.id)}
-                      className="text-red-500 hover:underline text-xs font-medium"
+                      className="text-red-500 hover:underline text-sm font-medium ml-3"
                     >
                       Delete
                     </button>
@@ -1706,8 +1706,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
               ))}
               {filteredGyms.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">
-                    No gyms found.
+                  <td colSpan={8} className="text-center py-12">
+                    <p className="text-gray-400 text-sm">No gyms found.</p>
                   </td>
                 </tr>
               )}
@@ -2043,7 +2043,7 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   return (
     <div>
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+        <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white bg-green-600">
           {toast}
         </div>
       )}
@@ -2095,7 +2095,7 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       </div>
 
       {loading ? (
-        <p className="text-gray-500 text-sm">Loading…</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading…</p></div>
       ) : (
         <>
         {(() => {
@@ -2109,9 +2109,9 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           const displayedUsers = pageSize === 0 ? filteredUsers : filteredUsers.slice(0, pageSize);
           return (
         <>
-        <div className="overflow-x-auto rounded-lg border bg-white">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
               <tr>
                 {["Email", "Status", "Owner ID", "Admin", "Super", "Actions"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
@@ -2240,8 +2240,8 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
-                    No users found.
+                  <td colSpan={6} className="text-center py-12">
+                    <p className="text-gray-400 text-sm">No users found.</p>
                   </td>
                 </tr>
               )}
@@ -2433,14 +2433,14 @@ function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) 
         <button onClick={() => { setSearch(""); setDateFrom(defaultLeadsDateFrom()); setDateTo(""); }} className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap">Reset</button>
       </div>
       {loading ? (
-        <p className="text-gray-500 text-sm">Loading…</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading…</p></div>
       ) : leads.length === 0 ? (
-        <p className="text-gray-500 text-sm">No leads yet.</p>
+        <div className="text-center py-12"><p className="text-gray-400 text-sm">No leads yet.</p></div>
       ) : (
         <>
-        <div className="overflow-x-auto rounded-lg border bg-white">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
               <tr>
                 {["Date", "Gym", "Name", "Email", "Phone"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
@@ -2642,7 +2642,7 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     setShowDeleteConfirm(true);
   }
 
-  if (loading) return <p className="text-gray-400 py-8 text-center">Loading datasets...</p>;
+  if (loading) return <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading datasets…</p></div>;
 
   return (
     <div className="space-y-6">
