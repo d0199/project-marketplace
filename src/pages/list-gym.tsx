@@ -28,12 +28,15 @@ export default function ListGymPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         await getCurrentUser();
         const attrs = await fetchUserAttributes();
+        setLoggedIn(true);
         const name = attrs.name ?? attrs.given_name ?? "";
         const email = attrs.email ?? "";
         if (name || email) {
@@ -53,8 +56,25 @@ export default function ListGymPage() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  async function checkEmail(val: string) {
+    if (!val || loggedIn) return;
+    try {
+      const r = await fetch(`/api/auth/check-email?email=${encodeURIComponent(val)}`);
+      const data = await r.json();
+      setEmailExists(data.exists === true);
+    } catch { /* ignore */ }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (emailExists) return;
+    if (!loggedIn && form.contactEmail) {
+      try {
+        const r = await fetch(`/api/auth/check-email?email=${encodeURIComponent(form.contactEmail)}`);
+        const data = await r.json();
+        if (data.exists === true) { setEmailExists(true); return; }
+      } catch { /* proceed */ }
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -145,9 +165,17 @@ export default function ListGymPage() {
                     required
                     type="email"
                     value={form.contactEmail}
-                    onChange={(e) => set("contactEmail", e.target.value)}
+                    onChange={(e) => { set("contactEmail", e.target.value); setEmailExists(false); }}
+                    onBlur={(e) => checkEmail(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
+                  {emailExists && (
+                    <div className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      An account with this email already exists.{" "}
+                      <Link href="/owner" className="text-brand-orange hover:underline font-semibold">Sign in</Link>{" "}
+                      to link this listing to your account automatically.
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>

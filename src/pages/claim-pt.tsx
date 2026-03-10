@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import { GetServerSideProps } from "next";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
@@ -37,12 +38,15 @@ export default function ClaimPTPage({ pts }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
 
   // Pre-fill email/name if logged in
   useEffect(() => {
     getCurrentUser()
       .then(() => fetchUserAttributes())
       .then((attrs) => {
+        setLoggedIn(true);
         setForm((f) => ({
           ...f,
           email: attrs.email ?? f.email,
@@ -75,8 +79,25 @@ export default function ClaimPTPage({ pts }: Props) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function checkEmail(val: string) {
+    if (!val || loggedIn) return;
+    try {
+      const r = await fetch(`/api/auth/check-email?email=${encodeURIComponent(val)}`);
+      const data = await r.json();
+      setEmailExists(data.exists === true);
+    } catch { /* ignore */ }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (emailExists) return;
+    if (!loggedIn && form.email) {
+      try {
+        const r = await fetch(`/api/auth/check-email?email=${encodeURIComponent(form.email)}`);
+        const data = await r.json();
+        if (data.exists === true) { setEmailExists(true); return; }
+      } catch { /* proceed */ }
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -151,8 +172,17 @@ export default function ClaimPTPage({ pts }: Props) {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
-                        <input required type="email" value={form.email} onChange={(e) => setField("email", e.target.value)}
+                        <input required type="email" value={form.email}
+                          onChange={(e) => { setField("email", e.target.value); setEmailExists(false); }}
+                          onBlur={(e) => checkEmail(e.target.value)}
                           className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                        {emailExists && (
+                          <div className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                            An account with this email already exists.{" "}
+                            <Link href="/owner" className="text-brand-orange hover:underline font-semibold">Sign in</Link>{" "}
+                            to link this claim to your account automatically.
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>

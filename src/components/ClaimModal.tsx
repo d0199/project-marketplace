@@ -30,6 +30,18 @@ export default function ClaimModal({ gym, onClose, initialEmail = "", initialNam
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (emailExists) return;
+    // Re-check email on submit in case blur didn't fire
+    if (!initialEmail && email) {
+      try {
+        const r = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+        const data = await r.json();
+        if (data.exists === true) {
+          setEmailExists(true);
+          return;
+        }
+      } catch { /* proceed if check fails */ }
+    }
     setStatus("submitting");
     try {
       const res = await fetch("/api/claim", {
