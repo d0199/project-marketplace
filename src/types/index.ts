@@ -118,6 +118,7 @@ export interface Lead {
   entityType?: "gym" | "pt";
   submittedAt?: string;
   status?: string;
+  notes?: string;
 }
 
 export interface OwnerSession {

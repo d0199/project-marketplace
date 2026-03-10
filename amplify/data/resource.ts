@@ -124,7 +124,10 @@ const schema = a.schema({
       email: a.string().required(),
       phone: a.string(),
       message: a.string(),
-      status: a.string(), // "new" | "read" | "contacted"
+      customData: a.string(),       // JSON-encoded custom field responses
+      entityType: a.string(),       // "gym" | "pt"
+      status: a.string(),           // "new" | "read" | "contacted"
+      notes: a.string(),            // internal owner notes
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

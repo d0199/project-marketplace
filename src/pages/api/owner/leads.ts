@@ -73,13 +73,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(leads);
   }
 
-  // ── PATCH: update a lead's status ─────────────────────────────────────────
+  // ── PATCH: update a lead's status and/or notes ───────────────────────────
   if (req.method === "PATCH") {
-    const { leadId, status } = req.body as { leadId: string; status: string };
+    const { leadId, status, notes } = req.body as { leadId: string; status: string; notes?: string };
     if (!leadId || !status) return res.status(400).json({ error: "leadId and status required" });
     if (!VALID_STATUSES.includes(status)) return res.status(400).json({ error: "Invalid status" });
 
-    await dataClient.models.Lead.update({ id: leadId, status });
+    await dataClient.models.Lead.update({
+      id: leadId,
+      status,
+      ...(notes !== undefined && { notes }),
+    });
     return res.status(200).json({ ok: true });
   }
 

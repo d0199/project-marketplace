@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email,
       phone: phone || undefined,
       message: message || undefined,
+      entityType: "gym",
       status: "new",
     });
   }
