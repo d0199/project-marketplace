@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import type { PersonalTrainer, Address, CustomLeadField } from "@/types";
 import { POSTCODE_COORDS } from "@/lib/utils";
 
+function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
+
 interface Props {
   pt: PersonalTrainer;
   onSave: (updated: PersonalTrainer) => Promise<string | undefined | void> | string | undefined | void;
@@ -48,12 +50,15 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
     update({ images: form.images.filter((_, idx) => idx !== i) });
   }
 
-  function toggleSpecialty(s: string) {
-    if (form.specialties.includes(s)) {
-      update({ specialties: form.specialties.filter((x) => x !== s) });
-    } else {
+  function addSpecialty(s: string) {
+    if (!form.specialties.includes(s)) {
       update({ specialties: [...form.specialties, s] });
     }
+    setSpecialtySearch("");
+  }
+
+  function removeSpecialty(s: string) {
+    update({ specialties: form.specialties.filter((x) => x !== s) });
   }
 
   function addQualification() {
@@ -94,10 +99,6 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
     }
     setSaving(false);
   }
-
-  const filteredSpecialties = specialtySearch
-    ? availableSpecialties.filter((s) => s.toLowerCase().includes(specialtySearch.toLowerCase()))
-    : availableSpecialties;
 
   const isPaid = form.isPaid || form.isFeatured;
 
@@ -235,25 +236,50 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
       {isPaid && (
         <section>
           <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Specialties</h3>
-          <input
-            type="text"
-            value={specialtySearch}
-            onChange={(e) => setSpecialtySearch(e.target.value)}
-            placeholder="Search specialties..."
-            className={`${inputCls} mb-2`}
-          />
-          <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-2">
-            {filteredSpecialties.map((s) => (
-              <label key={s} className="flex items-center gap-2 cursor-pointer py-0.5">
-                <input
-                  type="checkbox"
-                  checked={form.specialties.includes(s)}
-                  onChange={() => toggleSpecialty(s)}
-                  className="w-4 h-4 accent-brand-orange"
-                />
-                <span className="text-sm">{s}</span>
-              </label>
-            ))}
+          {form.specialties.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {form.specialties.map((s) => (
+                <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
+                  {s}
+                  <button type="button" onClick={() => removeSpecialty(s)} className="ml-0.5 text-indigo-400 hover:text-indigo-700">&times;</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="relative">
+            <input
+              type="text"
+              value={specialtySearch}
+              onChange={(e) => setSpecialtySearch(e.target.value)}
+              placeholder="Search specialties..."
+              className={inputCls}
+            />
+            {specialtySearch.trim().length >= 1 && (() => {
+              const q = normalize(specialtySearch);
+              const matches = availableSpecialties
+                .filter((s) => !form.specialties.includes(s))
+                .filter((s) => normalize(s).includes(q))
+                .slice(0, 10);
+              if (matches.length === 0) return (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 p-3 text-sm text-gray-400">
+                  No matching specialties.
+                </div>
+              );
+              return (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 max-h-48 overflow-y-auto">
+                  {matches.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => addSpecialty(s)}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </section>
       )}
