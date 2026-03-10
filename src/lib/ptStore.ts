@@ -179,11 +179,18 @@ export const ptStore = {
     try {
       const results: PTRecord[] = [];
       let nextToken: string | null | undefined;
+      const useGSI = typeof dataClient.models.PersonalTrainer.listPersonalTrainerByOwnerId === "function";
       do {
-        const res = await dataClient.models.PersonalTrainer.listPersonalTrainerByOwnerId(
-          { ownerId },
-          { limit: 1000, nextToken }
-        );
+        const res = useGSI
+          ? await dataClient.models.PersonalTrainer.listPersonalTrainerByOwnerId(
+              { ownerId },
+              { limit: 1000, nextToken }
+            )
+          : await dataClient.models.PersonalTrainer.list({
+              limit: 1000,
+              nextToken,
+              filter: { ownerId: { eq: ownerId } },
+            });
         results.push(...(res.data ?? []));
         nextToken = res.nextToken;
       } while (nextToken);

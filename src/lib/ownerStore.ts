@@ -176,11 +176,19 @@ export const ownerStore = {
       return seedGyms.filter((g) => g.ownerId === ownerId);
     const results: GymRecord[] = [];
     let nextToken: string | null | undefined;
+    // Try GSI method first; fall back to filtered list if GSI not in model introspection
+    const useGSI = typeof dataClient.models.Gym.listGymByOwnerId === "function";
     do {
-      const res = await dataClient.models.Gym.listGymByOwnerId(
-        { ownerId },
-        { limit: 1000, nextToken }
-      );
+      const res = useGSI
+        ? await dataClient.models.Gym.listGymByOwnerId(
+            { ownerId },
+            { limit: 1000, nextToken }
+          )
+        : await dataClient.models.Gym.list({
+            limit: 1000,
+            nextToken,
+            filter: { ownerId: { eq: ownerId } },
+          });
       results.push(...(res.data ?? []));
       nextToken = res.nextToken;
     } while (nextToken);

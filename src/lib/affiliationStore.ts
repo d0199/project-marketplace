@@ -108,11 +108,18 @@ export const affiliationStore = {
     if (!isModelAvailable()) return seedAffiliations.filter((a) => a.ptId === ptId);
     const results: AffRecord[] = [];
     let nextToken: string | null | undefined;
+    const useGSI = typeof dataClient.models.Affiliation.listAffiliationByPtId === "function";
     do {
-      const res = await dataClient.models.Affiliation.listAffiliationByPtId(
-        { ptId },
-        { limit: 100, nextToken }
-      );
+      const res = useGSI
+        ? await dataClient.models.Affiliation.listAffiliationByPtId(
+            { ptId },
+            { limit: 100, nextToken }
+          )
+        : await dataClient.models.Affiliation.list({
+            limit: 100,
+            nextToken,
+            filter: { ptId: { eq: ptId } },
+          });
       results.push(...(res.data ?? []));
       nextToken = res.nextToken;
     } while (nextToken);
@@ -123,11 +130,18 @@ export const affiliationStore = {
     if (!isModelAvailable()) return seedAffiliations.filter((a) => a.gymId === gymId);
     const results: AffRecord[] = [];
     let nextToken: string | null | undefined;
+    const useGSI = typeof dataClient.models.Affiliation.listAffiliationByGymId === "function";
     do {
-      const res = await dataClient.models.Affiliation.listAffiliationByGymId(
-        { gymId },
-        { limit: 100, nextToken }
-      );
+      const res = useGSI
+        ? await dataClient.models.Affiliation.listAffiliationByGymId(
+            { gymId },
+            { limit: 100, nextToken }
+          )
+        : await dataClient.models.Affiliation.list({
+            limit: 100,
+            nextToken,
+            filter: { gymId: { eq: gymId } },
+          });
       results.push(...(res.data ?? []));
       nextToken = res.nextToken;
     } while (nextToken);
