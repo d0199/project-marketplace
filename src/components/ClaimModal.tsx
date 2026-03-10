@@ -4,16 +4,28 @@ import type { Gym } from "@/types";
 interface Props {
   gym: Gym;
   onClose: () => void;
+  initialEmail?: string;
+  initialName?: string;
 }
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-export default function ClaimModal({ gym, onClose }: Props) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export default function ClaimModal({ gym, onClose, initialEmail = "", initialName = "" }: Props) {
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [emailExists, setEmailExists] = useState(false);
+
+  async function checkEmail(val: string) {
+    if (!val || initialEmail) return; // skip if logged in
+    try {
+      const r = await fetch(`/api/auth/check-email?email=${encodeURIComponent(val)}`);
+      const data = await r.json();
+      setEmailExists(data.exists === true);
+    } catch { /* ignore */ }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,6 +108,20 @@ export default function ClaimModal({ gym, onClose }: Props) {
               )}
             </div>
 
+            {initialEmail ? (
+              <p className="text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">
+                Signed in as <strong>{initialEmail}</strong>
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                Already have an account?{" "}
+                <a href="/owner" className="text-brand-orange hover:underline font-medium">
+                  Sign in first
+                </a>{" "}
+                to speed up the process.
+              </p>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Your name <span className="text-red-500">*</span>
@@ -117,10 +143,20 @@ export default function ClaimModal({ gym, onClose }: Props) {
                 required
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setEmailExists(false); }}
+                onBlur={(e) => checkEmail(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                 placeholder="jane@example.com"
               />
+              {emailExists && (
+                <div className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  An account with this email already exists.{" "}
+                  <a href="/owner" className="text-brand-orange hover:underline font-semibold">
+                    Sign in
+                  </a>{" "}
+                  to link this claim to your account automatically.
+                </div>
+              )}
             </div>
 
             <div>

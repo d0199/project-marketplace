@@ -13,6 +13,7 @@ import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
 import ShareButton from "@/components/ShareButton";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
+import PTClaimModal from "@/components/PTClaimModal";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
 interface AffiliatedGym {
@@ -97,6 +98,9 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [showContactModal, setShowContactModal] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showClaim, setShowClaim] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     getCurrentUser()
@@ -105,6 +109,8 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
         setIsAdmin(attributes["custom:isAdmin"] === "true");
         const email = user.signInDetails?.loginId ?? attributes.email ?? "";
         setIsInternalUser(email.endsWith("@mynextgym.com.au"));
+        setUserEmail(email);
+        setUserName(attributes.name ?? "");
         const ownerId = attributes["custom:ownerId"] ?? "";
         setIsOwner(ownerId === pt.ownerId);
         setAuthChecked(true);
@@ -550,12 +556,12 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                 </ul>
                 {isUnclaimed && (
                   <div className={`${pt.phone || pt.instagram || pt.facebook || pt.tiktok ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
-                    <Link
-                      href="/claim-pt"
+                    <button
+                      onClick={() => setShowClaim(true)}
                       className="text-sm text-brand-orange hover:underline"
                     >
                       Claim this profile for free →
-                    </Link>
+                    </button>
                   </div>
                 )}
               </div>
@@ -700,6 +706,9 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
         )}
         {showFeedback && (
           <FeedbackModal gymId={pt.id} gymName={pt.name} listingType="pt" onClose={() => setShowFeedback(false)} />
+        )}
+        {showClaim && (
+          <PTClaimModal pt={pt} onClose={() => setShowClaim(false)} initialEmail={userEmail} initialName={userName} />
         )}
       </Layout>
     </>

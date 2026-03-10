@@ -13,6 +13,7 @@ import { ptStore } from "@/lib/ptStore";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 import FeedbackModal from "@/components/FeedbackModal";
+import ClaimModal from "@/components/ClaimModal";
 import ShareButton from "@/components/ShareButton";
 
 const DAYS = [
@@ -150,6 +151,9 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
   const [contactForm, setContactForm] = useState<ContactForm>({ name: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showClaim, setShowClaim] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
 
   // Profile page always respects isPaid — admins edit via admin panel, not the listing view
   const effectivePaid = !!gym.isPaid;
@@ -162,6 +166,8 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
         setIsAdmin(attributes["custom:isAdmin"] === "true");
         const email = user.signInDetails?.loginId ?? attributes.email ?? "";
         setIsInternalUser(email.endsWith("@mynextgym.com.au"));
+        setUserEmail(email);
+        setUserName(attributes.name ?? "");
         setAuthChecked(true);
       })
       .catch(() => {
@@ -606,12 +612,12 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                 </ul>
                 {(gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
                   <div className={`${gym.phone || (effectivePaid && (gym.instagram || gym.facebook)) ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
-                    <Link
-                      href="/claim-gym"
+                    <button
+                      onClick={() => setShowClaim(true)}
                       className="text-sm text-brand-orange hover:underline"
                     >
                       Claim this listing for free →
-                    </Link>
+                    </button>
                   </div>
                 )}
               </div>
@@ -658,6 +664,9 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
 
         {showFeedback && (
           <FeedbackModal gymId={gym.id} gymName={gym.name} onClose={() => setShowFeedback(false)} />
+        )}
+        {showClaim && (
+          <ClaimModal gym={gym} onClose={() => setShowClaim(false)} initialEmail={userEmail} initialName={userName} />
         )}
       </Layout>
     </>
