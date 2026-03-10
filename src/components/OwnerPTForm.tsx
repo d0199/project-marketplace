@@ -470,7 +470,7 @@ export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Prop
       <section>
         <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Images</h3>
         <p className="text-xs text-gray-500 mb-3">
-          First image is your profile photo. Drag to reorder — add up to 6 images.
+          First image is your profile photo. Remaining images rotate in the background banner. Drag to reorder — up to 6 images.
         </p>
         <div className="space-y-3 mb-4">
           {form.images.map((url, idx) => {

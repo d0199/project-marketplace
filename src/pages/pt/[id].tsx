@@ -217,16 +217,16 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
 
         {/* Banner */}
         <div className="relative rounded-2xl h-72 sm:h-80 bg-brand-black mb-6">
-          {/* Background — carousel if multiple images, stock fallback otherwise */}
+          {/* Background — carousel from images[1+] (first image is profile photo only) */}
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
-            {hasImages ? (
+            {pt.images.length > 1 ? (
               <div className="absolute inset-0 opacity-60">
                 <ImageCarousel
-                  images={pt.images}
+                  images={pt.images.slice(1)}
                   alt={pt.name}
                   sizes="100vw"
                   showDots={false}
-                  focalPoints={pt.imageFocalPoints}
+                  focalPoints={pt.imageFocalPoints?.slice(1)}
                 />
               </div>
             ) : (
