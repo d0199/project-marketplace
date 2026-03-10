@@ -1222,7 +1222,7 @@ export default function BillingPage() {
 
         {/* ── Analytics tab ────────────────────────────────────────────────── */}
         {tab === "analytics" && session && (
-          <AnalyticsTab ownerId={session.ownerId} gyms={gyms} />
+          <AnalyticsTab ownerId={session.ownerId} gyms={gyms} pts={pts} />
         )}
 
         {/* ── Affiliations tab ───────────────────────────────────────────── */}

@@ -77,6 +77,14 @@ function buildJsonLd(pt: PersonalTrainer) {
   return jsonLd;
 }
 
+function track(ptId: string, event: string) {
+  fetch(`/api/stats/${ptId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event }),
+  }).catch(() => {});
+}
+
 export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -106,6 +114,11 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
       });
   }, [pt.ownerId]);
 
+  // Track page view on mount
+  useEffect(() => {
+    track(pt.id, "pageViews");
+  }, [pt.id]);
+
   // Block non-internal users from viewing test PTs
   useEffect(() => {
     if (authChecked && pt.isTest && !isInternalUser) {
@@ -127,6 +140,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
       });
       if (r.ok) {
         setContactStatus("sent");
+        track(pt.id, "emailClicks");
       } else {
         setContactStatus("error");
       }
@@ -382,6 +396,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                   href={pt.bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => track(pt.id, "bookingClicks")}
                   className="block mt-4 bg-white text-brand-orange text-center font-bold py-2.5 rounded-lg hover:bg-orange-50 transition-colors text-sm"
                 >
                   Book a Session →
@@ -393,6 +408,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                   href={pt.website}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => track(pt.id, "websiteClicks")}
                   className={`block ${pt.bookingUrl ? "mt-2 text-center text-orange-100 text-xs hover:underline" : "mt-4 bg-white text-brand-orange text-center font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors"}`}
                 >
                   {pt.bookingUrl ? "Visit website" : "Visit Website"}
@@ -504,7 +520,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                       <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
-                      <a href={`tel:${pt.phone}`} className="hover:underline">{pt.phone}</a>
+                      <a href={`tel:${pt.phone}`} onClick={() => track(pt.id, "phoneClicks")} className="hover:underline">{pt.phone}</a>
                     </li>
                   )}
                   {pt.instagram && (

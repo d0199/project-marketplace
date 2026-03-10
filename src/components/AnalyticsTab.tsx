@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Gym } from "@/types";
+import type { Gym, PersonalTrainer } from "@/types";
 
 interface OwnerStats {
   leads: number;
@@ -10,14 +10,15 @@ interface OwnerStats {
   bookingClicks: number;
 }
 
-interface GymStatRow {
+interface StatRow {
   gymId: string;
   gymName: string;
   stats: OwnerStats;
 }
 
 interface StatsResponse {
-  gyms: GymStatRow[];
+  gyms: StatRow[];
+  pts?: StatRow[];
   aggregate: OwnerStats;
 }
 
@@ -64,11 +65,13 @@ function StatsCard({
   subtitle,
   stats,
   highlight,
+  badge,
 }: {
   title: string;
   subtitle?: string;
   stats: OwnerStats;
   highlight?: boolean;
+  badge?: string;
 }) {
   return (
     <div
@@ -82,7 +85,14 @@ function StatsCard({
           highlight ? "bg-brand-orange" : "bg-gray-800"
         }`}
       >
-        <div className="font-bold text-lg text-white">{title}</div>
+        <div className="flex items-center gap-2">
+          <div className="font-bold text-lg text-white">{title}</div>
+          {badge && (
+            <span className="text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded-full">
+              {badge}
+            </span>
+          )}
+        </div>
         {subtitle && <div className="text-sm text-white/65 mt-0.5">{subtitle}</div>}
       </div>
 
@@ -101,14 +111,24 @@ function StatsCard({
   );
 }
 
-export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms: Gym[] }) {
+export default function AnalyticsTab({
+  ownerId,
+  gyms,
+  pts,
+}: {
+  ownerId: string;
+  gyms: Gym[];
+  pts?: PersonalTrainer[];
+}) {
   const [from, setFrom] = useState(daysAgoStr(30));
   const [to, setTo] = useState(todayStr());
   const [appliedFrom, setAppliedFrom] = useState(daysAgoStr(30));
   const [appliedTo, setAppliedTo] = useState(todayStr());
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [gymSearch, setGymSearch] = useState("");
+  const [searchQuery, setSearch] = useState("");
+
+  const totalListings = gyms.length + (pts?.length ?? 0);
 
   useEffect(() => {
     load();
@@ -135,6 +155,28 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
     setFrom(f); setTo(t);
     setAppliedFrom(f); setAppliedTo(t);
   }
+
+  function matchesSearch(row: StatRow, type: "gym" | "pt") {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    if (row.gymName.toLowerCase().includes(q)) return true;
+    if (type === "gym") {
+      const gym = gyms.find((g) => g.id === row.gymId);
+      return (
+        (gym?.address.suburb ?? "").toLowerCase().includes(q) ||
+        (gym?.address.postcode ?? "").includes(q)
+      );
+    } else {
+      const pt = (pts ?? []).find((p) => p.id === row.gymId);
+      return (
+        (pt?.address.suburb ?? "").toLowerCase().includes(q) ||
+        (pt?.address.postcode ?? "").includes(q)
+      );
+    }
+  }
+
+  const filteredGyms = (data?.gyms ?? []).filter((r) => matchesSearch(r, "gym"));
+  const filteredPTs = (data?.pts ?? []).filter((r) => matchesSearch(r, "pt"));
 
   return (
     <div>
@@ -175,11 +217,11 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
             </button>
           ))}
         </div>
-        {gyms.length > 1 && (
+        {totalListings > 1 && (
           <input
-            value={gymSearch}
-            onChange={(e) => setGymSearch(e.target.value)}
-            placeholder="Search gym, suburb, postcode…"
+            value={searchQuery}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search listing, suburb, postcode…"
             className="ml-auto px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange min-w-[220px]"
           />
         )}
@@ -195,9 +237,9 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
       ) : !data ? (
         <div className="text-center py-12 text-gray-400">Unable to load analytics.</div>
       ) : (
-        <div className="space-y-5">
-          {/* Aggregate card — only when owner has multiple gyms */}
-          {gyms.length > 1 && (
+        <div className="space-y-8">
+          {/* Aggregate card — only when owner has multiple listings */}
+          {totalListings > 1 && (
             <StatsCard
               title="All Listings"
               subtitle={`${appliedFrom} – ${appliedTo}`}
@@ -205,33 +247,62 @@ export default function AnalyticsTab({ ownerId, gyms }: { ownerId: string; gyms:
               highlight
             />
           )}
-          {/* Per-gym cards */}
-          {data.gyms
-            .filter((row) => {
-              if (!gymSearch.trim()) return true;
-              const q = gymSearch.toLowerCase();
-              const gym = gyms.find((g) => g.id === row.gymId);
-              return (
-                row.gymName.toLowerCase().includes(q) ||
-                (gym?.address.suburb ?? "").toLowerCase().includes(q) ||
-                (gym?.address.postcode ?? "").includes(q)
-              );
-            })
-            .map((row) => {
-              const gym = gyms.find((g) => g.id === row.gymId);
-              return (
-                <StatsCard
-                  key={row.gymId}
-                  title={row.gymName}
-                  subtitle={
-                    gym
-                      ? `${gym.address.suburb}, ${gym.address.state} · ${appliedFrom} – ${appliedTo}`
-                      : `${appliedFrom} – ${appliedTo}`
-                  }
-                  stats={row.stats}
-                />
-              );
-            })}
+
+          {/* ── Gym Analytics ───────────────────────────────────────────── */}
+          {filteredGyms.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Gym Analytics</h2>
+              <div className="space-y-5">
+                {filteredGyms.map((row) => {
+                  const gym = gyms.find((g) => g.id === row.gymId);
+                  return (
+                    <StatsCard
+                      key={row.gymId}
+                      title={row.gymName}
+                      subtitle={
+                        gym
+                          ? `${gym.address.suburb}, ${gym.address.state} · ${appliedFrom} – ${appliedTo}`
+                          : `${appliedFrom} – ${appliedTo}`
+                      }
+                      stats={row.stats}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ── PT Analytics ────────────────────────────────────────────── */}
+          {filteredPTs.length > 0 && (
+            <section>
+              {filteredGyms.length > 0 && <hr className="border-gray-200 my-8" />}
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Personal Trainer Analytics</h2>
+              <div className="space-y-5">
+                {filteredPTs.map((row) => {
+                  const pt = (pts ?? []).find((p) => p.id === row.gymId);
+                  return (
+                    <StatsCard
+                      key={row.gymId}
+                      title={row.gymName}
+                      subtitle={
+                        pt
+                          ? `${pt.address.suburb}, ${pt.address.state} · ${appliedFrom} – ${appliedTo}`
+                          : `${appliedFrom} – ${appliedTo}`
+                      }
+                      stats={row.stats}
+                      badge="PT"
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {filteredGyms.length === 0 && filteredPTs.length === 0 && (
+            <p className="text-gray-400 text-sm py-8 text-center">
+              No analytics data found for the selected period.
+            </p>
+          )}
         </div>
       )}
     </div>
