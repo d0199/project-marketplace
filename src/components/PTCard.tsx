@@ -1,5 +1,7 @@
+import { useState } from "react";
 import Link from "next/link";
 import ImageCarousel from "./ImageCarousel";
+import PTClaimModal from "./PTClaimModal";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 
 export interface PTWithDistance {
@@ -26,6 +28,7 @@ interface Props {
 }
 
 export default function PTCard({ pt }: Props) {
+  const [showClaim, setShowClaim] = useState(false);
   const unclaimed = pt.ownerId === "unclaimed" || pt.ownerId === "owner-3";
   const isStock = pt.images.length === 0;
   const displayImages = isStock ? [getStockImage(pt.id)] : pt.images;
@@ -104,7 +107,20 @@ export default function PTCard({ pt }: Props) {
         >
           View Trainer
         </Link>
+
+        {unclaimed && (
+          <button
+            onClick={() => setShowClaim(true)}
+            className="mt-2 w-full text-center text-xs text-gray-400 hover:text-brand-orange transition-colors"
+          >
+            Own this profile? Claim listing
+          </button>
+        )}
       </div>
+
+      {showClaim && (
+        <PTClaimModal pt={pt} onClose={() => setShowClaim(false)} />
+      )}
     </div>
   );
 }
