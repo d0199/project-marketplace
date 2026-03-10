@@ -55,7 +55,7 @@
     "bookingUrl": "https://www.eliteperformance.com.au/book",
     "lat": -31.9440,
     "lng": 115.8270,
-    "images": [],
+    "images": ["https://media.gettyimages.com/id/1040501222/photo/portrait-of-a-personal-trainer-in-the-gym.jpg?s=612x612&w=gi&k=20&c=NduHsYd4Lh0Vsit5hnWS3PKaI5lTzbxdM0eC5PKKPUo="],
     "gymIds": ["gym-001", "gym-002"],
     "specialties": ["Sports Performance", "Boxing", "Rehabilitation", "Strength Training", "Athletic Conditioning"],
     "qualifications": ["Bachelor of Exercise Science", "Cert IV in Fitness", "Boxing Australia Coach Level 1", "First Aid CPR"],

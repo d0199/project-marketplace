@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
-import ImageCarousel from "@/components/ImageCarousel";
 import type { PersonalTrainer } from "@/types";
 import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
-import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 import ShareButton from "@/components/ShareButton";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
@@ -108,7 +107,6 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   if (pt.isTest && !isInternalUser) return null;
 
   const hasImages = pt.images.length > 0;
-  const displayImages = hasImages ? pt.images : [getStockImage(pt.id)];
   const metaDesc = pt.description || `${pt.name} — Personal Trainer in ${pt.address.suburb}, ${pt.address.state}`;
 
   return (
@@ -148,52 +146,36 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
         </nav>
 
         {/* Banner */}
-        <div className="relative rounded-2xl h-56 sm:h-72 bg-brand-black mb-6">
+        <div className="relative rounded-2xl h-72 sm:h-80 bg-brand-black mb-6">
+          {/* Background — always use a stock gym image */}
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
-            <div className="absolute inset-0 opacity-60">
-              <ImageCarousel
-                images={hasImages && pt.images.length > 1 ? pt.images.slice(1) : displayImages}
-                alt={pt.name}
-                sizes="100vw"
-                showDots={false}
-                focalPoints={pt.imageFocalPoints}
-              />
-            </div>
-            {!hasImages && (
-              <span className="absolute bottom-2 right-3 text-[10px] text-white/50 z-10">
-                {STOCK_ATTRIBUTION}
-              </span>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+            <Image
+              src={`/stock/gym-${((pt.id.charCodeAt(pt.id.length - 1) % 20) + 1)}.jpg`}
+              alt=""
+              fill
+              className="object-cover opacity-40"
+              sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
           </div>
-          <div className="absolute inset-0 flex items-end p-6">
-            <div className="flex items-center gap-4">
-              {/* Profile photo */}
-              <div className="shrink-0">
-                {hasImages ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={pt.images[0]}
-                    alt={pt.name}
-                    className="w-24 h-24 sm:w-[7.5rem] sm:h-[7.5rem] rounded-full object-cover border-3 border-white/90 shadow-lg"
-                  />
-                ) : (
-                  <div className="w-24 h-24 sm:w-[7.5rem] sm:h-[7.5rem] rounded-full border-3 border-white/90 shadow-lg bg-gray-300 flex items-center justify-center">
-                    <svg className="w-10 h-10 sm:w-14 sm:h-14 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              {/* Name + location */}
-              <div>
-                <p className="text-orange-200 text-sm font-medium mb-0.5">Personal Trainer</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">{pt.name}</h1>
-                <p className="text-orange-100 mt-0.5">
-                  {pt.address.suburb}, {pt.address.state} {pt.address.postcode}
-                </p>
-              </div>
-            </div>
+          {/* Profile photo — only shown when image is populated */}
+          {hasImages && (
+          <div className="absolute left-6 top-0 bottom-[5.5rem] flex items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pt.images[0]}
+                alt={pt.name}
+                className="w-[7.5rem] h-[7.5rem] sm:w-[9.5rem] sm:h-[9.5rem] rounded-full object-cover object-top border-4 border-white/90 shadow-lg"
+              />
+          </div>
+          )}
+          {/* Text — pinned to bottom, matching gym banner layout */}
+          <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none">
+            <p className="text-orange-200 text-sm font-medium mb-0.5">Personal Trainer</p>
+            <h1 className="text-3xl font-bold text-white drop-shadow-md">{pt.name}</h1>
+            <p className="text-orange-100 mt-1">
+              {pt.address.suburb}, {pt.address.state} {pt.address.postcode}
+            </p>
           </div>
         </div>
 
