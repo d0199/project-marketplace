@@ -14,10 +14,11 @@ const DEFAULT_ISSUE_TYPES = [
 interface Props {
   gymId: string;
   gymName: string;
+  listingType?: "gym" | "pt";
   onClose: () => void;
 }
 
-export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
+export default function FeedbackModal({ gymId, gymName, listingType = "gym", onClose }: Props) {
   const [issueTypes, setIssueTypes] = useState<string[]>(DEFAULT_ISSUE_TYPES);
   const [issueType, setIssueType] = useState("");
   const [message, setMessage] = useState("");
@@ -42,7 +43,7 @@ export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gymId, gymName, issueType, message }),
+        body: JSON.stringify({ gymId, gymName, issueType, message, listingType }),
       });
       if (res.ok) {
         setSubmitted(true);

@@ -228,6 +228,18 @@ const schema = a.schema({
       entries: a.string().array(),   // the picklist values
     })
     .authorization((allow) => [allow.publicApiKey()]),
+
+  // User-submitted feedback / issue reports on listings.
+  FeedbackReport: a
+    .model({
+      listingId: a.string().required(),   // gymId or ptId
+      listingName: a.string(),
+      listingType: a.string().required(),  // "gym" | "pt"
+      issueType: a.string().required(),
+      message: a.string(),
+      submittedAt: a.string(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

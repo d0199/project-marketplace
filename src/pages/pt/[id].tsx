@@ -12,6 +12,7 @@ import { ownerStore } from "@/lib/ownerStore";
 import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
 import ShareButton from "@/components/ShareButton";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
+import FeedbackModal from "@/components/FeedbackModal";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
 interface AffiliatedGym {
@@ -87,6 +88,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
@@ -565,6 +567,15 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                 </a>
               </div>
             )}
+            {/* Feedback link */}
+            <div className="text-center mt-3">
+              <button
+                onClick={() => setShowFeedback(true)}
+                className="text-xs text-gray-400 hover:text-brand-orange transition-colors"
+              >
+                See something wrong? Let us know
+              </button>
+            </div>
           </aside>
         </div>
         {/* Enquiry modal — shown when PT has custom fields */}
@@ -669,6 +680,9 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
               )}
             </div>
           </div>
+        )}
+        {showFeedback && (
+          <FeedbackModal gymId={pt.id} gymName={pt.name} listingType="pt" onClose={() => setShowFeedback(false)} />
         )}
       </Layout>
     </>
