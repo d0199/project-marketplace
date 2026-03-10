@@ -10,6 +10,7 @@ import GymAffiliationsTab from "@/components/GymAffiliationsTab";
 import PTAffiliationsTab from "@/components/PTAffiliationsTab";
 import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
 import BulkEditModal from "@/components/BulkEditModal";
+import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -414,6 +415,7 @@ function PTRow({
   onUpgrade,
   onManage,
   onCancel,
+  onVerify,
 }: {
   pt: PersonalTrainer;
   interval: Interval;
@@ -423,6 +425,7 @@ function PTRow({
   onUpgrade: (pt: PersonalTrainer, plan: "paid" | "featured") => void;
   onManage: () => void;
   onCancel: (pt: PersonalTrainer) => void;
+  onVerify?: () => void;
 }) {
   const currentPlan =
     pt.stripePlan ?? (pt.isFeatured ? "featured" : pt.isPaid ? "paid" : null);
@@ -456,6 +459,17 @@ function PTRow({
           <div className="text-sm text-gray-500">
             {pt.address.suburb}, {pt.address.state} {pt.address.postcode}
           </div>
+          {!pt.qualificationsVerified && pt.qualifications.length > 0 && (
+            <button
+              onClick={() => onVerify?.()}
+              className="mt-1 inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 font-medium hover:bg-amber-100 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Verify qualifications
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <PlanBadge plan={currentPlan} />
@@ -801,6 +815,7 @@ export default function BillingPage() {
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [verifyPt, setVerifyPt] = useState<PersonalTrainer | null>(null);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1388,6 +1403,7 @@ export default function BillingPage() {
                         onUpgrade={handlePTUpgrade}
                         onManage={handleManage}
                         onCancel={handlePTCancel}
+                        onVerify={() => setVerifyPt(pt)}
                       />
                     ))}
                   </div>
@@ -1405,6 +1421,16 @@ export default function BillingPage() {
             ownerId={session.ownerId}
             onClose={() => setShowBulkModal(false)}
             onSubmitted={handleBulkSubmitted}
+          />
+        )}
+
+        {/* Qualification Verify Modal */}
+        {verifyPt && (
+          <QualificationVerifyModal
+            ptId={verifyPt.id}
+            ptName={verifyPt.name}
+            qualifications={verifyPt.qualifications}
+            onClose={() => setVerifyPt(null)}
           />
         )}
 

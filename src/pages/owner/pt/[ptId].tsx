@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import OwnerPTForm from "@/components/OwnerPTForm";
+import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 import type { OwnerSession, PersonalTrainer } from "@/types";
 
 function PlanBanner({ pt }: { pt: PersonalTrainer }) {
@@ -58,6 +59,7 @@ export default function EditPTPage() {
   const [pt, setPt] = useState<PersonalTrainer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showVerify, setShowVerify] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
@@ -161,8 +163,17 @@ export default function EditPTPage() {
 
           <PlanBanner pt={pt} />
 
-          <OwnerPTForm pt={pt} onSave={handleSave} />
+          <OwnerPTForm pt={pt} onSave={handleSave} onVerifyQualifications={() => setShowVerify(true)} />
         </div>
+
+        {showVerify && pt && (
+          <QualificationVerifyModal
+            ptId={pt.id}
+            ptName={pt.name}
+            qualifications={pt.qualifications}
+            onClose={() => setShowVerify(false)}
+          />
+        )}
       </Layout>
     </>
   );
