@@ -327,18 +327,17 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
       </section>
 
       {/* Custom Lead Fields */}
-      {isPaid && (
-        <section>
-          <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-1">Custom Enquiry Fields</h3>
-          <p className="text-xs text-gray-500 mb-3">
-            Add extra questions to your contact form. Prospects will see these when sending an enquiry.
-          </p>
-          <CustomLeadFieldsEditor
-            fields={form.customLeadFields ?? []}
-            onChange={(customLeadFields) => update({ customLeadFields })}
-          />
-        </section>
-      )}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-1">Custom Enquiry Fields</h3>
+        <p className="text-xs text-gray-500 mb-3">
+          Add extra questions to your contact form. Prospects will see these when sending an enquiry.
+          {!isPaid && " Upgrade to a paid plan to activate the contact form on your profile."}
+        </p>
+        <CustomLeadFieldsEditor
+          fields={form.customLeadFields ?? []}
+          onChange={(customLeadFields) => update({ customLeadFields })}
+        />
+      </section>
 
       {/* Save */}
       <div className="pt-4 border-t border-gray-200">
