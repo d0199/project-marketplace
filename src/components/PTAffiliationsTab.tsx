@@ -323,11 +323,11 @@ export default function PTAffiliationsTab({ pts }: Props) {
                         Awaiting gym owner approval
                         {aff.requestedAt && ` · ${new Date(aff.requestedAt).toLocaleDateString()}`}
                       </p>
-                      <Link href={`/gym/${aff.gymId}`} className="text-xs text-brand-orange hover:underline mt-1 inline-block">
-                        View Profile
-                      </Link>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-4">
+                      <Link href={`/gym/${aff.gymId}`} className="text-xs text-brand-orange hover:underline">
+                        View Profile →
+                      </Link>
                       <span className="text-xs bg-yellow-100 text-yellow-800 font-medium px-2 py-0.5 rounded-full">Pending</span>
                       <button
                         onClick={() => setConfirmAction({ id: aff.id, ptName: pt.name || pt.id, gymName: aff.gymName || aff.gymId, action: "cancelled" })}
@@ -347,13 +347,11 @@ export default function PTAffiliationsTab({ pts }: Props) {
               <div className="space-y-2 mb-3">
                 {active.map((aff) => (
                   <div key={aff.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm">{aff.gymName || aff.gymId}</p>
-                      <Link href={`/gym/${aff.gymId}`} className="text-xs text-brand-orange hover:underline mt-1 inline-block">
-                        View Profile
-                      </Link>
-                    </div>
+                    <p className="font-medium text-gray-900 text-sm">{aff.gymName || aff.gymId}</p>
                     <div className="flex items-center gap-2">
+                      <Link href={`/gym/${aff.gymId}`} className="text-xs text-brand-orange hover:underline">
+                        View Profile →
+                      </Link>
                       <span className="text-xs bg-green-100 text-green-700 font-medium px-2 py-0.5 rounded-full">Active</span>
                       <button
                         onClick={() => setConfirmAction({ id: aff.id, ptName: pt.name || pt.id, gymName: aff.gymName || aff.gymId, action: "removed" })}
