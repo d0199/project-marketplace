@@ -624,7 +624,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">
               Browse {isGymMode ? "gyms" : "trainers"} by suburb
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${isGymMode ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-6`}>
               {(["WA", "NSW", "VIC", "QLD", "SA"] as const).map((state) => {
                 const suburbs = Object.values(POSTCODE_META).filter((m) => m.state === state);
                 return (
@@ -637,7 +637,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
                             href={isGymMode ? `/gyms/${meta.slug}` : `/trainers/${meta.slug}`}
                             className="text-sm text-brand-orange hover:underline"
                           >
-                            {isGymMode ? "Gyms" : "Personal trainers"} in {meta.name}
+                            {isGymMode ? "Gyms" : "Personal Trainer"} {meta.name}
                           </Link>
                         </li>
                       ))}

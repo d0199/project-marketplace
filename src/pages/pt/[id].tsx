@@ -128,8 +128,9 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   useEffect(() => {
     if (authChecked && router.query.claim === "true") {
       setShowClaim(true);
-      const { claim, ...rest } = router.query;
-      router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+      const q = { ...router.query };
+      delete q.claim;
+      router.replace({ pathname: router.pathname, query: q }, undefined, { shallow: true });
     }
   }, [authChecked, router]);
 

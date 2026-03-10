@@ -137,8 +137,6 @@ export default function LeadsTab({
   const allFiltered = applyFilters(leads);
 
   // Determine which entity filter options to show
-  const showGymFilter = gyms.length > 1;
-  const showPTFilter = (pts ?? []).length > 1;
   const showEntityFilter = gyms.length + (pts ?? []).length > 1;
 
   function renderLead(lead: Lead) {
