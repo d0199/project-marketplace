@@ -1,5 +1,6 @@
 import type { GetServerSideProps } from "next";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 import { POSTCODE_META } from "@/lib/utils";
 
 const BASE = "https://www.mynextgym.com.au";
@@ -15,20 +16,33 @@ export default function SitemapXml() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const gyms = await ownerStore.getAll();
+  const [gyms, pts] = await Promise.all([ownerStore.getAll(), ptStore.getAll()]);
   const today = new Date().toISOString().slice(0, 10);
 
   const activeGyms = gyms.filter((g) => g.isActive !== false && !g.isTest);
+  const activePTs = pts.filter((p) => p.isActive !== false && !p.isTest);
+
+  const suburbSlugs = Object.values(POSTCODE_META).map(({ slug }) => slug);
 
   const lines = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
     entry(`${BASE}/`, "1.0", "daily", today),
-    ...Object.values(POSTCODE_META).map(({ slug }) =>
+    // Gym suburb pages
+    ...suburbSlugs.map((slug) =>
       entry(`${BASE}/gyms/${slug}`, "0.8", "weekly", today)
     ),
+    // Trainer suburb pages
+    ...suburbSlugs.map((slug) =>
+      entry(`${BASE}/trainers/${slug}`, "0.8", "weekly", today)
+    ),
+    // Individual gym pages
     ...activeGyms.map((g) =>
       entry(`${BASE}/gym/${g.id}`, "0.7", "weekly", today)
+    ),
+    // Individual PT pages
+    ...activePTs.map((p) =>
+      entry(`${BASE}/pt/${p.id}`, "0.7", "weekly", today)
     ),
     `</urlset>`,
   ];
