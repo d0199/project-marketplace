@@ -75,6 +75,7 @@ const schema = a.schema({
       phoneClicks: a.integer().default(0),
       emailClicks: a.integer().default(0),
       bookingClicks: a.integer().default(0),
+      directionsClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
@@ -203,6 +204,7 @@ const schema = a.schema({
       phoneClicks: a.integer().default(0),
       emailClicks: a.integer().default(0),
       bookingClicks: a.integer().default(0),
+      directionsClicks: a.integer().default(0),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

@@ -7,6 +7,7 @@ const VALID_EVENTS: StatEvent[] = [
   "phoneClicks",
   "emailClicks",
   "bookingClicks",
+  "directionsClicks",
 ];
 
 export default async function handler(

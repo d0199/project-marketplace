@@ -573,6 +573,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                   href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${pt.address.street}, ${pt.address.suburb} ${pt.address.state} ${pt.address.postcode}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => track(pt.id, "directionsClicks")}
                   className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

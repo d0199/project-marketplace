@@ -8,6 +8,7 @@ interface OwnerStats {
   phoneClicks: number;
   emailClicks: number;
   bookingClicks: number;
+  directionsClicks: number;
 }
 
 interface StatRow {
@@ -105,6 +106,7 @@ function StatsCard({
           <MetricTile label="Phone Clicks" value={stats.phoneClicks} />
           <MetricTile label="Email Clicks" value={stats.emailClicks} />
           <MetricTile label="Booking Clicks" value={stats.bookingClicks} />
+          <MetricTile label="Directions Clicks" value={stats.directionsClicks} />
         </div>
       </div>
     </div>
