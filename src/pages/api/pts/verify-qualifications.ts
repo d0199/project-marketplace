@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
 import { sendAdminAlert } from "@/lib/emailNotify";
+import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { BASE_URL } from "@/lib/siteUrl";
 
@@ -53,24 +54,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ? `\nFiles uploaded: ${(fileKeys as string[]).length} document(s)`
     : "\nNo files uploaded";
 
-  await sendAdminAlert(
-    "PT qualification verification request",
-    [
-      `A personal trainer has submitted evidence for qualification verification.`,
-      ``,
-      `PT: ${ptName} (${ptId})`,
-      `Submitted by: ${name} <${email}>`,
-      ``,
-      `Qualifications:`,
-      ...(qualifications as string[]).map((q: string) => `  - ${q}`),
-      ``,
-      `Evidence provided:`,
-      evidence,
-      fileInfo,
-      ``,
-      `Review at: ${BASE_URL}/admin (Moderation Review tab)`,
-    ].join("\n")
-  ).catch(() => {});
+  await Promise.allSettled([
+    sendAdminAlert(
+      "PT qualification verification request",
+      [
+        `A personal trainer has submitted evidence for qualification verification.`,
+        ``,
+        `PT: ${ptName} (${ptId})`,
+        `Submitted by: ${name} <${email}>`,
+        ``,
+        `Qualifications:`,
+        ...(qualifications as string[]).map((q: string) => `  - ${q}`),
+        ``,
+        `Evidence provided:`,
+        evidence,
+        fileInfo,
+        ``,
+        `Review at: ${BASE_URL}/admin (Moderation Review tab)`,
+      ].join("\n")
+    ),
+    sendSlackNotification("moderation", {
+      type: "PT Qualification Verification",
+      gym_name: ptName,
+      gym_id: ptId,
+      owner_email: email,
+      submitted_by: `${name} <${email}>`,
+      qualifications: (qualifications as string[]).join(", "),
+      files_uploaded: fileKeys?.length ? `${(fileKeys as string[]).length} document(s)` : "None",
+      submitted_at: nowAWST(),
+    }),
+  ]);
 
   return res.status(200).json({ ok: true });
 }
