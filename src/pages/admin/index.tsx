@@ -824,7 +824,19 @@ function ModerationTab({ onPendingCount, adminEmail }: { onPendingCount?: (n: nu
                         {isVerification && <span className="text-xs bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded">Qualification Verification</span>}
                         {isBulkEdit && <span className="text-xs bg-blue-100 text-blue-700 font-medium px-1.5 py-0.5 rounded">Bulk Edit</span>}
                       </p>
-                      <p className="text-xs text-gray-400">ID: {e.gymId}</p>
+                      <p className="text-xs text-gray-400">
+                        ID: {e.gymId}
+                        {e.gymId && (
+                          <a
+                            href={isPTEdit || isVerification ? `/pt/${e.gymId}` : `/gym/${e.gymId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-brand-orange hover:underline font-medium"
+                          >
+                            View profile &rarr;
+                          </a>
+                        )}
+                      </p>
                     </div>
                   </div>
                   <Badge status={e.status} />
