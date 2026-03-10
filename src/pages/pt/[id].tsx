@@ -14,7 +14,6 @@ import ShareButton from "@/components/ShareButton";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
-import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
 interface AffiliatedGym {
   id: string;
@@ -86,13 +85,12 @@ function track(ptId: string, event: string) {
   }).catch(() => {});
 }
 
-export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
+export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isInternalUser, setIsInternalUser] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [contactForm, setContactForm] = useState<{ name: string; email: string; phone: string; message: string }>({ name: "", email: "", phone: "", message: "" });
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -266,8 +264,8 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
               </section>
             )}
 
-            {/* Member Offers — paid feature behind flag */}
-            {flags.ptMemberOffers && pt.isPaid && (pt.memberOffers?.length || pt.memberOffersNotes) && (
+            {/* Member Offers — paid feature */}
+            {effectivePaid && (pt.memberOffers?.length || pt.memberOffersNotes) && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">Member Offers</h2>
                 {pt.memberOffers && pt.memberOffers.length > 0 && (
@@ -323,30 +321,9 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                 ) : (
                   <p className="mt-3 text-xs text-gray-400">
                     Unverified
-                    {isOwner && (
-                      <>
-                        {" — "}
-                        <button
-                          onClick={() => setShowVerifyModal(true)}
-                          className="text-brand-orange hover:underline"
-                        >
-                          Verify my qualifications
-                        </button>
-                      </>
-                    )}
                   </p>
                 )}
               </section>
-            )}
-
-            {/* Qualification verification modal — owner only */}
-            {showVerifyModal && (
-              <QualificationVerifyModal
-                ptId={pt.id}
-                ptName={pt.name}
-                qualifications={pt.qualifications}
-                onClose={() => setShowVerifyModal(false)}
-              />
             )}
 
             {/* Affiliated Gyms */}
