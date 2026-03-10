@@ -10,6 +10,7 @@ import type { PersonalTrainer, CustomLeadField } from "@/types";
 import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
 import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
+import ImageCarousel from "@/components/ImageCarousel";
 import ShareButton from "@/components/ShareButton";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
@@ -207,20 +208,32 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
 
         {/* Banner */}
         <div className="relative rounded-2xl h-72 sm:h-80 bg-brand-black mb-6">
-          {/* Background — always use a stock gym image */}
+          {/* Background — carousel if multiple images, stock fallback otherwise */}
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
-            <Image
-              src={`/stock/gym-${((pt.id.charCodeAt(pt.id.length - 1) % 20) + 1)}.jpg`}
-              alt=""
-              fill
-              className="object-cover opacity-40"
-              sizes="100vw"
-            />
+            {hasImages ? (
+              <div className="absolute inset-0 opacity-60">
+                <ImageCarousel
+                  images={pt.images}
+                  alt={pt.name}
+                  sizes="100vw"
+                  showDots={false}
+                  focalPoints={pt.imageFocalPoints}
+                />
+              </div>
+            ) : (
+              <Image
+                src={`/stock/gym-${((pt.id.charCodeAt(pt.id.length - 1) % 20) + 1)}.jpg`}
+                alt=""
+                fill
+                className="object-cover opacity-40"
+                sizes="100vw"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
           </div>
           {/* Profile photo — only shown when image is populated */}
           {hasImages && (
-          <div className="absolute left-6 top-0 bottom-[5.5rem] flex items-center">
+          <div className="absolute left-6 top-0 bottom-[5.5rem] flex items-center z-10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={pt.images[0]}

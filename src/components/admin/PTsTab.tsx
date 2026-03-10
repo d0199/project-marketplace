@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
 import { POSTCODE_COORDS } from "@/lib/utils";
@@ -372,6 +373,7 @@ function PTEditPanel({
 }) {
   const { pt, isNew } = panel;
   const [newImageUrl, setNewImageUrl] = useState("");
+  const dragIndex = useRef<number | null>(null);
   const [newGymId, setNewGymId] = useState("");
   const [newQualification, setNewQualification] = useState("");
   const [specialtySearch, setSpecialtySearch] = useState("");
@@ -404,15 +406,37 @@ function PTEditPanel({
     }
   }
 
+  function onDragStart(idx: number) {
+    dragIndex.current = idx;
+  }
+
+  function onDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault();
+    const from = dragIndex.current;
+    if (from === null || from === idx) return;
+    const imgs = [...pt.images];
+    imgs.splice(idx, 0, imgs.splice(from, 1)[0]);
+    const fps = [...(pt.imageFocalPoints ?? pt.images.map(() => 50))];
+    fps.splice(idx, 0, fps.splice(from, 1)[0]);
+    update({ images: imgs, imageFocalPoints: fps });
+    dragIndex.current = idx;
+  }
+
   function addImage() {
     const url = newImageUrl.trim();
-    if (!url) return;
-    update({ images: [...pt.images, url] });
+    if (!url || pt.images.length >= 6) return;
+    update({
+      images: [...pt.images, url],
+      imageFocalPoints: [...(pt.imageFocalPoints ?? pt.images.map(() => 50)), 50],
+    });
     setNewImageUrl("");
   }
 
   function removeImage(i: number) {
-    update({ images: pt.images.filter((_, idx) => idx !== i) });
+    update({
+      images: pt.images.filter((_, idx) => idx !== i),
+      imageFocalPoints: (pt.imageFocalPoints ?? pt.images.map(() => 50)).filter((_, idx) => idx !== i),
+    });
   }
 
   function addGymId() {
@@ -832,22 +856,82 @@ function PTEditPanel({
           {/* Images */}
           <section>
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Images</h3>
-            {pt.images.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                {pt.images.map((url, i) => (
-                  <div key={i} className="relative group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="w-full h-24 object-cover rounded-lg" />
-                    <button onClick={() => removeImage(i)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+            <p className="text-xs text-gray-500 mb-3">
+              First image is the profile photo. Drag to reorder — up to 6 images.
+            </p>
+            <div className="space-y-3 mb-4">
+              {pt.images.map((url, idx) => {
+                const focalY = pt.imageFocalPoints?.[idx] ?? 50;
+                return (
+                  <div
+                    key={url + idx}
+                    draggable
+                    onDragStart={() => onDragStart(idx)}
+                    onDragOver={(e) => onDragOver(e, idx)}
+                    className="rounded-lg border border-gray-100 hover:border-gray-200 bg-white hover:bg-gray-50 px-3 py-2 -mx-1 transition-colors cursor-grab active:cursor-grabbing"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-300 select-none text-base leading-none shrink-0" title="Drag to reorder">⠿</span>
+                      <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                        <Image
+                          src={url}
+                          alt={`Image ${idx + 1}`}
+                          fill
+                          className="object-cover"
+                          style={{ objectPosition: `center ${focalY}%` }}
+                          sizes="64px"
+                        />
+                      </div>
+                      <span className="flex-1 text-xs text-gray-600 truncate">{url}</span>
+                      {idx === 0 && (
+                        <span className="text-xs bg-brand-orange text-white px-2 py-0.5 rounded-full shrink-0">Primary</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="text-red-400 hover:text-red-600 text-lg leading-none shrink-0"
+                        aria-label="Remove image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 pl-7">
+                      <span className="text-xs text-gray-400 shrink-0">Focus</span>
+                      <span className="text-xs text-gray-400 shrink-0">Top</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={focalY}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          const fps = [...(pt.imageFocalPoints ?? pt.images.map(() => 50))];
+                          fps[idx] = val;
+                          update({ imageFocalPoints: fps });
+                        }}
+                        className="flex-1 accent-brand-orange cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-400 shrink-0">Bottom</span>
+                    </div>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+            {pt.images.length < 6 && (
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  className={inputCls}
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://… paste image URL"
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }}
+                />
+                <button onClick={addImage} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
               </div>
             )}
-            <p className="text-xs text-gray-400 mb-2">First image is used as your profile photo.</p>
-            <div className="flex gap-2">
-              <input className={inputCls} value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} placeholder="Image URL" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }} />
-              <button onClick={addImage} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
-            </div>
           </section>
 
           {/* Custom Enquiry Fields */}
