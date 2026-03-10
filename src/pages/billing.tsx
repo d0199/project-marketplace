@@ -32,6 +32,7 @@ interface OwnerClaim {
   notes?: string;
   claimType?: string;
   isNewListing?: boolean;
+  claimantNote?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -653,9 +654,10 @@ function PTRow({
 // ─────────────────────────────────────────────────────────────────────────────
 // ClaimCard — shown in owner portal for pending/rejected claims
 // ─────────────────────────────────────────────────────────────────────────────
-function ClaimCard({ claim, onResubmit, onDelete }: { claim: OwnerClaim; onResubmit: (id: string, message: string) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
+function ClaimCard({ claim, onResubmit, onAddNote, onDelete }: { claim: OwnerClaim; onResubmit: (id: string, message: string) => Promise<void>; onAddNote: (id: string, note: string) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
   const [showResubmit, setShowResubmit] = useState(false);
-  const [note, setNote] = useState("");
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [note, setNote] = useState(claim.claimantNote ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -741,11 +743,60 @@ function ClaimCard({ claim, onResubmit, onDelete }: { claim: OwnerClaim; onResub
         </div>
       )}
 
+      {/* Claimant note (shown on both pending and rejected) */}
+      {claim.claimantNote && !showAddNote && (
+        <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+          <p className="text-xs font-semibold text-blue-700 mb-0.5">Your note</p>
+          <p className="text-sm text-blue-800 whitespace-pre-wrap">{claim.claimantNote}</p>
+        </div>
+      )}
+
       {/* Pending status message */}
-      {claim.status === "pending" && (
-        <p className="mt-3 text-xs text-amber-600 bg-amber-50 rounded px-3 py-2">
-          Your submission is being reviewed by our team. You&apos;ll be able to manage your listing once approved.
-        </p>
+      {claim.status === "pending" && !showAddNote && (
+        <div className="mt-3">
+          <p className="text-xs text-amber-600 bg-amber-50 rounded px-3 py-2">
+            Your submission is being reviewed by our team. You&apos;ll be able to manage your listing once approved.
+          </p>
+          <button
+            onClick={() => setShowAddNote(true)}
+            className="mt-2 px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-xs rounded-lg font-medium transition-colors"
+          >
+            {claim.claimantNote ? "Edit note" : "Add note for reviewer"}
+          </button>
+        </div>
+      )}
+
+      {/* Add/edit note form for pending claims */}
+      {showAddNote && (
+        <div className="mt-3 space-y-2">
+          <textarea
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note for the admin reviewer (e.g. proof of ownership, additional context)…"
+            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+          />
+          <div className="flex gap-2">
+            <button
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                await onAddNote(claim.id, note);
+                setBusy(false);
+                setShowAddNote(false);
+              }}
+              className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-xs rounded-lg font-medium disabled:opacity-50"
+            >
+              {busy ? "Saving…" : "Save note"}
+            </button>
+            <button
+              onClick={() => { setShowAddNote(false); setNote(claim.claimantNote ?? ""); }}
+              className="px-4 py-1.5 border border-gray-300 text-gray-600 text-xs rounded-lg font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Delete */}
@@ -1192,6 +1243,18 @@ export default function BillingPage() {
                           if (r.ok) {
                             setClaims((prev) =>
                               prev.map((cl) => cl.id === id ? { ...cl, status: "pending" } : cl)
+                            );
+                          }
+                        }}
+                        onAddNote={async (id, claimantNote) => {
+                          const r = await fetch(`/api/owner/claims?id=${id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ claimantNote }),
+                          });
+                          if (r.ok) {
+                            setClaims((prev) =>
+                              prev.map((cl) => cl.id === id ? { ...cl, claimantNote } : cl)
                             );
                           }
                         }}

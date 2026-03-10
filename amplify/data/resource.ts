@@ -98,6 +98,7 @@ const schema = a.schema({
       gymSuburb: a.string(),
       gymPostcode: a.string(),
       claimType: a.string(),  // "gym" (default) | "pt"
+      claimantNote: a.string(), // note from claimant visible to admin
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

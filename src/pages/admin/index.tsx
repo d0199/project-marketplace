@@ -31,6 +31,7 @@ interface Claim {
   gymSuburb?: string;
   gymPostcode?: string;
   claimType?: string;
+  claimantNote?: string;
 }
 
 interface CognitoUser {
@@ -465,6 +466,14 @@ function ClaimsTab({ onPendingCount }: { onPendingCount?: (n: number) => void })
                 <div className="mb-3">
                   <p className="text-xs text-gray-400 mb-0.5">Message</p>
                   <p className="text-sm text-gray-700 bg-gray-50 rounded p-2">{c.message}</p>
+                </div>
+              )}
+
+              {/* Claimant note */}
+              {c.claimantNote && (
+                <div className="mb-3">
+                  <p className="text-xs text-blue-500 font-semibold mb-0.5">Note from claimant</p>
+                  <p className="text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded p-2 whitespace-pre-wrap">{c.claimantNote}</p>
                 </div>
               )}
 

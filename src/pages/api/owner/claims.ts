@@ -38,11 +38,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = String(req.query.id ?? "");
     if (!id) return res.status(400).json({ error: "Missing claim id" });
 
-    const { message } = req.body ?? {};
+    const { message, claimantNote } = req.body ?? {};
 
     // Fetch current claim
     const { data: claim } = await dataClient.models.Claim.get({ id });
     if (!claim) return res.status(404).json({ error: "Claim not found" });
+
+    // Adding/updating claimant note on a pending claim
+    if (claimantNote !== undefined && claim.status === "pending") {
+      await dataClient.models.Claim.update({ id, claimantNote });
+      return res.status(200).json({ ok: true });
+    }
 
     if (claim.status !== "rejected") {
       return res.status(400).json({ error: "Only rejected claims can be resubmitted" });
@@ -54,6 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       id,
       status: "pending",
       notes: `${existingNotes}Resubmitted by owner${message ? `: ${message}` : ""}`,
+      ...(message ? { claimantNote: message } : {}),
     });
 
     return res.status(200).json({ ok: true });
