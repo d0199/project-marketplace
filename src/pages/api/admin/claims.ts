@@ -138,6 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             email: claim.gymEmail || email,
             website: claim.gymWebsite ?? "",
             images: [],
+            gymIds: [],
             specialties: [],
             qualifications: [],
             languages: ["English"],

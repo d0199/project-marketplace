@@ -16,6 +16,24 @@ import BulkEditModal from "@/components/BulkEditModal";
 // ─────────────────────────────────────────────────────────────────────────────
 type Tab = "billing" | "leads" | "analytics" | "affiliations";
 type Interval = "month" | "year";
+
+interface OwnerClaim {
+  id: string;
+  gymId: string;
+  gymName?: string;
+  gymAddress?: string;
+  gymSuburb?: string;
+  gymPostcode?: string;
+  claimantName: string;
+  claimantEmail: string;
+  message?: string;
+  status: string;
+  notes?: string;
+  claimType?: string;
+  isNewListing?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 type TierFilter = "all" | "free" | "paid" | "featured";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -619,6 +637,106 @@ function PTRow({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ClaimCard — shown in owner portal for pending/rejected claims
+// ─────────────────────────────────────────────────────────────────────────────
+function ClaimCard({ claim, onResubmit }: { claim: OwnerClaim; onResubmit: (id: string, message: string) => Promise<void> }) {
+  const [showResubmit, setShowResubmit] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const isPt = claim.claimType === "pt";
+  const isNew = claim.isNewListing;
+  const label = isNew
+    ? isPt ? "New PT Listing" : "New Gym Listing"
+    : isPt ? "PT Profile Claim" : "Gym Claim";
+
+  const statusColor = claim.status === "pending"
+    ? "bg-amber-100 text-amber-800"
+    : "bg-red-100 text-red-800";
+
+  const created = claim.createdAt ? new Date(claim.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" }) : "";
+
+  return (
+    <div className="bg-white rounded-lg border border-dashed border-gray-300 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <p className="font-semibold text-gray-900">{claim.gymName || "Unnamed"}</p>
+            <span className="text-xs bg-gray-100 text-gray-600 font-medium px-2 py-0.5 rounded-full">{label}</span>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusColor}`}>
+              {claim.status}
+            </span>
+          </div>
+          <p className="text-xs text-gray-400">
+            {claim.gymSuburb || claim.gymAddress || ""} {claim.gymPostcode || ""}
+            {created && ` · Submitted ${created}`}
+          </p>
+        </div>
+      </div>
+
+      {/* Admin rejection notes */}
+      {claim.status === "rejected" && claim.notes && (
+        <div className="mt-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <p className="text-xs font-semibold text-red-700 mb-0.5">Reason for rejection</p>
+          <p className="text-sm text-red-800">{claim.notes}</p>
+        </div>
+      )}
+
+      {/* Resubmit button for rejected claims */}
+      {claim.status === "rejected" && !showResubmit && (
+        <button
+          onClick={() => setShowResubmit(true)}
+          className="mt-3 px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-xs rounded-lg font-medium transition-colors"
+        >
+          Resubmit with note
+        </button>
+      )}
+
+      {/* Resubmit form */}
+      {showResubmit && (
+        <div className="mt-3 space-y-2">
+          <textarea
+            rows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note explaining what's changed or provide additional info…"
+            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+          />
+          <div className="flex gap-2">
+            <button
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                await onResubmit(claim.id, note);
+                setBusy(false);
+                setShowResubmit(false);
+                setNote("");
+              }}
+              className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-xs rounded-lg font-medium disabled:opacity-50"
+            >
+              {busy ? "Resubmitting…" : "Resubmit"}
+            </button>
+            <button
+              onClick={() => { setShowResubmit(false); setNote(""); }}
+              className="px-4 py-1.5 border border-gray-300 text-gray-600 text-xs rounded-lg font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pending status message */}
+      {claim.status === "pending" && (
+        <p className="mt-3 text-xs text-amber-600 bg-amber-50 rounded px-3 py-2">
+          Your submission is being reviewed by our team. You&apos;ll be able to manage your listing once approved.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BillingPage
 // ─────────────────────────────────────────────────────────────────────────────
 export default function BillingPage() {
@@ -626,6 +744,7 @@ export default function BillingPage() {
   const [session, setSession] = useState<OwnerSession | null>(null);
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [pts, setPts] = useState<PersonalTrainer[]>([]);
+  const [claims, setClaims] = useState<OwnerClaim[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Tab
@@ -694,6 +813,12 @@ export default function BillingPage() {
       .then((r) => r.json())
       .then((data: PersonalTrainer[]) => {
         if (Array.isArray(data)) setPts(data);
+      })
+      .catch(() => {});
+    fetch(`/api/owner/claims?email=${encodeURIComponent(session.email)}`)
+      .then((r) => r.json())
+      .then((data: OwnerClaim[]) => {
+        if (Array.isArray(data)) setClaims(data);
       })
       .catch(() => {});
   }, [session]);
@@ -999,7 +1124,37 @@ export default function BillingPage() {
               </div>
             )}
 
-            {gyms.length === 0 && pts.length === 0 ? (
+            {/* ── Pending / rejected claims ── */}
+            {claims.filter((c) => c.status === "pending" || c.status === "rejected").length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Pending submissions</h3>
+                <div className="space-y-3">
+                  {claims
+                    .filter((c) => c.status === "pending" || c.status === "rejected")
+                    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
+                    .map((c) => (
+                      <ClaimCard
+                        key={c.id}
+                        claim={c}
+                        onResubmit={async (id, message) => {
+                          const r = await fetch(`/api/owner/claims?id=${id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ message }),
+                          });
+                          if (r.ok) {
+                            setClaims((prev) =>
+                              prev.map((cl) => cl.id === id ? { ...cl, status: "pending" } : cl)
+                            );
+                          }
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {gyms.length === 0 && pts.length === 0 && claims.filter((c) => c.status === "pending" || c.status === "rejected").length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-gray-500 mb-4">No listings yet.</p>
                 <div className="flex gap-3 justify-center">
