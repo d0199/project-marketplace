@@ -58,8 +58,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!edit) return res.status(404).json({ error: "Edit not found" });
         if (!edit.proposedChanges) return res.status(400).json({ error: "No proposed changes stored" });
 
-        const isPTEdit = edit.editType === "pt";
-        if (isPTEdit) {
+        const editType = edit.editType as string;
+        if (editType === "pt-verification") {
+          // Qualification verification approval — set verified flag on PT
+          const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
+          await ptStore.update({
+            ...proposed,
+            qualificationsVerified: true,
+            qualificationsNotes: notes ?? "Verified by admin",
+          });
+        } else if (editType === "pt") {
           const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
           await ptStore.update(proposed);
         } else {

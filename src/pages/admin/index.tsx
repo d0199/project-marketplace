@@ -733,9 +733,10 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
         <div className="space-y-4">
           {displayedEdits.map((e) => {
             const isPTEdit = e.editType === "pt";
+            const isVerification = e.editType === "pt-verification";
             const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) : null;
             const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) : null;
-            const changedFields = current && proposed ? computeDiff(current, proposed, e.editType) : [];
+            const changedFields = current && proposed && !isVerification ? computeDiff(current, proposed, e.editType) : [];
 
             return (
               <div
@@ -757,12 +758,52 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
                       <p className="font-semibold text-gray-900 flex items-center gap-2">
                         {e.gymName || e.gymId}
                         {isPTEdit && <span className="text-xs bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded">PT</span>}
+                        {isVerification && <span className="text-xs bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded">Qualification Verification</span>}
                       </p>
                       <p className="text-xs text-gray-400">ID: {e.gymId}</p>
                     </div>
                   </div>
                   <Badge status={e.status} />
                 </div>
+
+                {/* Qualification verification evidence panel */}
+                {isVerification && proposed && (
+                  <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-amber-800 mb-2">Qualification Evidence</p>
+                    {proposed.qualifications?.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-xs text-gray-500 mb-1">Qualifications:</p>
+                        <ul className="text-sm text-gray-700 space-y-0.5 pl-4 list-disc">
+                          {proposed.qualifications.map((q: string, i: number) => <li key={i}>{q}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {proposed.qualificationEvidence && (
+                      <div className="mb-2">
+                        <p className="text-xs text-gray-500 mb-1">Evidence provided:</p>
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap bg-white rounded p-2 border border-amber-100">{proposed.qualificationEvidence}</p>
+                      </div>
+                    )}
+                    {proposed.qualificationEvidenceFiles && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Uploaded files:</p>
+                        <ul className="text-sm text-gray-700 space-y-0.5">
+                          {proposed.qualificationEvidenceFiles.split(",").map((key: string, i: number) => (
+                            <li key={i} className="flex items-center gap-1.5">
+                              <svg className="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                              </svg>
+                              <span className="truncate text-xs">{key.split("/").pop()}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <p className="text-xs text-amber-600 mt-2">
+                      Approving will mark qualifications as verified on this PT&apos;s profile.
+                    </p>
+                  </div>
+                )}
 
                 {/* Meta */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-3">
