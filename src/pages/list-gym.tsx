@@ -109,16 +109,16 @@ export default function ListGymPage() {
   return (
     <>
       <Head>
-        <title>List Your Gym — mynextgym.com.au</title>
+        <title>Create a Gym Listing — mynextgym.com.au</title>
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">
           <div className="mb-8">
             <Link href="/list" className="text-sm text-brand-orange hover:underline mb-4 inline-block">
-              &larr; Back to listing options
+              &larr; Back
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              List your gym, it&apos;s free
+              Create your gym listing
             </h1>
             <p className="text-gray-500">
               Fill in the details below and our team will create your listing and set up your owner account. You&apos;ll be able to manage your profile once approved.

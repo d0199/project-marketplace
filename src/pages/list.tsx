@@ -35,7 +35,7 @@ export default function ListChoicePage() {
                   I own a gym
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  List your gym or fitness centre for free
+                  Create your gym listing for free
                 </p>
               </div>
             </Link>
@@ -56,7 +56,7 @@ export default function ListChoicePage() {
                   I&apos;m a personal trainer
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Create your personal trainer profile for free
+                  Create your PT listing for free
                 </p>
               </div>
             </Link>

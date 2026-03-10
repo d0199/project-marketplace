@@ -117,16 +117,16 @@ export default function ListPTPage() {
   return (
     <>
       <Head>
-        <title>List as a Personal Trainer — mynextgym.com.au</title>
+        <title>Create a PT Listing — mynextgym.com.au</title>
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">
           <div className="mb-8">
             <Link href="/list" className="text-sm text-brand-orange hover:underline mb-4 inline-block">
-              &larr; Back to listing options
+              &larr; Back
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Create your PT profile
+              Create your PT listing
             </h1>
             <p className="text-gray-500">
               Fill in the details below and our team will create your listing and set up your account. You&apos;ll be able to manage your profile once approved.
