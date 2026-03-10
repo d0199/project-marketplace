@@ -63,7 +63,13 @@ export default function ClaimModal({ gym, onClose }: Props) {
 
         {status === "success" ? (
           <div className="p-8 text-center">
-            <p className="text-4xl mb-3">✅</p>
+            <div className="flex justify-center mb-3">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
             <h3 className="font-semibold text-gray-900 text-lg mb-1">Request received</h3>
             <p className="text-gray-500 text-sm">
               Our team will review your claim and get back to you at{" "}
