@@ -35,6 +35,7 @@ export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!issueType) { setError("Please select an issue type."); return; }
+    if (!message.trim()) { setError("Please provide details about the issue."); return; }
     setError("");
     setSubmitting(true);
     try {
@@ -84,7 +85,7 @@ export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">What&apos;s wrong?</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">What&apos;s wrong? <span className="text-red-400">*</span></label>
                 <select
                   value={issueType}
                   onChange={(e) => setIssueType(e.target.value)}
@@ -98,7 +99,7 @@ export default function FeedbackModal({ gymId, gymName, onClose }: Props) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Details <span className="text-gray-400 font-normal">(optional)</span>
+                  Details <span className="text-red-400 font-normal">*</span>
                 </label>
                 <textarea
                   value={message}
