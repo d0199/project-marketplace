@@ -3,6 +3,7 @@ import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import type { Gym, PersonalTrainer } from "@/types";
 
 async function listAllEdits() {
@@ -17,7 +18,8 @@ async function listAllEdits() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  const adminEmail = await requireAdmin(req, res);
+  if (!adminEmail) return;
 
   if (!isAmplifyConfigured()) {
     return res.status(503).json({ error: "Backend not configured" });
@@ -38,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "PATCH") {
     const { action, id } = req.query as { action: string; id: string };
-    const { notes, adminEmail } = req.body as { notes?: string; adminEmail?: string };
+    const { notes } = req.body as { notes?: string };
 
     if (!id) return res.status(400).json({ error: "Missing id" });
 
@@ -46,13 +48,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (action === "reject") {
       try {
+        const { data: edit } = await dataClient.models.GymEdit.get({ id });
         await dataClient.models.GymEdit.update({
           id,
           status: "rejected",
           notes: notes ?? "",
-          reviewedBy: adminEmail ?? "",
+          reviewedBy: adminEmail,
           reviewedAt,
         });
+        logAdminAction({ adminEmail, action: "moderation.reject", entityType: String(edit?.editType ?? "gym"), entityId: String(edit?.gymId ?? id), entityName: String(edit?.gymName ?? id), details: notes });
         return res.status(200).json({ ok: true });
       } catch (err) {
         console.error("[admin/moderation reject]", err);
@@ -114,10 +118,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id,
           status: "approved",
           notes: notes ?? "Approved by admin",
-          reviewedBy: adminEmail ?? "",
+          reviewedBy: adminEmail,
           reviewedAt,
         });
 
+        logAdminAction({ adminEmail, action: "moderation.approve", entityType: editType === "pt" || editType === "pt-verification" ? "pt" : "gym", entityId: String(edit.gymId), entityName: String(edit.gymName ?? edit.gymId), details: editType === "bulk" ? `Bulk edit: ${editType}` : undefined });
         return res.status(200).json({ ok: true });
       } catch (err) {
         console.error("[admin/moderation approve]", err);

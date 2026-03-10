@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import type { Gym } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  const adminEmail = await requireAdmin(req, res);
+  if (!adminEmail) return;
 
   const gymId = String(req.query.gymId);
 
@@ -18,11 +20,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const gym = req.body as Gym;
     if (gym.id !== gymId) return res.status(400).json({ error: "ID mismatch" });
     await ownerStore.update(gym);
+    logAdminAction({ adminEmail, action: "gym.update", entityType: "gym", entityId: gymId, entityName: gym.name });
     return res.status(200).json({ ok: true });
   }
 
   if (req.method === "DELETE") {
+    const gym = await ownerStore.getById(gymId);
     await ownerStore.delete(gymId);
+    logAdminAction({ adminEmail, action: "gym.delete", entityType: "gym", entityId: gymId, entityName: gym?.name ?? gymId });
     return res.status(200).json({ ok: true });
   }
 

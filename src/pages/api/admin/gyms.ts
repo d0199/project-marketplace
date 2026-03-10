@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import type { Gym } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  const adminEmail = await requireAdmin(req, res);
+  if (!adminEmail) return;
 
   if (req.method === "GET") {
     const q = String(req.query.q ?? "").toLowerCase().trim();
@@ -30,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!gym.ownerId) gym.ownerId = "unclaimed";
     try {
       const created = await ownerStore.create(gym);
+      logAdminAction({ adminEmail, action: "gym.create", entityType: "gym", entityId: created.id, entityName: created.name });
       return res.status(201).json(created);
     } catch (err) {
       console.error("[admin/gyms POST]", err);

@@ -9,9 +9,11 @@ import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  const adminEmail = await requireAdmin(req, res);
+  if (!adminEmail) return;
 
   const username = String(req.query.username);
 
@@ -42,6 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await cognito.send(
         new AdminDeleteUserCommand({ UserPoolId: USER_POOL_ID, Username: username })
       );
+      logAdminAction({ adminEmail, action: "user.delete", entityType: "user", entityId: username, entityName: attrs.email ?? username, details: `Released ${gymsReleased} gym(s), ${ptsReleased} PT(s)` });
       return res.status(200).json({ ok: true, gymsReleased, ptsReleased });
     } catch (err) {
       console.error("[admin/users DELETE]", err);
@@ -98,6 +101,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
       }
 
+      const changes: string[] = [];
+      if (password) changes.push("password reset");
+      if (ownerId !== undefined) changes.push(`ownerId → ${ownerId}`);
+      if (isAdmin !== undefined) changes.push(`isAdmin → ${isAdmin}`);
+      if (isSuperAdmin !== undefined) changes.push(`isSuperAdmin → ${isSuperAdmin}`);
+      logAdminAction({ adminEmail, action: "user.update", entityType: "user", entityId: username, entityName: username, details: changes.join(", ") });
       return res.status(200).json({ ok: true });
     } catch (err) {
       console.error("[admin/users PATCH]", err);

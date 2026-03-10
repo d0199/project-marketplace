@@ -5,9 +5,11 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  const adminEmail = await requireAdmin(req, res);
+  if (!adminEmail) return;
 
   if (req.method === "GET") {
     const q = String(req.query.q ?? "").trim();
@@ -75,6 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       );
 
+      logAdminAction({ adminEmail, action: "user.create", entityType: "user", entityId: email, entityName: email, details: JSON.stringify({ ownerId, isAdmin, isSuperAdmin }) });
       return res.status(201).json({ ok: true });
     } catch (err) {
       console.error("[admin/users POST]", err);

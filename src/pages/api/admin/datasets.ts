@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import { datasetStore } from "@/lib/datasetStore";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
@@ -82,11 +83,13 @@ async function cleanupRemovedEntries(datasetName: string, removedEntries: string
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET is available to all admins; mutations require super-admin
+  let adminEmail: string | null;
   if (req.method === "GET") {
-    if (!(await requireAdmin(req, res))) return;
+    adminEmail = await requireAdmin(req, res);
   } else {
-    if (!(await requireSuperAdmin(req, res))) return;
+    adminEmail = await requireSuperAdmin(req, res);
   }
+  if (!adminEmail) return;
 
   if (req.method === "GET") {
     const name = req.query.name as string | undefined;
@@ -103,6 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const existing = await datasetStore.getByName(name);
     if (existing) return res.status(409).json({ error: `Dataset "${name}" already exists` });
     const ds = await datasetStore.create(name.trim(), entries ?? []);
+    logAdminAction({ adminEmail, action: "dataset.create", entityType: "dataset", entityId: ds.id, entityName: name.trim(), details: `${(entries ?? []).length} entries` });
     return res.status(201).json(ds);
   }
 
@@ -132,6 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         gymsUpdated = await cleanupRemovedEntries(current.name, removed);
       }
 
+      logAdminAction({ adminEmail, action: "dataset.update", entityType: "dataset", entityId: realId, entityName: current?.name ?? id, details: `${newEntries.length} entries, ${gymsUpdated} records cleaned` });
       return res.json({ ok: true, id: realId, gymsUpdated });
     } catch (err) {
       console.error("[datasets PUT] error:", err);
@@ -151,6 +156,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     await datasetStore.delete(id);
+    logAdminAction({ adminEmail, action: "dataset.delete", entityType: "dataset", entityId: id, entityName: ds?.name ?? id });
     return res.json({ ok: true });
   }
 

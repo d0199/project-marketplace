@@ -9,6 +9,7 @@ import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/auditLog";
 import { POSTCODE_COORDS } from "@/lib/utils";
 
 async function listAllClaims() {
@@ -23,7 +24,8 @@ async function listAllClaims() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(await requireAdmin(req, res))) return;
+  const adminEmail = await requireAdmin(req, res);
+  if (!adminEmail) return;
 
   if (!isAmplifyConfigured()) {
     return res.status(503).json({ error: "Backend not configured" });
@@ -50,7 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (action === "reject") {
       try {
+        const { data: claim } = await dataClient.models.Claim.get({ id });
         await dataClient.models.Claim.update({ id, status: "rejected", notes: notes ?? "" });
+        logAdminAction({ adminEmail, action: "claim.reject", entityType: "claim", entityId: id, entityName: String(claim?.gymName ?? id), details: notes });
         return res.status(200).json({ ok: true });
       } catch (err) {
         console.error("[admin/claims reject]", err);
@@ -154,6 +158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               : `Approved — PT created (${newPt.id}), added to existing user account, ownerId: ${ownerId}`),
           });
 
+          logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New PT listing created: ${newPt.id}` });
           return res.status(200).json({ ok: true, ownerId, isNewUser, ptId: newPt.id });
         } else if (claimType === "pt") {
           // Existing PT profile claim — assign ownership
@@ -169,6 +174,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               : `Approved — PT profile claimed, added to existing user account, ownerId: ${ownerId}`),
           });
 
+          logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? claim.gymId), details: `PT profile claimed, ownerId: ${ownerId}` });
           return res.status(200).json({ ok: true, ownerId, isNewUser });
         } else if (claim.isNewListing) {
           // New listing — create a gym record from submitted details
@@ -208,6 +214,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               : `Approved — gym created (${newGym.id}), added to existing user account, ownerId: ${ownerId}`),
           });
 
+          logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New gym listing created: ${newGym.id}` });
           return res.status(200).json({ ok: true, ownerId, isNewUser, gymId: newGym.id });
         } else {
           // Existing gym claim — assign ownership and clear AI-generated data
@@ -230,6 +237,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               : `Approved — gym added to existing user account, ownerId: ${ownerId}`),
           });
 
+          logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? claim.gymId), details: `Gym claimed, ownerId: ${ownerId}` });
           return res.status(200).json({ ok: true, ownerId, isNewUser });
         }
       } catch (err) {

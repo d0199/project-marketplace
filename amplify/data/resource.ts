@@ -237,6 +237,18 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
+  // Admin audit log — tracks all admin actions for accountability.
+  AdminAuditLog: a
+    .model({
+      adminEmail: a.string().required(),
+      action: a.string().required(),     // e.g. "gym.update", "claim.approve", "user.delete"
+      entityType: a.string(),            // "gym" | "pt" | "claim" | "user" | "dataset" | "feature-flag"
+      entityId: a.string(),              // the ID of the affected entity
+      entityName: a.string(),            // human-readable name for display
+      details: a.string(),               // JSON or text with action-specific details
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // User-submitted feedback / issue reports on listings.
   FeedbackReport: a
     .model({
