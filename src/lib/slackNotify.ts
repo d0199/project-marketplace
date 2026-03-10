@@ -3,16 +3,19 @@
  * Each trigger URL corresponds to a Slack Workflow Builder trigger with specific metadata fields.
  */
 
-const WEBHOOKS = {
+const WEBHOOKS: Record<string, string> = {
   feedback:
+    process.env.SLACK_WEBHOOK_FEEDBACK ??
     "https://hooks.slack.com/triggers/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",
   claim:
+    process.env.SLACK_WEBHOOK_CLAIM ??
     "https://hooks.slack.com/triggers/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",
   moderation:
+    process.env.SLACK_WEBHOOK_MODERATION ??
     "https://hooks.slack.com/triggers/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",
-} as const;
+};
 
-export type SlackChannel = keyof typeof WEBHOOKS;
+export type SlackChannel = "feedback" | "claim" | "moderation";
 
 /** Current timestamp formatted in AWST (UTC+8) */
 export function nowAWST(): string {

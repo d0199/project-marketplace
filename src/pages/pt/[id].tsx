@@ -29,7 +29,7 @@ interface Props {
 }
 
 function buildJsonLd(pt: PersonalTrainer) {
-  const url = `https://www.mynextgym.com.au/pt/${pt.id}`;
+  const url = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/pt/${pt.id}`;
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -163,7 +163,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
         <title>{`${pt.name} — Personal Trainer | mynextgym.com.au`}</title>
         <meta name="description" content={metaDesc} />
         {pt.isTest && <meta name="robots" content="noindex, nofollow" />}
-        <link rel="canonical" href={`https://www.mynextgym.com.au/pt/${pt.id}`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/pt/${pt.id}`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(pt)) }}

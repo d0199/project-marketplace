@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
+import { BASE_URL } from "@/lib/siteUrl";
 import type { PersonalTrainer } from "@/types";
 
 export default async function handler(
@@ -49,7 +50,7 @@ export default async function handler(
 
     await sendAdminAlert(
       "PT profile edit pending review",
-      `A PT owner has submitted profile changes that require moderation.\n\nPT: ${currentPT.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: https://www.mynextgym.com.au/admin`
+      `A PT owner has submitted profile changes that require moderation.\n\nPT: ${currentPT.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`
     ).catch(() => {});
 
     return res.status(200).json({ queued: true });

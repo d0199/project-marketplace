@@ -2,8 +2,7 @@ import type { GetServerSideProps } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { POSTCODE_META } from "@/lib/utils";
-
-const BASE = "https://www.mynextgym.com.au";
+import { BASE_URL as BASE } from "@/lib/siteUrl";
 
 function entry(loc: string, priority: string, changefreq: string, lastmod?: string) {
   const lm = lastmod ? `<lastmod>${lastmod}</lastmod>` : "";

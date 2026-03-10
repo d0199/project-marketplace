@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
+import { BASE_URL } from "@/lib/siteUrl";
 
 const FEEDBACK_RECIPIENT = "admin@mynextgym.com.au";
 
@@ -12,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!gymId || !issueType) return res.status(400).json({ error: "gymId and issueType are required" });
 
   const prefix = listingType === "pt" ? "pt" : "gym";
-  const listingUrl = `https://www.mynextgym.com.au/${prefix}/${gymId}`;
+  const listingUrl = `${BASE_URL}/${prefix}/${gymId}`;
   const submittedAt = nowAWST();
   const typeLabel = listingType === "pt" ? "PT" : "Gym";
 
@@ -27,8 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ``,
     `Submitted: ${submittedAt}`,
     listingType === "pt"
-      ? `Admin: https://www.mynextgym.com.au/admin?pt=${gymId}`
-      : `Admin: https://www.mynextgym.com.au/admin?gym=${gymId}`,
+      ? `Admin: ${BASE_URL}/admin?pt=${gymId}`
+      : `Admin: ${BASE_URL}/admin?gym=${gymId}`,
   ]
     .filter(Boolean)
     .join("\n");

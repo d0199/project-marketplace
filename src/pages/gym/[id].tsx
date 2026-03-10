@@ -69,7 +69,7 @@ function parseHoursRange(dayName: string, value: string) {
 }
 
 function buildJsonLd(gym: Gym) {
-  const url = `https://www.mynextgym.com.au/gym/${gym.id}`;
+  const url = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/gym/${gym.id}`;
 
   const openingHours = Object.entries(gym.hours)
     .filter(([, v]) => v && v.toLowerCase() !== "closed")
@@ -209,7 +209,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
         <title>{gym.name} — mynextgym.com.au</title>
         <meta name="description" content={gym.description} />
         {gym.isTest && <meta name="robots" content="noindex, nofollow" />}
-        <link rel="canonical" href={`https://www.mynextgym.com.au/gym/${gym.id}`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/gym/${gym.id}`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(gym)) }}

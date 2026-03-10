@@ -395,7 +395,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
         <meta property="og:title" content="Find Gyms across Australia | mynextgym.com.au" />
         <meta property="og:description" content="Search gyms across Australia by suburb and postcode. Compare prices, amenities and opening hours." />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.mynextgym.com.au/" />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/`} />
       </Head>
       <Layout hero={
         <div className="relative" style={{ height: flags.ptSearch ? 480 : 460 }}>

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
+import { BASE_URL } from "@/lib/siteUrl";
 
 export default async function handler(
   req: NextApiRequest,
@@ -47,8 +48,8 @@ export default async function handler(
   const entityLabel = isPT ? "PT profile" : "gym";
   const alertSubject = isNewListing ? "New gym listing request" : `New ${entityLabel} claim submitted`;
   const alertBody = isNewListing
-    ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`
-    : `A new ${entityLabel} claim has been submitted and is awaiting review.\n\n${isPT ? "PT" : "Gym"}: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: https://www.mynextgym.com.au/admin`;
+    ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: ${BASE_URL}/admin`
+    : `A new ${entityLabel} claim has been submitted and is awaiting review.\n\n${isPT ? "PT" : "Gym"}: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: ${BASE_URL}/admin`;
 
   await Promise.allSettled([
     sendAdminAlert(alertSubject, alertBody),

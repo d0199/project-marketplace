@@ -3,6 +3,7 @@ import { ownerStore } from "@/lib/ownerStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
+import { BASE_URL } from "@/lib/siteUrl";
 import type { Gym, OpeningHours } from "@/types";
 
 /** Apply a single field change to a gym object */
@@ -89,12 +90,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await Promise.allSettled([
     sendAdminAlert(
       `Bulk edit pending review (${affectedGyms.length} gyms)`,
-      `A gym owner has submitted a bulk edit that requires moderation.\n\nField: ${field}\nGyms (${affectedGyms.length}): ${gymNames}\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: https://www.mynextgym.com.au/admin`
+      `A gym owner has submitted a bulk edit that requires moderation.\n\nField: ${field}\nGyms (${affectedGyms.length}): ${gymNames}\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`
     ),
     sendSlackNotification("moderation", {
       gym_name: `Bulk edit (${affectedGyms.length} gyms)`,
       gym_id: affectedGyms[0].id,
-      gym_url: "https://www.mynextgym.com.au/admin",
+      gym_url: "${BASE_URL}/admin",
       owner_email: ownerEmail ?? "unknown",
       submitted_at: nowAWST(),
     }),

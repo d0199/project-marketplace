@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
+import { BASE_URL } from "@/lib/siteUrl";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -67,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       evidence,
       fileInfo,
       ``,
-      `Review at: https://www.mynextgym.com.au/admin (Moderation Review tab)`,
+      `Review at: ${BASE_URL}/admin (Moderation Review tab)`,
     ].join("\n")
   ).catch(() => {});
 

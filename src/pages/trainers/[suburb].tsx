@@ -149,7 +149,7 @@ export default function TrainerSuburbPage({ postcode, suburbName, slug, ptCount 
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href={`https://www.mynextgym.com.au/trainers/${slug}`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/trainers/${slug}`} />
       </Head>
       <Layout>
         {/* Breadcrumb */}
