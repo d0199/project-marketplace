@@ -124,6 +124,15 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
     track(pt.id, "pageViews");
   }, [pt.id]);
 
+  // Auto-open claim modal if redirected back from login
+  useEffect(() => {
+    if (authChecked && router.query.claim === "true") {
+      setShowClaim(true);
+      const { claim, ...rest } = router.query;
+      router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+    }
+  }, [authChecked, router]);
+
   // Block non-internal users from viewing test PTs
   useEffect(() => {
     if (authChecked && pt.isTest && !isInternalUser) {

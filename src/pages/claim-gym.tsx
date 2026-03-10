@@ -176,7 +176,7 @@ export default function ClaimGymPage({ gyms }: Props) {
                         {emailExists && (
                           <div className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                             An account with this email already exists.{" "}
-                            <Link href="/owner" className="text-brand-orange hover:underline font-semibold">Sign in</Link>{" "}
+                            <Link href={`/owner?redirect=${encodeURIComponent("/claim-gym")}`} className="text-brand-orange hover:underline font-semibold">Sign in</Link>{" "}
                             to link this claim to your account automatically.
                           </div>
                         )}

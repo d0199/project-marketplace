@@ -17,6 +17,7 @@ type View = "login" | "signup" | "confirm-signup" | "forgot" | "reset-confirm" |
 
 export default function OwnerPortalPage() {
   const router = useRouter();
+  const redirectTo = (router.query.redirect as string) || "/billing";
   const [loading, setLoading] = useState(true);
 
   // Shared form state
@@ -32,6 +33,14 @@ export default function OwnerPortalPage() {
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
 
+  function postLoginRedirect(attributes: Record<string, string | undefined>) {
+    if (attributes["custom:isAdmin"] === "true") {
+      router.replace("/admin");
+    } else {
+      router.replace(redirectTo);
+    }
+  }
+
   function resetForm() {
     setError(""); setInfo(""); setPassword(""); setConfirmPassword("");
     setCode(""); setNewPassword(""); setConfirmNewPassword("");
@@ -45,19 +54,16 @@ export default function OwnerPortalPage() {
     getCurrentUser()
       .then(async () => {
         const attributes = await fetchUserAttributes();
-        if (attributes["custom:isAdmin"] === "true") {
-          router.replace("/admin");
-          return;
-        }
-        router.replace("/billing");
+        postLoginRedirect(attributes);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, redirectTo]);
 
   function devLogin(ownerId: string, email: string) {
     sessionStorage.setItem("devSession", JSON.stringify({ ownerId, email, name: email.split("@")[0] }));
-    router.push("/billing");
+    router.push(redirectTo);
   }
 
 
@@ -73,11 +79,7 @@ export default function OwnerPortalPage() {
         return;
       }
       const attributes = await fetchUserAttributes();
-      if (attributes["custom:isAdmin"] === "true") {
-        router.replace("/admin");
-        return;
-      }
-      router.replace("/billing");
+      postLoginRedirect(attributes);
     } catch {
       setError("Incorrect email or password.");
     }
@@ -116,7 +118,8 @@ export default function OwnerPortalPage() {
       await confirmSignUp({ username: email, confirmationCode: code });
       // Auto sign in after confirmation
       await signIn({ username: email, password });
-      router.replace("/billing");
+      const attributes = await fetchUserAttributes();
+      postLoginRedirect(attributes);
     } catch {
       setError("Invalid or expired code. Please try again.");
     }
@@ -171,11 +174,7 @@ export default function OwnerPortalPage() {
     try {
       await confirmSignIn({ challengeResponse: newPassword });
       const attributes = await fetchUserAttributes();
-      if (attributes["custom:isAdmin"] === "true") {
-        router.replace("/admin");
-        return;
-      }
-      router.replace("/billing");
+      postLoginRedirect(attributes);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg.includes("password") ? "Password does not meet requirements." : msg);

@@ -128,7 +128,7 @@ export default function ClaimModal({ gym, onClose, initialEmail = "", initialNam
             ) : (
               <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
                 Already have an account?{" "}
-                <Link href="/owner" className="text-brand-orange hover:underline font-medium">
+                <Link href={`/owner?redirect=${encodeURIComponent(`/gym/${gym.id}?claim=true`)}`} className="text-brand-orange hover:underline font-medium">
                   Sign in first
                 </Link>{" "}
                 to speed up the process.
@@ -164,7 +164,7 @@ export default function ClaimModal({ gym, onClose, initialEmail = "", initialNam
               {emailExists && (
                 <div className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                   An account with this email already exists.{" "}
-                  <Link href="/owner" className="text-brand-orange hover:underline font-semibold">
+                  <Link href={`/owner?redirect=${encodeURIComponent(`/gym/${gym.id}?claim=true`)}`} className="text-brand-orange hover:underline font-semibold">
                     Sign in
                   </Link>{" "}
                   to link this claim to your account automatically.

@@ -177,6 +177,16 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
     track(gym.id, "pageViews");
   }, [gym.id, gym.ownerId]);
 
+  // Auto-open claim modal if redirected back from login
+  useEffect(() => {
+    if (authChecked && router.query.claim === "true") {
+      setShowClaim(true);
+      // Clean the URL without reload
+      const { claim, ...rest } = router.query;
+      router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+    }
+  }, [authChecked, router]);
+
   // Block non-internal users from viewing test gyms
   useEffect(() => {
     if (authChecked && gym.isTest && !isInternalUser) {
