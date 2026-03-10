@@ -24,6 +24,9 @@ const DAYS: (keyof OpeningHours)[] = [
 ];
 
 export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
+  const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
+  const labelCls = "block text-sm font-medium text-gray-700 mb-1";
+
   const [form, setForm] = useState<Gym>({ ...gym });
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -127,72 +130,72 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-5 py-3 rounded-lg shadow-lg font-medium animate-pulse">
+        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.includes("review") || toast.includes("submitted") ? "bg-blue-600" : toast.includes("Error") ? "bg-red-600" : "bg-green-600"}`}>
           {toast}
         </div>
       )}
 
       {/* Basic info */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Basic Information
-        </h2>
+        </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Gym Name
             </label>
             <input
               value={form.name}
               onChange={(e) => setField("name", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Description
             </label>
             <textarea
               rows={4}
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+              className={`${inputCls} resize-none`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Phone
             </label>
             <input
               value={form.phone}
               onChange={(e) => setField("phone", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Email
             </label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Website
             </label>
             <input
               type="url"
               value={form.website}
               onChange={(e) => setField("website", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Price per Week ($)
             </label>
             <input
@@ -203,7 +206,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               onChange={(e) =>
                 setField("pricePerWeek", parseFloat(e.target.value) || 0)
               }
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
             <label className="flex items-center gap-2 mt-2 cursor-pointer">
               <input
@@ -216,7 +219,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             </label>
             {form.priceVerified && (
               <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={labelCls}>
                   Pricing note <span className="text-gray-400 font-normal">(shown below price)</span>
                 </label>
                 <input
@@ -224,7 +227,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
                   value={form.pricingNotes ?? ""}
                   onChange={(e) => setField("pricingNotes", e.target.value)}
                   placeholder="e.g. Verified using AI"
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+                  className={inputCls}
                 />
               </div>
             )}
@@ -234,12 +237,12 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
 
       {/* Social Media + Booking — paid listings only */}
       {(form.isPaid || isAdmin) && <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Social Media &amp; Booking
-        </h2>
+        </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Instagram URL
             </label>
             <input
@@ -247,11 +250,11 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               value={form.instagram ?? ""}
               onChange={(e) => setField("instagram", e.target.value || undefined)}
               placeholder="https://instagram.com/yourgym"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Facebook URL
             </label>
             <input
@@ -259,11 +262,11 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               value={form.facebook ?? ""}
               onChange={(e) => setField("facebook", e.target.value || undefined)}
               placeholder="https://facebook.com/yourgym"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Online Booking URL
             </label>
             <input
@@ -271,7 +274,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               value={form.bookingUrl ?? ""}
               onChange={(e) => setField("bookingUrl", e.target.value || undefined)}
               placeholder="https://app.mindbodyonline.com/... or your booking page"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
             <p className="text-xs text-gray-400 mt-1">Mindbody, Glofox, Pike13, or any direct booking link. Displays a &ldquo;Book Now&rdquo; button on your profile.</p>
           </div>
@@ -280,39 +283,39 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
 
       {/* Address */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Address
-        </h2>
+        </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Street
             </label>
             <input
               value={form.address.street}
               onChange={(e) => setAddressField("street", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Suburb
             </label>
             <input
               value={form.address.suburb}
               onChange={(e) => setAddressField("suburb", e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Postcode
             </label>
             <input
               value={form.address.postcode}
               onChange={(e) => setAddressField("postcode", e.target.value)}
               maxLength={4}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={inputCls}
             />
           </div>
         </div>
@@ -320,9 +323,9 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
 
       {/* Amenities */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Amenities
-        </h2>
+        </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {availableAmenities.map((amenity) => (
             <label
@@ -342,7 +345,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
           ))}
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className={labelCls}>
             Amenities note <span className="text-gray-400 font-normal">(shown below amenities)</span>
           </label>
           <input
@@ -350,16 +353,16 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             value={form.amenitiesNotes ?? ""}
             onChange={(e) => setField("amenitiesNotes", e.target.value)}
             placeholder="e.g. Verified using AI"
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+            className={inputCls}
           />
         </div>
       </section>
 
       {/* Specialties — admin only, select from dataset */}
       {isAdmin && <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Specialties
-        </h2>
+        </h3>
         <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines this gym is known for. Search and select from the approved list. Manage the list in Admin &rarr; Datasets.</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {(form.specialties ?? []).map((s) => (
@@ -381,7 +384,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             value={specSearch}
             onChange={(e) => setSpecSearch(e.target.value)}
             placeholder="Search specialties..."
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+            className={inputCls}
           />
           {specSearch.trim().length >= 1 && (() => {
             const q = normalize(specSearch);
@@ -417,9 +420,9 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
 
       {/* Member Offers — paid listings only */}
       {(form.isPaid || isAdmin) && <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Member Offers
-        </h2>
+        </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {availableMemberOffers.map((offer) => (
             <label key={offer} className="flex items-center gap-2 cursor-pointer">
@@ -437,7 +440,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Benefits / affiliations
             </label>
             <textarea
@@ -445,12 +448,12 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               value={form.memberOffersNotes ?? ""}
               onChange={(e) => setField("memberOffersNotes", e.target.value || undefined)}
               placeholder="e.g. No joining fee, Health fund rebates, Corporate discounts"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none text-sm"
+              className={`${inputCls} resize-none`}
             />
             <p className="text-xs text-gray-400 mt-1">Separate each benefit with a comma — shown as bullet points on your profile.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={labelCls}>
               Terms &amp; Conditions
             </label>
             <textarea
@@ -458,7 +461,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               value={form.memberOffersTnC ?? ""}
               onChange={(e) => setField("memberOffersTnC", e.target.value || undefined)}
               placeholder="Any T&Cs for the above offers…"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none text-sm"
+              className={`${inputCls} resize-none`}
             />
           </div>
         </div>
@@ -482,7 +485,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
             value={form.memberScrollText ?? ""}
             onChange={(e) => setField("memberScrollText", e.target.value || undefined)}
             placeholder="e.g. No joining fee this month — ask us how!"
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-sm"
+            className={inputCls}
           />
           <p className="text-xs text-gray-400 mt-1">This short message scrolls across the bottom of your listing card when enabled.</p>
         </div>
@@ -490,9 +493,9 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
 
       {/* Images */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Images
-        </h2>
+        </h3>
         <p className="text-xs text-gray-500 mb-3">
           First image is the primary photo shown on cards. Drag to reorder — add up to 6 images.
         </p>
@@ -570,7 +573,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
               placeholder="https://… paste image URL"
-              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+              className={`${inputCls} flex-1`}
             />
             <button
               type="button"
@@ -595,9 +598,9 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
 
       {/* Hours */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
+        <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Opening Hours
-        </h2>
+        </h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {DAYS.map((day) => (
             <div key={day} className="flex items-center gap-3">
@@ -608,7 +611,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
                 value={form.hours[day] ?? ""}
                 onChange={(e) => setHoursField(day, e.target.value)}
                 placeholder="e.g. 6:00am – 9:00pm"
-                className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                className={`${inputCls} flex-1`}
               />
             </div>
           ))}
@@ -630,7 +633,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
                 value={form.hoursComment}
                 onChange={(e) => setField("hoursComment", e.target.value)}
                 placeholder="e.g. Public holidays may vary. 24/7 access via key fob."
-                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+                className={`${inputCls} resize-none`}
               />
             )}
           </div>
