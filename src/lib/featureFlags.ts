@@ -21,6 +21,8 @@ export interface FeatureFlags {
   amenities: boolean;
   /** Show the radius slider in the sidebar */
   radiusSlider: boolean;
+  /** Show PT member offers on PT profiles (paid feature) */
+  ptMemberOffers: boolean;
 
   // Legacy keys — kept so existing DynamoDB records don't break reads
   heroSpecialties?: boolean;
@@ -33,6 +35,7 @@ const DEFAULTS: FeatureFlags = {
   memberOffers: true,
   amenities: true,
   radiusSlider: true,
+  ptMemberOffers: false,
 };
 
 const RECORD_ID = "global";
@@ -63,6 +66,7 @@ export const featureFlagStore = {
           memberOffers: data.memberOffers ?? DEFAULTS.memberOffers,
           amenities: data.amenities ?? data.heroAmenities ?? DEFAULTS.amenities,
           radiusSlider: data.radiusSlider ?? DEFAULTS.radiusSlider,
+          ptMemberOffers: data.ptMemberOffers ?? DEFAULTS.ptMemberOffers,
         };
       } else {
         cached = { ...DEFAULTS };

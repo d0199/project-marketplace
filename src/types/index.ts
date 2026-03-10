@@ -86,6 +86,8 @@ export interface PersonalTrainer {
   qualificationsVerified?: boolean;
   qualificationsNotes?: string;
   qualificationEvidence?: string; // URL or text description of evidence submitted
+  memberOffers?: string[];
+  memberOffersNotes?: string;
   experienceYears?: number;
   pricePerSession?: number;
   sessionDuration?: number; // minutes

@@ -7,6 +7,7 @@ interface FeatureFlags {
   memberOffers: boolean;
   amenities: boolean;
   radiusSlider: boolean;
+  ptMemberOffers: boolean;
 }
 
 interface FlagMeta {
@@ -40,6 +41,11 @@ const FLAGS: FlagMeta[] = [
     key: "radiusSlider",
     label: "Radius Slider",
     description: "Show the search radius slider in the sidebar. When off, a default radius is used.",
+  },
+  {
+    key: "ptMemberOffers",
+    label: "PT Member Offers",
+    description: "Show member offers on paid PT profiles. When off, member offers are hidden from all PT pages.",
   },
 ];
 

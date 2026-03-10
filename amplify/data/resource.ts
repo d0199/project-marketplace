@@ -161,6 +161,8 @@ const schema = a.schema({
       qualificationsVerified: a.boolean(),
       qualificationsNotes: a.string(),
       qualificationEvidence: a.string(),
+      memberOffers: a.string().array(),
+      memberOffersNotes: a.string(),
       experienceYears: a.integer(),
       pricePerSession: a.float(),
       sessionDuration: a.integer(),
@@ -209,6 +211,7 @@ const schema = a.schema({
       memberOffers: a.boolean(),
       amenities: a.boolean(),
       radiusSlider: a.boolean(),
+      ptMemberOffers: a.boolean(),
       // Legacy — kept for backwards compat with existing records
       heroSpecialties: a.boolean(),
       heroAmenities: a.boolean(),

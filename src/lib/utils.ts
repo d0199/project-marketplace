@@ -255,6 +255,19 @@ export const ALL_PT_SPECIALTIES = [
   "Competition Prep",
 ] as const;
 
+export const ALL_PT_MEMBER_OFFERS = [
+  "free initial consultation",
+  "first session free",
+  "discounted packs",
+  "couples training",
+  "online coaching",
+  "group sessions",
+  "student discount",
+  "referral bonus",
+  "flexible scheduling",
+  "nutrition plan included",
+] as const;
+
 export const REPORT_ISSUE_TYPES = [
   "Pricing is incorrect",
   "Address is wrong",

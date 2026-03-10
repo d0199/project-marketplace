@@ -39,6 +39,25 @@ async function cleanupRemovedEntries(datasetName: string, removedEntries: string
     return updated;
   }
 
+  // Clean PT member offers
+  if (datasetName === "pt-member-offers") {
+    const allPTs = await ptStore.getAll();
+    await Promise.all(
+      allPTs.map(async (pt) => {
+        const current = pt.memberOffers ?? [];
+        const cleaned = current.filter((v) => !removedSet.has(v));
+        if (cleaned.length < current.length) {
+          await ptStore.update({ ...pt, memberOffers: cleaned });
+          updated++;
+        }
+      })
+    );
+    if (updated > 0) {
+      console.log(`[datasets] Removed ${removedEntries.length} entries from "pt-member-offers" — cleaned ${updated} PT(s)`);
+    }
+    return updated;
+  }
+
   // Clean gym fields
   const field = DATASET_TO_GYM_FIELD[datasetName];
   if (!field) return 0;

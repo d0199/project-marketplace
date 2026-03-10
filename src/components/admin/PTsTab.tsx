@@ -321,11 +321,17 @@ function PTEditPanel({
   const [newQualification, setNewQualification] = useState("");
   const [specialtySearch, setSpecialtySearch] = useState("");
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
+  const [memberOfferSearch, setMemberOfferSearch] = useState("");
+  const [availableMemberOffers, setAvailableMemberOffers] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/datasets/pt-specialties")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries) setAvailableSpecialties(data.entries); })
+      .catch(() => {});
+    fetch("/api/datasets/pt-member-offers")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries) setAvailableMemberOffers(data.entries); })
       .catch(() => {});
   }, []);
 
@@ -385,9 +391,22 @@ function PTEditPanel({
     update({ qualifications: pt.qualifications.filter((x) => x !== q) });
   }
 
+  function toggleMemberOffer(o: string) {
+    const current = pt.memberOffers ?? [];
+    if (current.includes(o)) {
+      update({ memberOffers: current.filter((x) => x !== o) });
+    } else {
+      update({ memberOffers: [...current, o] });
+    }
+  }
+
   const filteredSpecialties = specialtySearch
     ? availableSpecialties.filter((s) => s.toLowerCase().includes(specialtySearch.toLowerCase()))
     : availableSpecialties;
+
+  const filteredMemberOffers = memberOfferSearch
+    ? availableMemberOffers.filter((o) => o.toLowerCase().includes(memberOfferSearch.toLowerCase()))
+    : availableMemberOffers;
 
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
@@ -606,6 +625,40 @@ function PTEditPanel({
                   <span className="text-sm">{s}</span>
                 </label>
               ))}
+            </div>
+          </section>
+
+          {/* Member Offers (paid feature) */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Member Offers <span className="text-xs font-normal text-gray-400">(paid feature)</span></h3>
+            <input
+              type="text"
+              value={memberOfferSearch}
+              onChange={(e) => setMemberOfferSearch(e.target.value)}
+              placeholder="Search offers..."
+              className={`${inputCls} mb-2`}
+            />
+            <div className="max-h-40 overflow-y-auto space-y-1">
+              {filteredMemberOffers.map((o) => (
+                <label key={o} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={(pt.memberOffers ?? []).includes(o)}
+                    onChange={() => toggleMemberOffer(o)}
+                    className="w-4 h-4 accent-brand-orange"
+                  />
+                  <span className="text-sm capitalize">{o}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-3">
+              <label className={labelCls}>Member Offers Notes</label>
+              <input
+                className={inputCls}
+                value={pt.memberOffersNotes ?? ""}
+                onChange={(e) => update({ memberOffersNotes: e.target.value || undefined })}
+                placeholder="e.g. Free consultation for first-time members"
+              />
             </div>
           </section>
 

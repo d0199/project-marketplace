@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import type { PersonalTrainer } from "@/types";
 import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
+import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
 import ShareButton from "@/components/ShareButton";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
@@ -22,6 +23,7 @@ interface AffiliatedGym {
 interface Props {
   pt: PersonalTrainer;
   affiliatedGyms: AffiliatedGym[];
+  flags: FeatureFlags;
 }
 
 function buildJsonLd(pt: PersonalTrainer) {
@@ -73,7 +75,7 @@ function buildJsonLd(pt: PersonalTrainer) {
   return jsonLd;
 }
 
-export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
+export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -201,6 +203,26 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
                     </span>
                   ))}
                 </div>
+              </section>
+            )}
+
+            {/* Member Offers — paid feature behind flag */}
+            {flags.ptMemberOffers && pt.isPaid && pt.memberOffers && pt.memberOffers.length > 0 && (
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Member Offers</h2>
+                <div className="space-y-2">
+                  {pt.memberOffers.map((offer) => (
+                    <div key={offer} className="flex items-center gap-2 text-sm text-gray-700">
+                      <svg className="w-4 h-4 shrink-0 text-brand-orange" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
+                      </svg>
+                      <span className="capitalize">{offer}</span>
+                    </div>
+                  ))}
+                </div>
+                {pt.memberOffersNotes && (
+                  <p className="mt-3 text-xs text-gray-500">{pt.memberOffersNotes}</p>
+                )}
               </section>
             )}
 
@@ -427,7 +449,10 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
-  const pt = await ptStore.getById(params?.id as string);
+  const [pt, flags] = await Promise.all([
+    ptStore.getById(params?.id as string),
+    featureFlagStore.get(),
+  ]);
   if (!pt || pt.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
   // Resolve affiliated gym names
@@ -444,5 +469,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     }
   }
 
-  return { props: { pt, affiliatedGyms } };
+  return { props: { pt, affiliatedGyms, flags } };
 };

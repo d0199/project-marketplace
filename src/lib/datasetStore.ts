@@ -1,6 +1,6 @@
 import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
-import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS, REPORT_ISSUE_TYPES, ALL_PT_SPECIALTIES } from "./utils";
+import { ALL_SPECIALTIES, ALL_AMENITIES, ALL_MEMBER_OFFERS, REPORT_ISSUE_TYPES, ALL_PT_SPECIALTIES, ALL_PT_MEMBER_OFFERS } from "./utils";
 
 type DatasetRecord = Schema["Dataset"]["type"];
 
@@ -25,6 +25,7 @@ const FALLBACK_DATASETS: Record<string, string[]> = {
   "member-offers": [...ALL_MEMBER_OFFERS],
   "report-issues": [...REPORT_ISSUE_TYPES],
   "pt-specialties": [...ALL_PT_SPECIALTIES],
+  "pt-member-offers": [...ALL_PT_MEMBER_OFFERS],
 };
 
 export const datasetStore = {
