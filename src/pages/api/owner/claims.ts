@@ -59,6 +59,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ ok: true });
   }
 
-  res.setHeader("Allow", "GET, PUT");
+  if (req.method === "DELETE") {
+    const id = String(req.query.id ?? "");
+    if (!id) return res.status(400).json({ error: "Missing claim id" });
+
+    const { data: claim } = await dataClient.models.Claim.get({ id });
+    if (!claim) return res.status(404).json({ error: "Claim not found" });
+
+    if (claim.status !== "pending" && claim.status !== "rejected") {
+      return res.status(400).json({ error: "Only pending or rejected claims can be deleted" });
+    }
+
+    await dataClient.models.Claim.delete({ id });
+    return res.status(200).json({ ok: true });
+  }
+
+  res.setHeader("Allow", "GET, PUT, DELETE");
   return res.status(405).end();
 }

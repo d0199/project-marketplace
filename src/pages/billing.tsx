@@ -639,10 +639,11 @@ function PTRow({
 // ─────────────────────────────────────────────────────────────────────────────
 // ClaimCard — shown in owner portal for pending/rejected claims
 // ─────────────────────────────────────────────────────────────────────────────
-function ClaimCard({ claim, onResubmit }: { claim: OwnerClaim; onResubmit: (id: string, message: string) => Promise<void> }) {
+function ClaimCard({ claim, onResubmit, onDelete }: { claim: OwnerClaim; onResubmit: (id: string, message: string) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
   const [showResubmit, setShowResubmit] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isPt = claim.claimType === "pt";
   const isNew = claim.isNewListing;
@@ -731,6 +732,37 @@ function ClaimCard({ claim, onResubmit }: { claim: OwnerClaim; onResubmit: (id: 
         <p className="mt-3 text-xs text-amber-600 bg-amber-50 rounded px-3 py-2">
           Your submission is being reviewed by our team. You&apos;ll be able to manage your listing once approved.
         </p>
+      )}
+
+      {/* Delete */}
+      {!confirmDelete ? (
+        <button
+          onClick={() => setConfirmDelete(true)}
+          className="mt-3 text-xs text-gray-400 hover:text-red-500 transition-colors"
+        >
+          Delete submission
+        </button>
+      ) : (
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xs text-red-600">Are you sure?</span>
+          <button
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await onDelete(claim.id);
+              setBusy(false);
+            }}
+            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg font-medium disabled:opacity-50"
+          >
+            {busy ? "Deleting…" : "Yes, delete"}
+          </button>
+          <button
+            onClick={() => setConfirmDelete(false)}
+            className="px-3 py-1 border border-gray-300 text-gray-600 text-xs rounded-lg font-medium hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
       )}
     </div>
   );
@@ -1146,6 +1178,12 @@ export default function BillingPage() {
                             setClaims((prev) =>
                               prev.map((cl) => cl.id === id ? { ...cl, status: "pending" } : cl)
                             );
+                          }
+                        }}
+                        onDelete={async (id) => {
+                          const r = await fetch(`/api/owner/claims?id=${id}`, { method: "DELETE" });
+                          if (r.ok) {
+                            setClaims((prev) => prev.filter((cl) => cl.id !== id));
                           }
                         }}
                       />
