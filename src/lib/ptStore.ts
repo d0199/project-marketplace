@@ -57,6 +57,9 @@ function toPT(r: PTRecord): PersonalTrainer {
     ...(r.availability != null && { availability: r.availability }),
     ...(r.gender != null && { gender: r.gender }),
     languages: (r.languages?.filter(Boolean) ?? []) as string[],
+    ...((r as Record<string, unknown>).customLeadFields != null && {
+      customLeadFields: JSON.parse((r as Record<string, unknown>).customLeadFields as string),
+    }),
   };
 }
 
@@ -103,6 +106,7 @@ function fromPT(pt: PersonalTrainer) {
     availability: pt.availability,
     gender: pt.gender,
     languages: pt.languages,
+    customLeadFields: pt.customLeadFields ? JSON.stringify(pt.customLeadFields) : undefined,
   };
 }
 

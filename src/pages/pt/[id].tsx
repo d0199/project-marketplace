@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
-import type { PersonalTrainer } from "@/types";
+import type { PersonalTrainer, CustomLeadField } from "@/types";
 import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
 import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
@@ -82,6 +82,9 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
   const [isInternalUser, setIsInternalUser] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [contactForm, setContactForm] = useState<{ name: string; email: string; phone: string; message: string }>({ name: "", email: "", phone: "", message: "" });
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   useEffect(() => {
     getCurrentUser()
@@ -106,10 +109,34 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
     }
   }, [authChecked, pt.isTest, isInternalUser, router]);
 
+  async function handleContactSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setContactStatus("sending");
+    try {
+      const r = await fetch(`/api/contact/pt/${pt.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...contactForm,
+          customData: Object.keys(customValues).length > 0 ? customValues : undefined,
+        }),
+      });
+      if (r.ok) {
+        setContactStatus("sent");
+      } else {
+        setContactStatus("error");
+      }
+    } catch {
+      setContactStatus("error");
+    }
+  }
+
   if (pt.isTest && !isInternalUser) return null;
 
   const hasImages = pt.images.length > 0;
   const isUnclaimed = pt.ownerId === "unclaimed" || pt.ownerId === "owner-3";
+  const effectivePaid = pt.isPaid || pt.isFeatured;
+  const customFields: CustomLeadField[] = pt.customLeadFields ?? [];
   const metaDesc = pt.description || `${pt.name} — Personal Trainer in ${pt.address.suburb}, ${pt.address.state}`;
 
   return (
@@ -353,6 +380,95 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
                 >
                   {pt.bookingUrl ? "Visit website" : "Visit Website"}
                 </a>
+              )}
+
+              {/* Contact form for paid PTs with email */}
+              {effectivePaid && pt.email && (
+                <div className="mt-4">
+                  {contactStatus === "sent" ? (
+                    <div className="bg-white/20 rounded-lg p-4 text-center">
+                      <p className="font-semibold text-white">Message sent!</p>
+                      <p className="text-orange-100 text-sm mt-1">They&apos;ll be in touch shortly.</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleContactSubmit} className="space-y-2">
+                      <p className="text-orange-100 text-sm font-medium mb-2">Send an enquiry</p>
+                      <input
+                        required
+                        placeholder="Your name"
+                        value={contactForm.name}
+                        onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                      />
+                      <input
+                        required
+                        type="email"
+                        placeholder="Your email"
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                      />
+                      <input
+                        placeholder="Phone (optional)"
+                        value={contactForm.phone}
+                        onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                      />
+                      <textarea
+                        rows={3}
+                        placeholder="Your message…"
+                        value={contactForm.message}
+                        onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none resize-none"
+                      />
+                      {/* Custom fields defined by PT */}
+                      {customFields.map((field) => (
+                        <div key={field.label}>
+                          {field.type === "select" ? (
+                            <select
+                              required={field.required}
+                              value={customValues[field.label] ?? ""}
+                              onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
+                              className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                            >
+                              <option value="">{field.label}{field.required ? " *" : ""}</option>
+                              {(field.options ?? []).map((opt) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          ) : field.type === "textarea" ? (
+                            <textarea
+                              required={field.required}
+                              rows={2}
+                              placeholder={`${field.label}${field.required ? " *" : ""}`}
+                              value={customValues[field.label] ?? ""}
+                              onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
+                              className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none resize-none"
+                            />
+                          ) : (
+                            <input
+                              required={field.required}
+                              placeholder={`${field.label}${field.required ? " *" : ""}`}
+                              value={customValues[field.label] ?? ""}
+                              onChange={(e) => setCustomValues((v) => ({ ...v, [field.label]: e.target.value }))}
+                              className="w-full px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none"
+                            />
+                          )}
+                        </div>
+                      ))}
+                      {contactStatus === "error" && (
+                        <p className="text-orange-100 text-xs">Something went wrong. Please try again.</p>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={contactStatus === "sending"}
+                        className="w-full bg-white text-brand-orange font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors disabled:opacity-50"
+                      >
+                        {contactStatus === "sending" ? "Sending…" : "Send Enquiry"}
+                      </button>
+                    </form>
+                  )}
+                </div>
               )}
             </div>
 

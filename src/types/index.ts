@@ -95,6 +95,14 @@ export interface PersonalTrainer {
   availability?: string;
   gender?: string;
   languages?: string[];
+  customLeadFields?: CustomLeadField[];
+}
+
+export interface CustomLeadField {
+  label: string;
+  type: "text" | "textarea" | "select";
+  options?: string[]; // for select type
+  required?: boolean;
 }
 
 export interface Lead {
@@ -105,6 +113,8 @@ export interface Lead {
   email: string;
   phone?: string;
   message?: string;
+  customData?: string; // JSON string of custom field responses
+  entityType?: "gym" | "pt";
   submittedAt?: string;
   status?: string;
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Gym } from "@/types";
+import type { Gym, PersonalTrainer } from "@/types";
 
 interface Lead {
   id: string;
@@ -9,6 +9,8 @@ interface Lead {
   email: string;
   phone?: string;
   message?: string;
+  customData?: string;
+  entityType?: "gym" | "pt";
   status?: string;
   createdAt?: string;
 }
@@ -34,10 +36,12 @@ function daysAgoStr(days: number) {
 export default function LeadsTab({
   ownerId,
   gyms,
+  pts,
   onNewCount,
 }: {
   ownerId: string;
   gyms: Gym[];
+  pts?: PersonalTrainer[];
   onNewCount?: (n: number) => void;
 }) {
   const [from, setFrom] = useState(daysAgoStr(30));
@@ -143,15 +147,18 @@ export default function LeadsTab({
             </button>
           ))}
         </div>
-        {gyms.length > 1 && (
+        {(gyms.length + (pts?.length ?? 0)) > 1 && (
           <select
             value={gymFilter}
             onChange={(e) => setGymFilter(e.target.value)}
             className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
           >
-            <option value="all">All gyms</option>
+            <option value="all">All listings</option>
             {gyms.map((g) => (
               <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+            {(pts ?? []).map((p) => (
+              <option key={p.id} value={p.id}>PT: {p.name}</option>
             ))}
           </select>
         )}
@@ -194,7 +201,7 @@ export default function LeadsTab({
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-400">No leads in this period.</p>
-          <p className="text-sm text-gray-300 mt-1">Leads appear here when someone submits an enquiry on your gym page.</p>
+          <p className="text-sm text-gray-300 mt-1">Leads appear here when someone submits an enquiry on your listing page.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -213,7 +220,10 @@ export default function LeadsTab({
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
                       <span className="font-semibold text-gray-900 text-base">{lead.name}</span>
-                      {gyms.length > 1 && (
+                      {lead.entityType === "pt" && (
+                        <span className="text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded-full">PT</span>
+                      )}
+                      {(gyms.length + (pts?.length ?? 0)) > 1 && (
                         <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                           {lead.gymName}
                         </span>
@@ -253,6 +263,26 @@ export default function LeadsTab({
                         {lead.message}
                       </div>
                     )}
+                    {lead.customData && (() => {
+                      try {
+                        const data = JSON.parse(lead.customData) as Record<string, string>;
+                        const entries = Object.entries(data).filter(([, v]) => v);
+                        if (entries.length === 0) return null;
+                        return (
+                          <div className="bg-purple-50 rounded-lg px-4 py-3 text-sm mt-2">
+                            <p className="text-xs font-semibold text-purple-700 mb-1">Additional Info</p>
+                            <dl className="space-y-1">
+                              {entries.map(([k, v]) => (
+                                <div key={k} className="flex gap-2">
+                                  <dt className="text-gray-500 font-medium min-w-[100px]">{k}:</dt>
+                                  <dd className="text-gray-700">{v}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </div>
+                        );
+                      } catch { return null; }
+                    })()}
                   </div>
 
                   {/* Right: status selector */}

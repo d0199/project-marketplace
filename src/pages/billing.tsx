@@ -1217,7 +1217,7 @@ export default function BillingPage() {
 
         {/* ── Leads tab ────────────────────────────────────────────────────── */}
         {tab === "leads" && session && (
-          <LeadsTab ownerId={session.ownerId} gyms={gyms} onNewCount={setLeadsNewCount} />
+          <LeadsTab ownerId={session.ownerId} gyms={gyms} pts={pts} onNewCount={setLeadsNewCount} />
         )}
 
         {/* ── Analytics tab ────────────────────────────────────────────────── */}

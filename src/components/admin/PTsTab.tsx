@@ -743,6 +743,24 @@ function PTEditPanel({
               <button onClick={addImage} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
             </div>
           </section>
+
+          {/* Custom Lead Fields */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Custom Lead Fields <span className="text-xs font-normal text-gray-400">(JSON)</span></h3>
+            <textarea
+              className={inputCls}
+              rows={4}
+              value={JSON.stringify(pt.customLeadFields ?? [], null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  if (Array.isArray(parsed)) update({ customLeadFields: parsed });
+                } catch { /* invalid JSON, ignore */ }
+              }}
+              placeholder='[{"label":"Goal","type":"select","options":["Weight Loss","Muscle Gain"],"required":true}]'
+            />
+            <p className="text-xs text-gray-400 mt-1">Array of {`{label, type: "text"|"textarea"|"select", options?, required?}`}</p>
+          </section>
         </div>
       </div>
     </div>
