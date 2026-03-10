@@ -88,6 +88,7 @@ export interface PersonalTrainer {
   qualificationEvidence?: string; // URL or text description of evidence submitted
   memberOffers?: string[];
   memberOffersNotes?: string;
+  memberOffersTnC?: string;
   experienceYears?: number;
   pricePerSession?: number;
   sessionDuration?: number; // minutes

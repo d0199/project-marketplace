@@ -11,6 +11,7 @@ import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
 import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
 import ShareButton from "@/components/ShareButton";
+import { MemberOfferIcon } from "@/components/AmenityIcon";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 
 interface AffiliatedGym {
@@ -244,21 +245,34 @@ export default function PTProfilePage({ pt, affiliatedGyms, flags }: Props) {
             )}
 
             {/* Member Offers — paid feature behind flag */}
-            {flags.ptMemberOffers && pt.isPaid && pt.memberOffers && pt.memberOffers.length > 0 && (
+            {flags.ptMemberOffers && pt.isPaid && (pt.memberOffers?.length || pt.memberOffersNotes) && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">Member Offers</h2>
-                <div className="space-y-2">
-                  {pt.memberOffers.map((offer) => (
-                    <div key={offer} className="flex items-center gap-2 text-sm text-gray-700">
-                      <svg className="w-4 h-4 shrink-0 text-brand-orange" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
-                      </svg>
-                      <span className="capitalize">{offer}</span>
-                    </div>
-                  ))}
-                </div>
+                {pt.memberOffers && pt.memberOffers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {pt.memberOffers.map((offer) => (
+                      <span key={offer} className="inline-flex items-center gap-1.5 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
+                        <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0" />
+                        <span className="capitalize">{offer}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {pt.memberOffersNotes && (
-                  <p className="mt-3 text-xs text-gray-500">{pt.memberOffersNotes}</p>
+                  <ul className="space-y-1 mb-2">
+                    {pt.memberOffersNotes.split(/[,;]+/).map((item) => item.trim()).filter(Boolean).map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm font-semibold text-gray-800">
+                        <span className="text-brand-orange mt-0.5">&bull;</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {pt.memberOffersTnC && (
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Terms &amp; Conditions</p>
+                    <p className="text-xs text-gray-400">{pt.memberOffersTnC}</p>
+                  </div>
                 )}
               </section>
             )}

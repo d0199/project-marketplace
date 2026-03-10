@@ -163,6 +163,7 @@ const schema = a.schema({
       qualificationEvidence: a.string(),
       memberOffers: a.string().array(),
       memberOffersNotes: a.string(),
+      memberOffersTnC: a.string(),
       experienceYears: a.integer(),
       pricePerSession: a.float(),
       sessionDuration: a.integer(),

@@ -17,11 +17,17 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
   const [newQualification, setNewQualification] = useState("");
   const [specialtySearch, setSpecialtySearch] = useState("");
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
+  const [memberOfferSearch, setMemberOfferSearch] = useState("");
+  const [availableMemberOffers, setAvailableMemberOffers] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/datasets/pt-specialties")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries) setAvailableSpecialties(data.entries); })
+      .catch(() => {});
+    fetch("/api/datasets/pt-member-offers")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries) setAvailableMemberOffers(data.entries); })
       .catch(() => {});
   }, []);
 
@@ -59,6 +65,17 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
 
   function removeSpecialty(s: string) {
     update({ specialties: form.specialties.filter((x) => x !== s) });
+  }
+
+  function addMemberOffer(s: string) {
+    if (!(form.memberOffers ?? []).includes(s)) {
+      update({ memberOffers: [...(form.memberOffers ?? []), s] });
+    }
+    setMemberOfferSearch("");
+  }
+
+  function removeMemberOffer(s: string) {
+    update({ memberOffers: (form.memberOffers ?? []).filter((x) => x !== s) });
   }
 
   function addQualification() {
@@ -280,6 +297,79 @@ export default function OwnerPTForm({ pt, onSave }: Props) {
                 </div>
               );
             })()}
+          </div>
+        </section>
+      )}
+
+      {/* Member Offers — paid only */}
+      {isPaid && (
+        <section>
+          <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Member Offers</h3>
+          {(form.memberOffers ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {(form.memberOffers ?? []).map((s) => (
+                <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 text-brand-orange text-sm font-medium border border-orange-200">
+                  {s}
+                  <button type="button" onClick={() => removeMemberOffer(s)} className="ml-0.5 text-orange-400 hover:text-orange-700">&times;</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="relative">
+            <input
+              type="text"
+              value={memberOfferSearch}
+              onChange={(e) => setMemberOfferSearch(e.target.value)}
+              placeholder="Search member offers..."
+              className={inputCls}
+            />
+            {memberOfferSearch.trim().length >= 1 && (() => {
+              const q = normalize(memberOfferSearch);
+              const matches = availableMemberOffers
+                .filter((s) => !(form.memberOffers ?? []).includes(s))
+                .filter((s) => normalize(s).includes(q))
+                .slice(0, 10);
+              if (matches.length === 0) return (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 p-3 text-sm text-gray-400">
+                  No matching offers.
+                </div>
+              );
+              return (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 max-h-48 overflow-y-auto">
+                  {matches.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => addMemberOffer(s)}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-brand-orange transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+          <div className="mt-4">
+            <label className={labelCls}>Benefits / Affiliations</label>
+            <p className="text-xs text-gray-400 mb-1">Separate each benefit with a comma — shown as bullet points on your profile.</p>
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.memberOffersNotes ?? ""}
+              onChange={(e) => update({ memberOffersNotes: e.target.value || undefined })}
+              placeholder="e.g. Free body composition scan, 10% off supplements"
+            />
+          </div>
+          <div className="mt-4">
+            <label className={labelCls}>Terms &amp; Conditions</label>
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.memberOffersTnC ?? ""}
+              onChange={(e) => update({ memberOffersTnC: e.target.value || undefined })}
+              placeholder="e.g. Offers valid for new clients only. Discount packs expire after 6 months."
+            />
           </div>
         </section>
       )}
