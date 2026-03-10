@@ -14,7 +14,6 @@ interface Form {
   ptPhone: string;
   ptEmail: string;
   ptWebsite: string;
-  specialties: string;
   description: string;
 }
 
@@ -22,7 +21,7 @@ const EMPTY: Form = {
   contactName: "", contactEmail: "", contactPhone: "",
   ptName: "", ptSuburb: "", ptPostcode: "",
   ptPhone: "", ptEmail: "", ptWebsite: "",
-  specialties: "", description: "",
+  description: "",
 };
 
 export default function ListPTPage() {
@@ -77,7 +76,7 @@ export default function ListPTPage() {
           name: form.contactName,
           email: form.contactEmail,
           phone: form.contactPhone,
-          message: `Specialties: ${form.specialties}\n\n${form.description}`.trim(),
+          message: form.description.trim(),
         }),
       });
       if (!r.ok) throw new Error("Submission failed");
@@ -219,15 +218,6 @@ export default function ListPTPage() {
                     placeholder="https://"
                     value={form.ptWebsite}
                     onChange={(e) => set("ptWebsite", e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialties</label>
-                  <input
-                    placeholder="e.g. Strength Training, Boxing, Weight Loss, Yoga"
-                    value={form.specialties}
-                    onChange={(e) => set("specialties", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>

@@ -323,7 +323,7 @@ function PTEditPanel({
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch("/api/datasets/specialties")
+    fetch("/api/datasets/pt-specialties")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries) setAvailableSpecialties(data.entries); })
       .catch(() => {});

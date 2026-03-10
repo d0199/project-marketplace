@@ -232,6 +232,29 @@ export const ALL_SPECIALTIES = [
   "Parkour",
 ] as const;
 
+export const ALL_PT_SPECIALTIES = [
+  "Strength Training",
+  "Weight Loss",
+  "HIIT",
+  "Boxing",
+  "Yoga",
+  "Pilates",
+  "Rehabilitation",
+  "Sports Performance",
+  "Powerlifting",
+  "CrossFit",
+  "Functional Training",
+  "Pre & Postnatal",
+  "Nutrition",
+  "MMA",
+  "Athletic Conditioning",
+  "Flexibility & Mobility",
+  "Body Composition",
+  "Senior Fitness",
+  "Mindfulness",
+  "Competition Prep",
+] as const;
+
 export const REPORT_ISSUE_TYPES = [
   "Pricing is incorrect",
   "Address is wrong",

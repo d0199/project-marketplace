@@ -22,22 +22,21 @@ const MAX_RADIUS = 50;
 type SearchMode = "gyms" | "trainers";
 type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
 
-const PT_SPECIALTIES = [
-  "Strength Training", "Weight Loss", "HIIT", "Boxing", "Yoga", "Pilates",
-  "Rehabilitation", "Sports Performance", "Powerlifting", "CrossFit",
-  "Functional Training", "Pre & Postnatal", "Nutrition", "MMA",
-];
-
 interface Props {
   flags: FeatureFlags;
+  ptSpecialties: string[];
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  const flags = await featureFlagStore.get();
-  return { props: { flags } };
+  const { datasetStore } = await import("@/lib/datasetStore");
+  const [flags, ptDs] = await Promise.all([
+    featureFlagStore.get(),
+    datasetStore.getByName("pt-specialties"),
+  ]);
+  return { props: { flags, ptSpecialties: ptDs?.entries ?? [] } };
 };
 
-export default function HomePage({ flags }: Props) {
+export default function HomePage({ flags, ptSpecialties }: Props) {
   const router = useRouter();
   const [searchMode, setSearchMode] = useState<SearchMode>("gyms");
   const [postcode, setPostcode] = useState("");
@@ -364,7 +363,7 @@ export default function HomePage({ flags }: Props) {
         )}
       </div>
       <ul className="space-y-2 max-h-48 overflow-y-auto">
-        {PT_SPECIALTIES.map((s) => {
+        {ptSpecialties.map((s) => {
           const checked = selectedPTSpecialties.includes(s);
           return (
             <li key={s}>

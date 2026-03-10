@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
 import { datasetStore } from "@/lib/datasetStore";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 
 /** Map dataset name → gym field that stores those values */
 const DATASET_TO_GYM_FIELD: Record<string, "amenities" | "specialties" | "memberOffers"> = {
@@ -12,17 +13,37 @@ const DATASET_TO_GYM_FIELD: Record<string, "amenities" | "specialties" | "member
 
 /**
  * When entries are removed from a dataset, strip those values from every gym
- * that currently has them set.
+ * or PT that currently has them set.
  */
 async function cleanupRemovedEntries(datasetName: string, removedEntries: string[]) {
   if (removedEntries.length === 0) return 0;
+  let updated = 0;
+  const removedSet = new Set(removedEntries);
+
+  // Clean PT specialties
+  if (datasetName === "pt-specialties") {
+    const allPTs = await ptStore.getAll();
+    await Promise.all(
+      allPTs.map(async (pt) => {
+        const current = pt.specialties ?? [];
+        const cleaned = current.filter((v) => !removedSet.has(v));
+        if (cleaned.length < current.length) {
+          await ptStore.update({ ...pt, specialties: cleaned });
+          updated++;
+        }
+      })
+    );
+    if (updated > 0) {
+      console.log(`[datasets] Removed ${removedEntries.length} entries from "pt-specialties" — cleaned ${updated} PT(s)`);
+    }
+    return updated;
+  }
+
+  // Clean gym fields
   const field = DATASET_TO_GYM_FIELD[datasetName];
   if (!field) return 0;
 
   const allGyms = await ownerStore.getAll();
-  const removedSet = new Set(removedEntries);
-  let updated = 0;
-
   await Promise.all(
     allGyms.map(async (gym) => {
       const current: string[] = (gym[field] as string[] | undefined) ?? [];
