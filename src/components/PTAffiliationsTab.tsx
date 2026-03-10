@@ -28,7 +28,8 @@ export default function PTAffiliationsTab({ pts }: Props) {
   const [affiliations, setAffiliations] = useState<Affiliation[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ id: string; gymName: string; ptName: string; action: "cancelled" | "removed" } | null>(null);
 
   // Gym search
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,7 +95,7 @@ export default function PTAffiliationsTab({ pts }: Props) {
       showToastMsg("Select a PT profile first");
       return;
     }
-    setBusy(true);
+    setBusy("request");
     try {
       const r = await fetch("/api/affiliations", {
         method: "POST",
@@ -118,7 +119,27 @@ export default function PTAffiliationsTab({ pts }: Props) {
     } catch {
       showToastMsg("Something went wrong");
     }
-    setBusy(false);
+    setBusy(null);
+  }
+
+  async function respond(id: string, status: "cancelled" | "removed") {
+    setBusy(id);
+    try {
+      const r = await fetch("/api/affiliations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (r.ok) {
+        const msgs = { cancelled: "Affiliation request cancelled", removed: "Affiliation removed" };
+        showToastMsg(msgs[status]);
+        load();
+      }
+    } catch {
+      showToastMsg("Something went wrong");
+    }
+    setBusy(null);
+    setConfirmAction(null);
   }
 
   if (loading) {
@@ -143,6 +164,33 @@ export default function PTAffiliationsTab({ pts }: Props) {
       {toast && (
         <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white bg-green-600">
           {toast}
+        </div>
+      )}
+
+      {/* Confirmation modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmAction(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              {confirmAction.action === "removed" ? "Remove Gym Affiliation" : "Cancel Affiliation Request"}
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {confirmAction.action === "removed"
+                ? <>Are you sure you want to remove <strong>{confirmAction.ptName}</strong>&apos;s affiliation with <strong>{confirmAction.gymName}</strong>? You will no longer appear as an affiliated PT on their gym profile.</>
+                : <>Cancel the pending affiliation request from <strong>{confirmAction.ptName}</strong> to <strong>{confirmAction.gymName}</strong>?</>
+              }
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
+              <button
+                onClick={() => respond(confirmAction.id, confirmAction.action)}
+                disabled={busy === confirmAction.id}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+              >
+                {busy === confirmAction.id ? "Processing..." : confirmAction.action === "removed" ? "Remove" : "Cancel Request"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -209,7 +257,7 @@ export default function PTAffiliationsTab({ pts }: Props) {
                       ) : (
                         <button
                           onClick={() => requestAffiliation(gym.id)}
-                          disabled={busy}
+                          disabled={busy === "request"}
                           className="px-4 py-1.5 bg-brand-orange text-white text-sm font-semibold rounded-lg hover:bg-brand-orange-dark disabled:opacity-50"
                         >
                           Request
@@ -275,8 +323,20 @@ export default function PTAffiliationsTab({ pts }: Props) {
                         Awaiting gym owner approval
                         {aff.requestedAt && ` · ${new Date(aff.requestedAt).toLocaleDateString()}`}
                       </p>
+                      <Link href={`/gym/${aff.gymId}`} className="text-xs text-brand-orange hover:underline mt-1 inline-block">
+                        View Profile
+                      </Link>
                     </div>
-                    <span className="text-xs bg-yellow-100 text-yellow-800 font-medium px-2 py-0.5 rounded-full">Pending</span>
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
+                      <span className="text-xs bg-yellow-100 text-yellow-800 font-medium px-2 py-0.5 rounded-full">Pending</span>
+                      <button
+                        onClick={() => setConfirmAction({ id: aff.id, ptName: pt.name || pt.id, gymName: aff.gymName || aff.gymId, action: "cancelled" })}
+                        disabled={busy === aff.id}
+                        className="text-xs text-red-500 hover:underline disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -287,12 +347,22 @@ export default function PTAffiliationsTab({ pts }: Props) {
               <div className="space-y-2 mb-3">
                 {active.map((aff) => (
                   <div key={aff.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg">
-                    <p className="font-medium text-gray-900 text-sm">
-                      <Link href={`/gym/${aff.gymId}`} className="hover:text-brand-orange">
-                        {aff.gymName || aff.gymId}
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{aff.gymName || aff.gymId}</p>
+                      <Link href={`/gym/${aff.gymId}`} className="text-xs text-brand-orange hover:underline mt-1 inline-block">
+                        View Profile
                       </Link>
-                    </p>
-                    <span className="text-xs bg-green-100 text-green-700 font-medium px-2 py-0.5 rounded-full">Active</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-green-100 text-green-700 font-medium px-2 py-0.5 rounded-full">Active</span>
+                      <button
+                        onClick={() => setConfirmAction({ id: aff.id, ptName: pt.name || pt.id, gymName: aff.gymName || aff.gymId, action: "removed" })}
+                        disabled={busy === aff.id}
+                        className="text-xs text-red-500 hover:underline disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -318,9 +388,6 @@ export default function PTAffiliationsTab({ pts }: Props) {
         );
       })}
 
-      <p className="text-xs text-gray-400 mt-4">
-        To remove an affiliation, please contact admin.
-      </p>
     </div>
   );
 }
