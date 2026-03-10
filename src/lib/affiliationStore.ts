@@ -155,7 +155,20 @@ export const affiliationStore = {
   },
 
   async create(aff: Omit<Affiliation, "id" | "createdAt" | "updatedAt">): Promise<Affiliation> {
-    if (!isAmplifyConfigured()) throw new Error("Backend not configured");
+    const now = new Date().toISOString();
+    if (!isModelAvailable()) {
+      // Fallback: mutate in-memory seed array
+      const newAff: Affiliation = {
+        id: `aff-${crypto.randomUUID().slice(0, 8)}`,
+        ...aff,
+        status: aff.status ?? "pending",
+        requestedAt: aff.requestedAt ?? now,
+        createdAt: now,
+        updatedAt: now,
+      };
+      seedAffiliations.push(newAff);
+      return newAff;
+    }
     const { data } = await dataClient.models.Affiliation.create({
       ptId: aff.ptId,
       ptName: aff.ptName,
@@ -164,19 +177,30 @@ export const affiliationStore = {
       requestedBy: aff.requestedBy,
       status: aff.status ?? "pending",
       notes: aff.notes,
-      requestedAt: aff.requestedAt ?? new Date().toISOString(),
+      requestedAt: aff.requestedAt ?? now,
     });
     if (!data) throw new Error("Failed to create affiliation");
     return toAffiliation(data);
   },
 
   async updateStatus(id: string, status: string, notes?: string): Promise<void> {
-    if (!isAmplifyConfigured()) return;
+    if (!isModelAvailable()) {
+      const aff = seedAffiliations.find((a) => a.id === id);
+      if (aff) {
+        aff.status = status;
+        if (notes != null) aff.notes = notes;
+      }
+      return;
+    }
     await dataClient.models.Affiliation.update({ id, status, ...(notes != null && { notes }) });
   },
 
   async delete(id: string): Promise<void> {
-    if (!isAmplifyConfigured()) return;
+    if (!isModelAvailable()) {
+      const idx = seedAffiliations.findIndex((a) => a.id === id);
+      if (idx >= 0) seedAffiliations.splice(idx, 1);
+      return;
+    }
     await dataClient.models.Affiliation.delete({ id });
   },
 };
