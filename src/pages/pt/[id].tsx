@@ -10,6 +10,7 @@ import type { PersonalTrainer } from "@/types";
 import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
+import ShareButton from "@/components/ShareButton";
 
 interface AffiliatedGym {
   id: string;
@@ -125,14 +126,20 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
             {" / "}
             <span className="text-gray-800 font-medium">{pt.name}</span>
           </div>
-          {isAdmin && (
-            <Link
-              href={`/admin?tab=pts`}
-              className="bg-brand-black hover:bg-gray-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
-            >
-              Admin Edit
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            <ShareButton
+              title={pt.name}
+              text={`Check out ${pt.name} — Personal Trainer in ${pt.address.suburb} on mynextgym.com.au`}
+            />
+            {isAdmin && (
+              <Link
+                href={`/admin?tab=pts`}
+                className="bg-brand-black hover:bg-gray-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
+              >
+                Admin Edit
+              </Link>
+            )}
+          </div>
         </nav>
 
         {/* Banner */}

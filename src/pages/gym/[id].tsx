@@ -13,6 +13,7 @@ import { ptStore } from "@/lib/ptStore";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 import FeedbackModal from "@/components/FeedbackModal";
+import ShareButton from "@/components/ShareButton";
 
 const DAYS = [
   "monday",
@@ -225,6 +226,10 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
             <span className="text-gray-800 font-medium">{gym.name}</span>
           </div>
           <div className="flex items-center gap-2">
+            <ShareButton
+              title={gym.name}
+              text={`Check out ${gym.name} in ${gym.address.suburb} on mynextgym.com.au`}
+            />
             {isOwner && (
               <Link
                 href={`/owner/${gym.id}`}
