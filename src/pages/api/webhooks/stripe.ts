@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { loadStripeSecrets } from "@/lib/amplifySecrets";
 import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 import type Stripe from "stripe";
 
 export const config = { api: { bodyParser: false } };
@@ -18,11 +19,32 @@ async function getRawBody(req: NextApiRequest): Promise<Buffer> {
 
 function getPriceToPlan(): Record<string, "paid" | "featured"> {
   return {
+    // Gym prices
     [serverConfig.STRIPE_PRICE_PAID_MONTHLY]: "paid",
     [serverConfig.STRIPE_PRICE_PAID_ANNUAL]: "paid",
     [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY]: "featured",
     [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL]: "featured",
+    // PT prices
+    [serverConfig.STRIPE_PRICE_PAID_MONTHLY_PT]: "paid",
+    [serverConfig.STRIPE_PRICE_PAID_ANNUAL_PT]: "paid",
+    [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY_PT]: "featured",
+    [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL_PT]: "featured",
   };
+}
+
+/** Update billing flags on the correct entity (gym or PT) */
+async function updateEntityBilling(
+  entityId: string,
+  entityType: string | undefined,
+  billing: { isPaid: boolean; isFeatured: boolean }
+) {
+  if (entityType === "pt") {
+    const pt = await ptStore.getById(entityId);
+    if (!pt) return;
+    await ptStore.update({ ...pt, isPaid: billing.isPaid, isFeatured: billing.isFeatured });
+  } else {
+    await ownerStore.updateBilling(entityId, billing);
+  }
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -44,16 +66,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const { gymId, plan } = session.metadata ?? {};
+      const { gymId, plan, entityType } = session.metadata ?? {};
       const subscriptionId = typeof session.subscription === "string"
         ? session.subscription
         : session.subscription?.id ?? null;
       if (!gymId || !plan || !subscriptionId) break;
 
-      const gym = await ownerStore.getById(gymId);
-      if (!gym) break;
-
-      await ownerStore.updateBilling(gymId, {
+      await updateEntityBilling(gymId, entityType, {
         isPaid: true,
         isFeatured: plan === "featured",
       });
@@ -61,33 +80,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     case "customer.subscription.deleted": {
-      // Find gym by looking up the customer's metadata via Stripe
       const sub = event.data.object as Stripe.Subscription;
       const sessions = await (await getStripe()).checkout.sessions.list({
         subscription: sub.id,
         limit: 1,
       });
-      const gymId = sessions.data[0]?.metadata?.gymId;
+      const meta = sessions.data[0]?.metadata;
+      const gymId = meta?.gymId;
       if (!gymId) break;
 
-      await ownerStore.updateBilling(gymId, { isPaid: false, isFeatured: false });
+      await updateEntityBilling(gymId, meta?.entityType, { isPaid: false, isFeatured: false });
       break;
     }
 
     case "customer.subscription.updated": {
       const sub = event.data.object as Stripe.Subscription;
-      // If cancelling at period end, keep flags active until subscription actually deletes
       if (sub.cancel_at_period_end) break;
 
       const sessions = await (await getStripe()).checkout.sessions.list({ subscription: sub.id, limit: 1 });
-      const gymId = sessions.data[0]?.metadata?.gymId;
+      const meta = sessions.data[0]?.metadata;
+      const gymId = meta?.gymId;
       if (!gymId) break;
 
       const priceId = sub.items.data[0]?.price.id ?? "";
       const newPlan = getPriceToPlan()[priceId];
       if (!newPlan) break;
 
-      await ownerStore.updateBilling(gymId, {
+      await updateEntityBilling(gymId, meta?.entityType, {
         isPaid: true,
         isFeatured: newPlan === "featured",
       });

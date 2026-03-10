@@ -2,8 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getStripe } from "@/lib/stripe";
 import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
+import { ptStore } from "@/lib/ptStore";
 
-function getPriceMap() {
+function getGymPriceMap() {
   return {
     paid: {
       month: serverConfig.STRIPE_PRICE_PAID_MONTHLY,
@@ -16,23 +17,76 @@ function getPriceMap() {
   };
 }
 
+function getPTPriceMap() {
+  return {
+    paid: {
+      month: serverConfig.STRIPE_PRICE_PAID_MONTHLY_PT,
+      year: serverConfig.STRIPE_PRICE_PAID_ANNUAL_PT,
+    },
+    featured: {
+      month: serverConfig.STRIPE_PRICE_FEATURED_MONTHLY_PT,
+      year: serverConfig.STRIPE_PRICE_FEATURED_ANNUAL_PT,
+    },
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
   try {
 
-  const { gymId, ownerId, email, plan, interval } = req.body as {
+  const { gymId, ownerId, email, plan, interval, entityType } = req.body as {
     gymId: string;
     ownerId: string;
     email: string;
     plan: "paid" | "featured";
     interval: "month" | "year";
+    entityType?: "gym" | "pt";
   };
 
   if (!gymId || !ownerId || !email || !plan || !interval) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  const isPT = entityType === "pt";
+
+  if (isPT) {
+    // PT checkout flow
+    const pt = await ptStore.getById(gymId);
+    if (!pt || pt.ownerId !== ownerId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    if (pt.stripeSubscriptionId) {
+      return res.status(200).json({ redirect: "portal" });
+    }
+
+    const stripe = await getStripe();
+    const existing = await stripe.customers.list({ email, limit: 1 });
+    const customer = existing.data.length > 0
+      ? existing.data[0]
+      : await stripe.customers.create({ email });
+
+    const priceId = getPTPriceMap()[plan]?.[interval];
+    if (!priceId) {
+      return res.status(400).json({ error: "Invalid plan or interval" });
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customer.id,
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { gymId, plan, entityType: "pt" },
+      success_url: `${baseUrl}/billing?billing=success`,
+      cancel_url: `${baseUrl}/billing`,
+    });
+
+    return res.status(200).json({ url: session.url });
+  }
+
+  // Gym checkout flow
   const gym = await ownerStore.getById(gymId);
   if (!gym || gym.ownerId !== ownerId) {
     return res.status(403).json({ error: "Forbidden" });
@@ -49,20 +103,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  // If gym already has an active subscription, redirect to portal
   if (gym.stripeSubscriptionId) {
     return res.status(200).json({ redirect: "portal" });
   }
 
   const stripe = await getStripe();
 
-  // Find or create Stripe Customer
   const existing = await stripe.customers.list({ email, limit: 1 });
   const customer = existing.data.length > 0
     ? existing.data[0]
     : await stripe.customers.create({ email });
 
-  const priceId = getPriceMap()[plan]?.[interval];
+  const priceId = getGymPriceMap()[plan]?.[interval];
   if (!priceId) {
     return res.status(400).json({ error: "Invalid plan or interval" });
   }

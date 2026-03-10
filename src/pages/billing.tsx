@@ -27,7 +27,7 @@ const PRICES = {
 
 const PT_PRICES = {
   paid: { month: 12, year: 120 },
-  featured: { month: 39, year: 390 },
+  featured: { month: 59, year: 590 },
 };
 
 const PAID_FEATURES = [
@@ -666,9 +666,12 @@ export default function BillingPage() {
 
   // ── Derived: available states for filter ──────────────────────────────────
   const availableStates = useMemo(() => {
-    const states = new Set(gyms.map((g) => g.address.state).filter(Boolean));
+    const states = new Set([
+      ...gyms.map((g) => g.address.state),
+      ...pts.map((p) => p.address.state),
+    ].filter(Boolean));
     return Array.from(states).sort();
-  }, [gyms]);
+  }, [gyms, pts]);
 
   // ── Derived: filtered gyms for billing tab ────────────────────────────────
   const filteredGyms = useMemo(() => {
@@ -691,6 +694,27 @@ export default function BillingPage() {
     });
   }, [gyms, search, tierFilter, stateFilter]);
 
+  // ── Derived: filtered PTs for billing tab ─────────────────────────────────
+  const filteredPTs = useMemo(() => {
+    const q = search.toLowerCase();
+    return pts.filter((p) => {
+      if (
+        q &&
+        ![p.name, p.address.suburb, p.address.postcode, p.address.state].some((v) =>
+          v?.toLowerCase().includes(q)
+        )
+      )
+        return false;
+      const plan =
+        p.stripePlan ?? (p.isFeatured ? "featured" : p.isPaid ? "paid" : null);
+      if (tierFilter === "free" && plan !== null) return false;
+      if (tierFilter === "paid" && plan !== "paid") return false;
+      if (tierFilter === "featured" && plan !== "featured") return false;
+      if (stateFilter !== "all" && p.address.state !== stateFilter) return false;
+      return true;
+    });
+  }, [pts, search, tierFilter, stateFilter]);
+
   // ── Collapse helpers ──────────────────────────────────────────────────────
   function toggleCollapse(gymId: string) {
     setCollapsed((prev) => {
@@ -699,7 +723,8 @@ export default function BillingPage() {
       return next;
     });
   }
-  const allCollapsed = gyms.length > 0 && collapsed.size === gyms.length;
+  const totalListings = gyms.length + pts.length;
+  const allCollapsed = totalListings > 0 && collapsed.size === totalListings;
 
   // ── Billing actions ───────────────────────────────────────────────────────
   async function handlePTUpgrade(pt: PersonalTrainer, plan: "paid" | "featured") {
@@ -976,8 +1001,8 @@ export default function BillingPage() {
                     </button>
                   </div>
 
-                  {/* Search + filters — only when >1 gym */}
-                  {gyms.length > 1 && (
+                  {/* Search + filters — only when >1 listing */}
+                  {(gyms.length + pts.length) > 1 && (
                     <>
                       <input
                         type="text"
@@ -1018,7 +1043,7 @@ export default function BillingPage() {
                     onClick={() =>
                       allCollapsed
                         ? setCollapsed(new Set())
-                        : setCollapsed(new Set(gyms.map((g) => g.id)))
+                        : setCollapsed(new Set([...gyms.map((g) => g.id), ...pts.map((p) => p.id)]))
                     }
                     className="ml-auto text-sm text-gray-500 hover:text-gray-700 underline"
                   >
@@ -1026,8 +1051,8 @@ export default function BillingPage() {
                   </button>
                 </div>
 
-                {/* ── Gym cards ── */}
-                {filteredGyms.length === 0 ? (
+                {/* ── Listing cards ── */}
+                {filteredGyms.length === 0 && filteredPTs.length === 0 ? (
                   <p className="text-center py-10 text-gray-400">
                     No listings match your filters.
                   </p>
@@ -1046,7 +1071,7 @@ export default function BillingPage() {
                         onCancel={handleCancel}
                       />
                     ))}
-                    {pts.map((pt) => (
+                    {filteredPTs.map((pt) => (
                       <PTRow
                         key={pt.id}
                         pt={pt}

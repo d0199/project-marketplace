@@ -14,4 +14,9 @@ export const serverConfig = {
   get STRIPE_PRICE_PAID_ANNUAL()      { return getSecret("STRIPE_PRICE_PAID_ANNUAL");      },
   get STRIPE_PRICE_FEATURED_MONTHLY() { return getSecret("STRIPE_PRICE_FEATURED_MONTHLY"); },
   get STRIPE_PRICE_FEATURED_ANNUAL()  { return getSecret("STRIPE_PRICE_FEATURED_ANNUAL");  },
+  // PT-specific price IDs
+  get STRIPE_PRICE_PAID_MONTHLY_PT()     { return getSecret("STRIPE_PRICE_PAID_MONTHLY_PT");     },
+  get STRIPE_PRICE_PAID_ANNUAL_PT()      { return getSecret("STRIPE_PRICE_PAID_ANNUAL_PT");      },
+  get STRIPE_PRICE_FEATURED_MONTHLY_PT() { return getSecret("STRIPE_PRICE_FEATURED_MONTHLY_PT"); },
+  get STRIPE_PRICE_FEATURED_ANNUAL_PT()  { return getSecret("STRIPE_PRICE_FEATURED_ANNUAL_PT");  },
 };
