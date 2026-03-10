@@ -9,6 +9,7 @@ import AnalyticsTab from "@/components/AnalyticsTab";
 import GymAffiliationsTab from "@/components/GymAffiliationsTab";
 import PTAffiliationsTab from "@/components/PTAffiliationsTab";
 import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
+import BulkEditModal from "@/components/BulkEditModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -111,6 +112,9 @@ function GymRow({
   onUpgrade,
   onManage,
   onCancel,
+  bulkMode,
+  bulkSelected,
+  onBulkToggle,
 }: {
   gym: Gym;
   interval: Interval;
@@ -120,6 +124,9 @@ function GymRow({
   onUpgrade: (gym: Gym, plan: "paid" | "featured") => void;
   onManage: () => void;
   onCancel: (gym: Gym) => void;
+  bulkMode?: boolean;
+  bulkSelected?: boolean;
+  onBulkToggle?: () => void;
 }) {
   const currentPlan =
     gym.stripePlan ?? (gym.isFeatured ? "featured" : gym.isPaid ? "paid" : null);
@@ -145,20 +152,33 @@ function GymRow({
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
       {/* Gym header — always visible */}
       <div className="flex items-center justify-between px-5 py-4">
-        <div>
+        <div className="flex items-center gap-3">
+          {bulkMode && (
+            <input
+              type="checkbox"
+              checked={bulkSelected ?? false}
+              onChange={onBulkToggle}
+              className="w-4.5 h-4.5 accent-brand-orange shrink-0 cursor-pointer"
+            />
+          )}
+          <div>
           <div className="font-semibold text-gray-900">{gym.name}</div>
           <div className="text-sm text-gray-500">
             {gym.address.suburb}, {gym.address.state} {gym.address.postcode}
           </div>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <PlanBadge plan={currentPlan} />
+          {!bulkMode && (
           <Link
             href={`/owner/${gym.id}`}
             className="text-sm font-bold text-gray-700 hover:text-brand-orange transition-colors"
           >
             Edit listing →
           </Link>
+          )}
+          {!bulkMode && (
           <Link
             href={`/gym/${gym.id}`}
             target="_blank"
@@ -167,6 +187,8 @@ function GymRow({
           >
             View profile →
           </Link>
+          )}
+          {!bulkMode && (
           <button
             onClick={onToggleCollapse}
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -188,11 +210,12 @@ function GymRow({
               />
             </svg>
           </button>
+          )}
         </div>
       </div>
 
-      {/* Plan columns — collapsible */}
-      {!collapsed && (
+      {/* Plan columns — collapsible (hidden in bulk mode) */}
+      {!collapsed && !bulkMode && (
         <div className="border-t border-gray-100 grid grid-cols-3 divide-x divide-gray-100">
 
           {/* Free */}
@@ -617,6 +640,11 @@ export default function BillingPage() {
   // Collapse state per gym
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
+  // Bulk edit state
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [showBulkModal, setShowBulkModal] = useState(false);
+
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     getCurrentUser()
@@ -725,6 +753,25 @@ export default function BillingPage() {
   }
   const totalListings = gyms.length + pts.length;
   const allCollapsed = totalListings > 0 && collapsed.size === totalListings;
+
+  // Bulk edit helpers
+  function toggleBulkSelect(id: string) {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function exitBulkMode() {
+    setBulkMode(false);
+    setBulkSelected(new Set());
+  }
+  function handleBulkSubmitted() {
+    setShowBulkModal(false);
+    exitBulkMode();
+    setCancelToast("Bulk edit submitted for review.");
+  }
+  const bulkSelectedGyms = gyms.filter((g) => bulkSelected.has(g.id));
 
   // ── Billing actions ───────────────────────────────────────────────────────
   async function handlePTUpgrade(pt: PersonalTrainer, plan: "paid" | "featured") {
@@ -1038,18 +1085,75 @@ export default function BillingPage() {
                     </>
                   )}
 
-                  {/* Collapse all / expand all */}
-                  <button
-                    onClick={() =>
-                      allCollapsed
-                        ? setCollapsed(new Set())
-                        : setCollapsed(new Set([...gyms.map((g) => g.id), ...pts.map((p) => p.id)]))
-                    }
-                    className="ml-auto text-sm text-gray-500 hover:text-gray-700 underline"
-                  >
-                    {allCollapsed ? "Expand all" : "Collapse all"}
-                  </button>
+                  {/* Collapse all / expand all + Bulk Edit */}
+                  <div className="ml-auto flex items-center gap-3">
+                    {gyms.length >= 2 && !bulkMode && (
+                      <button
+                        onClick={() => setBulkMode(true)}
+                        className="text-sm text-gray-500 hover:text-brand-orange font-medium flex items-center gap-1.5 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Bulk Edit
+                      </button>
+                    )}
+                    {!bulkMode && (
+                      <button
+                        onClick={() =>
+                          allCollapsed
+                            ? setCollapsed(new Set())
+                            : setCollapsed(new Set([...gyms.map((g) => g.id), ...pts.map((p) => p.id)]))
+                        }
+                        className="text-sm text-gray-500 hover:text-gray-700 underline"
+                      >
+                        {allCollapsed ? "Expand all" : "Collapse all"}
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Bulk edit selection bar */}
+                {bulkMode && (
+                  <div className="mb-4 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-xl px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={bulkSelected.size === filteredGyms.length && filteredGyms.length > 0}
+                          onChange={() => {
+                            if (bulkSelected.size === filteredGyms.length) {
+                              setBulkSelected(new Set());
+                            } else {
+                              setBulkSelected(new Set(filteredGyms.map((g) => g.id)));
+                            }
+                          }}
+                          className="w-4 h-4 accent-brand-orange"
+                        />
+                        <span className="text-sm text-blue-800 font-medium">
+                          {bulkSelected.size === 0
+                            ? "Select gyms to edit"
+                            : `${bulkSelected.size} gym${bulkSelected.size !== 1 ? "s" : ""} selected`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={exitBulkMode}
+                        className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => setShowBulkModal(true)}
+                        disabled={bulkSelected.size < 2}
+                        className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Edit selected →
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Listing cards ── */}
                 {filteredGyms.length === 0 && filteredPTs.length === 0 ? (
@@ -1069,6 +1173,9 @@ export default function BillingPage() {
                         onUpgrade={handleUpgrade}
                         onManage={handleManage}
                         onCancel={handleCancel}
+                        bulkMode={bulkMode}
+                        bulkSelected={bulkSelected.has(gym.id)}
+                        onBulkToggle={() => toggleBulkSelect(gym.id)}
                       />
                     ))}
                     {filteredPTs.map((pt) => (
@@ -1089,6 +1196,17 @@ export default function BillingPage() {
               </>
             )}
           </>
+        )}
+
+        {/* Bulk Edit Modal */}
+        {showBulkModal && session && (
+          <BulkEditModal
+            gyms={bulkSelectedGyms}
+            ownerEmail={session.email}
+            ownerId={session.ownerId}
+            onClose={() => setShowBulkModal(false)}
+            onSubmitted={handleBulkSubmitted}
+          />
         )}
 
         {/* ── Leads tab ────────────────────────────────────────────────────── */}

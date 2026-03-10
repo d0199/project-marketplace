@@ -59,7 +59,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!edit.proposedChanges) return res.status(400).json({ error: "No proposed changes stored" });
 
         const editType = edit.editType as string;
-        if (editType === "pt-verification") {
+        if (editType === "bulk") {
+          // Bulk edit: apply single field change to multiple gyms
+          const proposed = JSON.parse(edit.proposedChanges as string) as {
+            field: string;
+            value: unknown;
+            gymIds: string[];
+          };
+          let applied = 0;
+          for (const gymId of proposed.gymIds) {
+            const gym = await ownerStore.getById(gymId);
+            if (!gym) continue;
+            // Apply field change
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let updated: Gym = { ...gym };
+            if (proposed.field.startsWith("address.")) {
+              const sub = proposed.field.split(".")[1];
+              updated = { ...gym, address: { ...gym.address, [sub]: proposed.value } };
+            } else if (proposed.field === "hours") {
+              updated = { ...gym, hours: proposed.value as Gym["hours"] };
+            } else {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (updated as any)[proposed.field] = proposed.value;
+            }
+            await ownerStore.update(updated);
+            applied++;
+          }
+          console.log(`[moderation] Bulk edit approved: ${applied}/${proposed.gymIds.length} gyms updated`);
+        } else if (editType === "pt-verification") {
           // Qualification verification approval — set verified flag on PT
           const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
           await ptStore.update({

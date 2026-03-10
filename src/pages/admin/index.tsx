@@ -734,9 +734,10 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
           {displayedEdits.map((e) => {
             const isPTEdit = e.editType === "pt";
             const isVerification = e.editType === "pt-verification";
+            const isBulkEdit = e.editType === "bulk";
             const current = e.currentSnapshot ? JSON.parse(e.currentSnapshot) : null;
             const proposed = e.proposedChanges ? JSON.parse(e.proposedChanges) : null;
-            const changedFields = current && proposed && !isVerification ? computeDiff(current, proposed, e.editType) : [];
+            const changedFields = current && proposed && !isVerification && !isBulkEdit ? computeDiff(current, proposed, e.editType) : [];
 
             return (
               <div
@@ -759,6 +760,7 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
                         {e.gymName || e.gymId}
                         {isPTEdit && <span className="text-xs bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded">PT</span>}
                         {isVerification && <span className="text-xs bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded">Qualification Verification</span>}
+                        {isBulkEdit && <span className="text-xs bg-blue-100 text-blue-700 font-medium px-1.5 py-0.5 rounded">Bulk Edit</span>}
                       </p>
                       <p className="text-xs text-gray-400">ID: {e.gymId}</p>
                     </div>
@@ -805,6 +807,51 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
                   </div>
                 )}
 
+                {/* Bulk edit detail panel */}
+                {isBulkEdit && proposed && (
+                  <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-xs font-semibold text-blue-800">Bulk Edit — {proposed.gymIds?.length ?? 0} gyms affected</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-2 text-sm">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Field</p>
+                        <p className="text-blue-900 font-medium">{proposed.field}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">New value</p>
+                        <p className="text-blue-900 font-medium break-all">
+                          {Array.isArray(proposed.value)
+                            ? proposed.value.join(", ") || "(none)"
+                            : typeof proposed.value === "object"
+                              ? JSON.stringify(proposed.value)
+                              : String(proposed.value) || "(empty)"}
+                        </p>
+                      </div>
+                    </div>
+                    {current && Array.isArray(current) && (
+                      <details className="text-xs">
+                        <summary className="text-blue-700 cursor-pointer hover:underline font-medium">
+                          View affected gyms ({current.length})
+                        </summary>
+                        <ul className="mt-1.5 space-y-1 pl-2">
+                          {current.map((g: { gymId: string; gymName: string; currentValue: unknown }) => (
+                            <li key={g.gymId} className="flex items-center justify-between py-0.5">
+                              <span className="text-gray-700">{g.gymName} <span className="text-gray-400">({g.gymId})</span></span>
+                              <span className="text-gray-400 truncate ml-2 max-w-[200px]">
+                                Current: {Array.isArray(g.currentValue) ? g.currentValue.join(", ") : String(g.currentValue ?? "—")}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                    <p className="text-xs text-blue-600 mt-2">
+                      Approving will apply the new value to all {proposed.gymIds?.length ?? 0} gyms.
+                    </p>
+                  </div>
+                )}
+
                 {/* Meta */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-3">
                   <div>
@@ -817,7 +864,11 @@ function ModerationTab({ onPendingCount }: { onPendingCount?: (n: number) => voi
                   </div>
                   <div>
                     <p className="text-xs text-gray-400 mb-0.5">Changes</p>
-                    <p className="text-gray-800">{changedFields.length} field{changedFields.length !== 1 ? "s" : ""}</p>
+                    <p className="text-gray-800">
+                      {isBulkEdit
+                        ? `${proposed?.gymIds?.length ?? 0} gyms × 1 field`
+                        : `${changedFields.length} field${changedFields.length !== 1 ? "s" : ""}`}
+                    </p>
                   </div>
                 </div>
 
