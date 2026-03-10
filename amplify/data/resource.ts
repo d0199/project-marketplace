@@ -197,6 +197,18 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
+  // Feature flags — single record (id = "global") toggled from admin panel.
+  // Controls which UI features are visible on the public search page.
+  FeatureFlag: a
+    .model({
+      ptSearch: a.boolean(),
+      heroSpecialties: a.boolean(),
+      memberOffers: a.boolean(),
+      heroAmenities: a.boolean(),
+      radiusSlider: a.boolean(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // Admin-managed picklists (e.g. "specialties", "amenities").
   // Very few records — full scan is fine.
   Dataset: a
