@@ -24,7 +24,10 @@ const EMPTY: Form = {
   description: "",
 };
 
+type ListingRole = "pt" | "gym-owner";
+
 export default function ListPTPage() {
+  const [role, setRole] = useState<ListingRole>("pt");
   const [form, setForm] = useState<Form>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -76,7 +79,10 @@ export default function ListPTPage() {
           name: form.contactName,
           email: form.contactEmail,
           phone: form.contactPhone,
-          message: form.description.trim(),
+          message: role === "gym-owner"
+            ? `[Submitted by gym owner — PT should be created as unclaimed]\n${form.description}`.trim()
+            : form.description.trim(),
+          ptListingRole: role,
         }),
       });
       if (!r.ok) throw new Error("Submission failed");
@@ -128,6 +134,38 @@ export default function ListPTPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Role selector */}
+            <section>
+              <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b">Who are you?</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setRole("pt")}
+                  className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                    role === "pt" ? "border-brand-orange bg-orange-50" : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900 text-sm">I am the personal trainer</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Create my own profile</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("gym-owner")}
+                  className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                    role === "gym-owner" ? "border-brand-orange bg-orange-50" : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900 text-sm">I&apos;m a gym owner</p>
+                  <p className="text-xs text-gray-500 mt-0.5">List a trainer at my gym</p>
+                </button>
+              </div>
+              {role === "gym-owner" && (
+                <p className="text-xs text-amber-600 mt-3 bg-amber-50 rounded-lg px-3 py-2">
+                  The trainer will be listed as unclaimed. The PT can claim their profile and will need to approve the gym affiliation.
+                </p>
+              )}
+            </section>
+
             {/* Contact details */}
             <section>
               <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b">Your contact details</h2>

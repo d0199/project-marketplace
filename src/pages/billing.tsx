@@ -926,7 +926,7 @@ export default function BillingPage() {
                 <p className="text-gray-500 mb-4">No listings yet.</p>
                 <div className="flex gap-3 justify-center">
                   <Link
-                    href="/list-gym"
+                    href="/list"
                     className="px-5 py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg text-sm transition-colors"
                   >
                     Create a listing
