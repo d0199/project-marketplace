@@ -2416,8 +2416,11 @@ interface LeadRecord {
   email: string;
   phone?: string;
   message?: string;
+  customData?: string;
+  entityType?: "gym" | "pt";
   createdAt?: string;
   status?: string;
+  notes?: string;
 }
 
 function defaultLeadsDateFrom() {
@@ -2475,7 +2478,7 @@ function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) 
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search name, email, phone, gym…"
+          placeholder="Search name, email, phone, gym/PT…"
           className="flex-1 min-w-[200px] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
         />
         <input
@@ -2504,25 +2507,45 @@ function LeadsTab({ onPendingCount }: { onPendingCount?: (n: number) => void }) 
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
               <tr>
-                {["Date", "Gym", "Name", "Email", "Phone"].map((h) => (
+                {["Date", "Type", "Listing", "Name", "Email", "Phone", "Status"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {displayed.map((l) => (
+              {displayed.map((l) => {
+                const isPT = l.entityType === "pt" || l.gymId.startsWith("pt-");
+                const profileUrl = isPT ? `/pt/${l.gymId}` : `/gym/${l.gymId}`;
+                return (
                 <tr key={l.id}>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDate(l.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    {isPT ? (
+                      <span className="text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded-full">PT</span>
+                    ) : (
+                      <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">Gym</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-700">
-                    <a href={`/gym/${l.gymId}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-brand-orange">
+                    <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline text-brand-orange">
                       {l.gymName || l.gymId}
                     </a>
                   </td>
                   <td className="px-4 py-3 text-gray-900 font-medium">{l.name}</td>
                   <td className="px-4 py-3 text-gray-700 break-all">{l.email}</td>
                   <td className="px-4 py-3 text-gray-700">{l.phone || "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      !l.status || l.status === "new" ? "bg-orange-100 text-orange-800" :
+                      l.status === "contacted" ? "bg-green-100 text-green-800" :
+                      "bg-gray-100 text-gray-600"
+                    }`}>
+                      {(l.status ?? "new").charAt(0).toUpperCase() + (l.status ?? "new").slice(1)}
+                    </span>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
