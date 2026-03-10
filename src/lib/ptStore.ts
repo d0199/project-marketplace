@@ -258,6 +258,7 @@ export const ptStore = {
       availability: pt.availability,
       gender: pt.gender,
       languages: pt.languages,
+      customLeadFields: pt.customLeadFields ? JSON.stringify(pt.customLeadFields) : undefined,
     });
     if (!data) throw new Error("Failed to create PT");
     invalidateCache();

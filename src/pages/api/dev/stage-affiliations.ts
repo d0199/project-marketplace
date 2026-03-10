@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         lat: -31.95, lng: 115.86,
         images: [], amenities: [],
         hours: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
-        pricing: { casualVisit: "", weekly: "", fortnightly: "", monthly: "", yearly: "" },
+        pricePerWeek: 0,
       });
       log.push(`Created Gym for Owner A: ${gymA.name} (${gymA.id})`);
     } else {
@@ -135,7 +135,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         lat: -31.947, lng: 115.86,
         images: [], amenities: [],
         hours: { monday: "", tuesday: "", wednesday: "", thursday: "", friday: "", saturday: "", sunday: "" },
-        pricing: { casualVisit: "", weekly: "", fortnightly: "", monthly: "", yearly: "" },
+        pricePerWeek: 0,
       });
       log.push(`Created Gym for Owner B: ${gymB.name} (${gymB.id})`);
     } else {

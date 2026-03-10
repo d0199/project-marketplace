@@ -170,6 +170,7 @@ const schema = a.schema({
       availability: a.string(),
       gender: a.string(),
       languages: a.string().array(),
+      customLeadFields: a.string(), // JSON-encoded CustomLeadField[]
     })
     .secondaryIndexes((index) => [index("ownerId")])
     .authorization((allow) => [allow.publicApiKey()]),
