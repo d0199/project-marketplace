@@ -28,11 +28,11 @@ export default function Navbar() {
           </Link>
           {!isOwnerRoute && (
             <Link
-              href="/list-gym"
+              href="/list"
               className="text-brand-orange hover:text-orange-400 font-medium transition-colors whitespace-nowrap"
             >
               <span className="sm:hidden">List for free</span>
-              <span className="hidden sm:inline">List your gym, it&apos;s free</span>
+              <span className="hidden sm:inline">Create a free listing</span>
             </Link>
           )}
           {isOwnerRoute ? (

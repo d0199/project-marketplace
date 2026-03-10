@@ -8,22 +8,24 @@ interface Form {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  gymName: string;
-  gymSuburb: string;
-  gymPostcode: string;
-  gymPhone: string;
-  gymEmail: string;
-  gymWebsite: string;
+  ptName: string;
+  ptSuburb: string;
+  ptPostcode: string;
+  ptPhone: string;
+  ptEmail: string;
+  ptWebsite: string;
+  specialties: string;
   description: string;
 }
 
 const EMPTY: Form = {
   contactName: "", contactEmail: "", contactPhone: "",
-  gymName: "", gymSuburb: "", gymPostcode: "",
-  gymPhone: "", gymEmail: "", gymWebsite: "", description: "",
+  ptName: "", ptSuburb: "", ptPostcode: "",
+  ptPhone: "", ptEmail: "", ptWebsite: "",
+  specialties: "", description: "",
 };
 
-export default function ListGymPage() {
+export default function ListPTPage() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -44,7 +46,7 @@ export default function ListGymPage() {
           }));
         }
       } catch {
-        // not signed in — leave form empty
+        // not signed in
       }
     })();
   }, []);
@@ -63,18 +65,19 @@ export default function ListGymPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           isNewListing: true,
+          claimType: "pt",
           gymId: "new",
-          gymName: form.gymName,
-          gymAddress: `${form.gymSuburb} ${form.gymPostcode}`.trim(),
-          gymSuburb: form.gymSuburb,
-          gymPostcode: form.gymPostcode,
-          gymWebsite: form.gymWebsite,
-          gymPhone: form.gymPhone,
-          gymEmail: form.gymEmail,
+          gymName: form.ptName,
+          gymAddress: `${form.ptSuburb} ${form.ptPostcode}`.trim(),
+          gymSuburb: form.ptSuburb,
+          gymPostcode: form.ptPostcode,
+          gymWebsite: form.ptWebsite,
+          gymPhone: form.ptPhone,
+          gymEmail: form.ptEmail,
           name: form.contactName,
           email: form.contactEmail,
           phone: form.contactPhone,
-          message: form.description,
+          message: `Specialties: ${form.specialties}\n\n${form.description}`.trim(),
         }),
       });
       if (!r.ok) throw new Error("Submission failed");
@@ -109,7 +112,7 @@ export default function ListGymPage() {
   return (
     <>
       <Head>
-        <title>List Your Gym — mynextgym.com.au</title>
+        <title>List as a Personal Trainer — mynextgym.com.au</title>
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">
@@ -118,15 +121,15 @@ export default function ListGymPage() {
               &larr; Back to listing options
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              List your gym, it&apos;s free
+              Create your PT profile
             </h1>
             <p className="text-gray-500">
-              Fill in the details below and our team will create your listing and set up your owner account. You&apos;ll be able to manage your profile once approved.
+              Fill in the details below and our team will create your listing and set up your account. You&apos;ll be able to manage your profile once approved.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Your details */}
+            {/* Contact details */}
             <section>
               <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b">Your contact details</h2>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -161,16 +164,16 @@ export default function ListGymPage() {
               </div>
             </section>
 
-            {/* Gym details */}
+            {/* PT details */}
             <section>
-              <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b">Gym details</h2>
+              <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b">Your training details</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Gym name <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your full name (as shown on profile) <span className="text-red-500">*</span></label>
                   <input
                     required
-                    value={form.gymName}
-                    onChange={(e) => set("gymName", e.target.value)}
+                    value={form.ptName}
+                    onChange={(e) => set("ptName", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
@@ -178,8 +181,8 @@ export default function ListGymPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Suburb <span className="text-red-500">*</span></label>
                   <input
                     required
-                    value={form.gymSuburb}
-                    onChange={(e) => set("gymSuburb", e.target.value)}
+                    value={form.ptSuburb}
+                    onChange={(e) => set("ptSuburb", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
@@ -187,36 +190,44 @@ export default function ListGymPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Postcode <span className="text-red-500">*</span></label>
                   <input
                     required
-                    value={form.gymPostcode}
-                    onChange={(e) => set("gymPostcode", e.target.value)}
+                    value={form.ptPostcode}
+                    onChange={(e) => set("ptPostcode", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Gym phone</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                   <input
                     type="tel"
-                    value={form.gymPhone}
-                    onChange={(e) => set("gymPhone", e.target.value)}
+                    value={form.ptPhone}
+                    onChange={(e) => set("ptPhone", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Gym email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
-                    value={form.gymEmail}
-                    onChange={(e) => set("gymEmail", e.target.value)}
+                    value={form.ptEmail}
+                    onChange={(e) => set("ptEmail", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website or Instagram</label>
                   <input
-                    type="url"
                     placeholder="https://"
-                    value={form.gymWebsite}
-                    onChange={(e) => set("gymWebsite", e.target.value)}
+                    value={form.ptWebsite}
+                    onChange={(e) => set("ptWebsite", e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialties</label>
+                  <input
+                    placeholder="e.g. Strength Training, Boxing, Weight Loss, Yoga"
+                    value={form.specialties}
+                    onChange={(e) => set("specialties", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 </div>
@@ -224,7 +235,7 @@ export default function ListGymPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Brief description</label>
                   <textarea
                     rows={3}
-                    placeholder="Tell us a bit about your gym — facilities, membership types, what makes you unique…"
+                    placeholder="Tell us about your training style, experience, qualifications, and what makes you unique…"
                     value={form.description}
                     onChange={(e) => set("description", e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
@@ -244,7 +255,7 @@ export default function ListGymPage() {
             </button>
 
             <p className="text-xs text-gray-400 text-center">
-              By submitting you confirm you are authorised to list this gym. Our team reviews all submissions before going live.
+              By submitting you confirm the information provided is accurate. Our team reviews all submissions before going live.
             </p>
           </form>
         </div>
