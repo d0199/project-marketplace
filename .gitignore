@@ -37,3 +37,4 @@ __pycache__/
 *.egg-info/
 venv/
 .venv/
+amplify_outputs_staging.json

@@ -19,13 +19,18 @@ import crypto from "crypto";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
-const outputs = require("../amplify_outputs.json");
+
+// Allow --config flag to point at a different amplify_outputs file (e.g. staging)
+const configArg = process.argv.indexOf("--config");
+const configPath = configArg !== -1 ? path.resolve(process.argv[configArg + 1]) : path.resolve("amplify_outputs.json");
+const outputs = require(configPath);
+console.log(`Using config: ${configPath}`);
 
 const APPSYNC_URL: string = outputs.data?.url;
 const API_KEY: string = outputs.data?.api_key;
 
 if (!APPSYNC_URL || !API_KEY) {
-  console.error("Missing data.url or data.api_key in amplify_outputs.json");
+  console.error("Missing data.url or data.api_key in config file");
   process.exit(1);
 }
 
@@ -234,7 +239,7 @@ async function main() {
       if (ok % 50 === 0 || i === rows.length - 1) {
         process.stdout.write(`${label}  OK  ${r.name} (${ok} created)\n`);
       }
-    } else if (result.error?.includes("Conditional") || result.error?.includes("already exists")) {
+    } else if (result.error?.includes("onditional") || result.error?.includes("already exists")) {
       skipped++;
     } else {
       failed++;
