@@ -35,7 +35,18 @@
       "Bash(mv:*)",
       "Skill(claude-api)",
       "Bash(grep:*)",
-      "WebFetch(domain:www.adapthealthclub.com.au)"
+      "WebFetch(domain:www.adapthealthclub.com.au)",
+      "WebFetch(domain:www.abs.gov.au)",
+      "WebFetch(domain:mynextgym.com.au)",
+      "WebFetch(domain:www.mynextgym.com.au)",
+      "WebFetch(domain:www.googleapis.com)",
+      "WebFetch(domain:pagespeed.web.dev)",
+      "Bash(npx lighthouse:*)",
+      "Bash(du:*)",
+      "Read(//c/Users/david/Desktop/Claude/$TEMP/**)",
+      "Read(//c/Users/david/AppData/Local/Temp/**)",
+      "WebFetch(domain:www.mngym.com.au)",
+      "WebFetch(domain:mngym.com.au)"
     ]
   }
 }

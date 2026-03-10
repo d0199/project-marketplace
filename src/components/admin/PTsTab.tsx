@@ -356,6 +356,8 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
 // ---------------------------------------------------------------------------
 // Edit Panel
 // ---------------------------------------------------------------------------
+function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
+
 function PTEditPanel({
   panel,
   setPanel,
@@ -393,7 +395,6 @@ function PTEditPanel({
 
   function updateAddress(patch: Partial<Address>) {
     const addr = { ...pt.address, ...patch };
-    // Auto-fill lat/lng from postcode
     if (patch.postcode && POSTCODE_COORDS[patch.postcode]) {
       const [lat, lng] = POSTCODE_COORDS[patch.postcode];
       update({ address: addr, lat, lng });
@@ -424,12 +425,22 @@ function PTEditPanel({
     update({ gymIds: pt.gymIds.filter((g) => g !== id) });
   }
 
-  function toggleSpecialty(s: string) {
-    if (pt.specialties.includes(s)) {
-      update({ specialties: pt.specialties.filter((x) => x !== s) });
-    } else {
-      update({ specialties: [...pt.specialties, s] });
-    }
+  function addSpecialty(s: string) {
+    if (!pt.specialties.includes(s)) update({ specialties: [...pt.specialties, s] });
+    setSpecialtySearch("");
+  }
+
+  function removeSpecialty(s: string) {
+    update({ specialties: pt.specialties.filter((x) => x !== s) });
+  }
+
+  function addMemberOffer(s: string) {
+    if (!(pt.memberOffers ?? []).includes(s)) update({ memberOffers: [...(pt.memberOffers ?? []), s] });
+    setMemberOfferSearch("");
+  }
+
+  function removeMemberOffer(s: string) {
+    update({ memberOffers: (pt.memberOffers ?? []).filter((x) => x !== s) });
   }
 
   function addQualification() {
@@ -442,23 +453,6 @@ function PTEditPanel({
   function removeQualification(q: string) {
     update({ qualifications: pt.qualifications.filter((x) => x !== q) });
   }
-
-  function toggleMemberOffer(o: string) {
-    const current = pt.memberOffers ?? [];
-    if (current.includes(o)) {
-      update({ memberOffers: current.filter((x) => x !== o) });
-    } else {
-      update({ memberOffers: [...current, o] });
-    }
-  }
-
-  const filteredSpecialties = specialtySearch
-    ? availableSpecialties.filter((s) => s.toLowerCase().includes(specialtySearch.toLowerCase()))
-    : availableSpecialties;
-
-  const filteredMemberOffers = memberOfferSearch
-    ? availableMemberOffers.filter((o) => o.toLowerCase().includes(memberOfferSearch.toLowerCase()))
-    : availableMemberOffers;
 
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
@@ -480,6 +474,105 @@ function PTEditPanel({
         </div>
 
         <div className="p-6 space-y-6">
+          {/* ============================================================= */}
+          {/* ADMIN-ONLY SECTION                                             */}
+          {/* ============================================================= */}
+
+          {/* Flags + Owner + Stripe */}
+          <section className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Admin Controls</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={pt.isActive !== false} onChange={(e) => update({ isActive: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
+                <span className="text-sm">Active</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={pt.isTest ?? false} onChange={(e) => update({ isTest: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
+                <span className="text-sm">Test</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={pt.isPaid ?? false} onChange={(e) => update({ isPaid: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
+                <span className="text-sm">Paid</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={pt.isFeatured ?? false} onChange={(e) => update({ isFeatured: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
+                <span className="text-sm">Featured</span>
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-3">
+              <div>
+                <label className={labelCls}>Owner ID</label>
+                <input className={inputCls} value={pt.ownerId} onChange={(e) => update({ ownerId: e.target.value })} />
+              </div>
+              <div>
+                <label className={labelCls}>Stripe Plan</label>
+                <select className={inputCls} value={pt.stripePlan ?? ""} onChange={(e) => update({ stripePlan: (e.target.value || undefined) as PersonalTrainer["stripePlan"] })}>
+                  <option value="">None</option>
+                  <option value="paid">Paid</option>
+                  <option value="featured">Featured</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {/* Affiliated Gyms (admin-only) */}
+          <section className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Affiliated Gyms</h3>
+            {pt.gymIds.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {pt.gymIds.map((gid) => (
+                  <span key={gid} className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full px-3 py-1 text-sm">
+                    {gid}
+                    <button onClick={() => removeGymId(gid)} className="text-gray-400 hover:text-red-500 ml-1">&times;</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input className={inputCls} value={newGymId} onChange={(e) => setNewGymId(e.target.value)} placeholder="Gym ID (e.g. gym-001)" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGymId(); } }} />
+              <button onClick={addGymId} className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-100 shrink-0">Add</button>
+            </div>
+          </section>
+
+          {/* Qualification Verification (admin-only) */}
+          <section className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Qualification Verification</h3>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pt.qualificationsVerified ?? false}
+                  onChange={(e) => update({ qualificationsVerified: e.target.checked })}
+                  className="w-4 h-4 accent-green-600"
+                />
+                <span className={`text-xs font-semibold ${pt.qualificationsVerified ? "text-green-700" : "text-gray-400"}`}>
+                  {pt.qualificationsVerified ? "Verified" : "Unverified"}
+                </span>
+              </label>
+            </div>
+            <div>
+              <label className={labelCls}>Verification notes</label>
+              <input
+                className={inputCls}
+                value={pt.qualificationsNotes ?? ""}
+                onChange={(e) => update({ qualificationsNotes: e.target.value })}
+                placeholder="e.g. Verified via AIF portal 2026-03-10"
+              />
+            </div>
+            {pt.qualificationEvidence && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs font-semibold text-amber-800 mb-1">Evidence submitted by PT:</p>
+                <p className="text-sm text-amber-900 whitespace-pre-wrap">{pt.qualificationEvidence}</p>
+              </div>
+            )}
+          </section>
+
+          <hr className="border-gray-300" />
+
+          {/* ============================================================= */}
+          {/* LISTING FIELDS (mirrors OwnerPTForm)                           */}
+          {/* ============================================================= */}
+
           {/* Basic Info */}
           <section>
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Basic Info</h3>
@@ -530,15 +623,15 @@ function PTEditPanel({
               </div>
               <div>
                 <label className={labelCls}>Instagram</label>
-                <input className={inputCls} value={pt.instagram ?? ""} onChange={(e) => update({ instagram: e.target.value || undefined })} />
+                <input className={inputCls} value={pt.instagram ?? ""} onChange={(e) => update({ instagram: e.target.value || undefined })} placeholder="https://instagram.com/..." />
               </div>
               <div>
                 <label className={labelCls}>Facebook</label>
-                <input className={inputCls} value={pt.facebook ?? ""} onChange={(e) => update({ facebook: e.target.value || undefined })} />
+                <input className={inputCls} value={pt.facebook ?? ""} onChange={(e) => update({ facebook: e.target.value || undefined })} placeholder="https://facebook.com/..." />
               </div>
               <div>
                 <label className={labelCls}>TikTok</label>
-                <input className={inputCls} value={pt.tiktok ?? ""} onChange={(e) => update({ tiktok: e.target.value || undefined })} />
+                <input className={inputCls} value={pt.tiktok ?? ""} onChange={(e) => update({ tiktok: e.target.value || undefined })} placeholder="https://tiktok.com/@..." />
               </div>
             </div>
           </section>
@@ -590,7 +683,7 @@ function PTEditPanel({
               </div>
               <div className="col-span-2">
                 <label className={labelCls}>Pricing Notes</label>
-                <input className={inputCls} value={pt.pricingNotes ?? ""} onChange={(e) => update({ pricingNotes: e.target.value || undefined })} />
+                <input className={inputCls} value={pt.pricingNotes ?? ""} onChange={(e) => update({ pricingNotes: e.target.value || undefined })} placeholder="e.g. Discounts for 10-pack sessions" />
               </div>
               <div className="col-span-2">
                 <label className={labelCls}>Availability</label>
@@ -599,143 +692,126 @@ function PTEditPanel({
             </div>
           </section>
 
-          {/* Flags */}
+          {/* Specialties — search dropdown with pills (mirrors OwnerPTForm) */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Flags</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={pt.isActive !== false} onChange={(e) => update({ isActive: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
-                <span className="text-sm">Active</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={pt.isTest ?? false} onChange={(e) => update({ isTest: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
-                <span className="text-sm">Test</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={pt.isPaid ?? false} onChange={(e) => update({ isPaid: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
-                <span className="text-sm">Paid</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={pt.isFeatured ?? false} onChange={(e) => update({ isFeatured: e.target.checked })} className="w-4 h-4 accent-brand-orange" />
-                <span className="text-sm">Featured</span>
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-3">
-              <div>
-                <label className={labelCls}>Owner ID</label>
-                <input className={inputCls} value={pt.ownerId} onChange={(e) => update({ ownerId: e.target.value })} />
-              </div>
-              <div>
-                <label className={labelCls}>Stripe Plan</label>
-                <select className={inputCls} value={pt.stripePlan ?? ""} onChange={(e) => update({ stripePlan: (e.target.value || undefined) as PersonalTrainer["stripePlan"] })}>
-                  <option value="">None</option>
-                  <option value="paid">Paid</option>
-                  <option value="featured">Featured</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          {/* Affiliated Gyms */}
-          <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Affiliated Gyms</h3>
-            {pt.gymIds.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {pt.gymIds.map((gid) => (
-                  <span key={gid} className="inline-flex items-center gap-1 bg-gray-100 rounded-full px-3 py-1 text-sm">
-                    {gid}
-                    <button onClick={() => removeGymId(gid)} className="text-gray-400 hover:text-red-500 ml-1">&times;</button>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Specialties</h3>
+            {pt.specialties.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {pt.specialties.map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
+                    {s}
+                    <button type="button" onClick={() => removeSpecialty(s)} className="ml-0.5 text-indigo-400 hover:text-indigo-700">&times;</button>
                   </span>
                 ))}
               </div>
             )}
-            <div className="flex gap-2">
-              <input className={inputCls} value={newGymId} onChange={(e) => setNewGymId(e.target.value)} placeholder="Gym ID (e.g. gym-001)" />
-              <button onClick={addGymId} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
-            </div>
-          </section>
-
-          {/* Specialties */}
-          <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Specialties</h3>
-            <input
-              type="text"
-              value={specialtySearch}
-              onChange={(e) => setSpecialtySearch(e.target.value)}
-              placeholder="Search specialties..."
-              className={`${inputCls} mb-2`}
-            />
-            <div className="max-h-40 overflow-y-auto space-y-1">
-              {filteredSpecialties.map((s) => (
-                <label key={s} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={pt.specialties.includes(s)}
-                    onChange={() => toggleSpecialty(s)}
-                    className="w-4 h-4 accent-brand-orange"
-                  />
-                  <span className="text-sm">{s}</span>
-                </label>
-              ))}
-            </div>
-          </section>
-
-          {/* Member Offers (paid feature) */}
-          <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Member Offers <span className="text-xs font-normal text-gray-400">(paid feature)</span></h3>
-            <input
-              type="text"
-              value={memberOfferSearch}
-              onChange={(e) => setMemberOfferSearch(e.target.value)}
-              placeholder="Search offers..."
-              className={`${inputCls} mb-2`}
-            />
-            <div className="max-h-40 overflow-y-auto space-y-1">
-              {filteredMemberOffers.map((o) => (
-                <label key={o} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={(pt.memberOffers ?? []).includes(o)}
-                    onChange={() => toggleMemberOffer(o)}
-                    className="w-4 h-4 accent-brand-orange"
-                  />
-                  <span className="text-sm capitalize">{o}</span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-3">
-              <label className={labelCls}>Member Offers Notes</label>
+            <div className="relative">
               <input
+                type="text"
+                value={specialtySearch}
+                onChange={(e) => setSpecialtySearch(e.target.value)}
+                placeholder="Search specialties..."
                 className={inputCls}
+              />
+              {specialtySearch.trim().length >= 1 && (() => {
+                const q = normalize(specialtySearch);
+                const matches = availableSpecialties
+                  .filter((s) => !pt.specialties.includes(s))
+                  .filter((s) => normalize(s).includes(q))
+                  .slice(0, 10);
+                if (matches.length === 0) return (
+                  <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 p-3 text-sm text-gray-400">
+                    No matching specialties.
+                  </div>
+                );
+                return (
+                  <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 max-h-48 overflow-y-auto">
+                    {matches.map((s) => (
+                      <button key={s} type="button" onClick={() => addSpecialty(s)} className="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </section>
+
+          {/* Member Offers — search dropdown with pills (mirrors OwnerPTForm) */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Member Offers</h3>
+            {(pt.memberOffers ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {(pt.memberOffers ?? []).map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 text-brand-orange text-sm font-medium border border-orange-200">
+                    {s}
+                    <button type="button" onClick={() => removeMemberOffer(s)} className="ml-0.5 text-orange-400 hover:text-orange-700">&times;</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="relative">
+              <input
+                type="text"
+                value={memberOfferSearch}
+                onChange={(e) => setMemberOfferSearch(e.target.value)}
+                placeholder="Search member offers..."
+                className={inputCls}
+              />
+              {memberOfferSearch.trim().length >= 1 && (() => {
+                const q = normalize(memberOfferSearch);
+                const matches = availableMemberOffers
+                  .filter((s) => !(pt.memberOffers ?? []).includes(s))
+                  .filter((s) => normalize(s).includes(q))
+                  .slice(0, 10);
+                if (matches.length === 0) return (
+                  <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 p-3 text-sm text-gray-400">
+                    No matching offers.
+                  </div>
+                );
+                return (
+                  <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-100 max-h-48 overflow-y-auto">
+                    {matches.map((s) => (
+                      <button key={s} type="button" onClick={() => addMemberOffer(s)} className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-brand-orange transition-colors">
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="mt-4">
+              <label className={labelCls}>Benefits / Affiliations</label>
+              <p className="text-xs text-gray-400 mb-1">Separate each benefit with a comma — shown as bullet points on your profile.</p>
+              <textarea
+                className={inputCls}
+                rows={2}
                 value={pt.memberOffersNotes ?? ""}
                 onChange={(e) => update({ memberOffersNotes: e.target.value || undefined })}
-                placeholder="e.g. Free consultation for first-time members"
+                placeholder="e.g. Free body composition scan, 10% off supplements"
+              />
+            </div>
+            <div className="mt-4">
+              <label className={labelCls}>Terms &amp; Conditions</label>
+              <textarea
+                className={inputCls}
+                rows={2}
+                value={pt.memberOffersTnC ?? ""}
+                onChange={(e) => update({ memberOffersTnC: e.target.value || undefined })}
+                placeholder="e.g. Offers valid for new clients only. Discount packs expire after 6 months."
               />
             </div>
           </section>
 
           {/* Qualifications */}
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Qualifications</h3>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pt.qualificationsVerified ?? false}
-                  onChange={(e) => update({ qualificationsVerified: e.target.checked })}
-                  className="w-4 h-4 accent-green-600"
-                />
-                <span className={`text-xs font-semibold ${pt.qualificationsVerified ? "text-green-700" : "text-gray-400"}`}>
-                  {pt.qualificationsVerified ? "Verified" : "Unverified"}
-                </span>
-              </label>
-            </div>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Qualifications</h3>
             {pt.qualifications.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {pt.qualifications.map((qual) => (
-                  <span key={qual} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm ${pt.qualificationsVerified ? "bg-green-50 text-green-800" : "bg-blue-50 text-blue-800"}`}>
+                  <span key={qual} className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 rounded-full px-3 py-1 text-sm">
                     {qual}
-                    <button onClick={() => removeQualification(qual)} className={`${pt.qualificationsVerified ? "text-green-400" : "text-blue-400"} hover:text-red-500 ml-1`}>&times;</button>
+                    <button onClick={() => removeQualification(qual)} className="text-blue-400 hover:text-red-500 ml-1">&times;</button>
                   </span>
                 ))}
               </div>
@@ -744,21 +820,6 @@ function PTEditPanel({
               <input className={inputCls} value={newQualification} onChange={(e) => setNewQualification(e.target.value)} placeholder="e.g. Cert III Fitness, Cert IV PT" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addQualification(); } }} />
               <button onClick={addQualification} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
             </div>
-            <div className="mt-3">
-              <label className={labelCls}>Verification notes</label>
-              <input
-                className={inputCls}
-                value={pt.qualificationsNotes ?? ""}
-                onChange={(e) => update({ qualificationsNotes: e.target.value })}
-                placeholder="e.g. Verified via AIF portal 2026-03-10"
-              />
-            </div>
-            {pt.qualificationEvidence && (
-              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-xs font-semibold text-amber-800 mb-1">Evidence submitted by PT:</p>
-                <p className="text-sm text-amber-900 whitespace-pre-wrap">{pt.qualificationEvidence}</p>
-              </div>
-            )}
           </section>
 
           {/* Languages */}
@@ -781,15 +842,16 @@ function PTEditPanel({
                 ))}
               </div>
             )}
+            <p className="text-xs text-gray-400 mb-2">First image is used as your profile photo.</p>
             <div className="flex gap-2">
               <input className={inputCls} value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} placeholder="Image URL" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }} />
               <button onClick={addImage} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
             </div>
           </section>
 
-          {/* Custom Lead Fields */}
+          {/* Custom Enquiry Fields */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Custom Lead Fields <span className="text-xs font-normal text-gray-400">(JSON)</span></h3>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Custom Enquiry Fields <span className="text-xs font-normal text-gray-400">(JSON)</span></h3>
             <textarea
               className={inputCls}
               rows={4}
