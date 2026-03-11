@@ -5,6 +5,7 @@ import AmenityBadge from "./AmenityBadge";
 import ImageCarousel from "./ImageCarousel";
 import ClaimModal from "./ClaimModal";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
+import { trackEvent } from "@/lib/gtag";
 
 interface Props {
   gym: GymWithDistance;
@@ -106,6 +107,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
 
         <Link
           href={`/gym/${gym.id}`}
+          onClick={() => trackEvent("select_content", { content_type: "gym", item_id: gym.id, content_id: gym.name })}
           className="block text-center bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
           View Gym

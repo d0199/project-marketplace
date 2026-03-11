@@ -12,6 +12,7 @@ import {
   fetchUserAttributes,
 } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
+import { trackEvent } from "@/lib/gtag";
 
 type View = "login" | "signup" | "confirm-signup" | "forgot" | "reset-confirm" | "new-password";
 
@@ -103,6 +104,7 @@ export default function OwnerPortalPage() {
       });
       switchView("confirm-signup");
       setInfo("A verification code has been sent to your email.");
+      trackEvent("sign_up", { method: "email" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg.includes("already exists") ? "An account with this email already exists." : msg);

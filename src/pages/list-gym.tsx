@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
+import { trackEvent } from "@/lib/gtag";
 
 interface Form {
   contactName: string;
@@ -99,6 +100,7 @@ export default function ListGymPage() {
       });
       if (!r.ok) throw new Error("Submission failed");
       setDone(true);
+      trackEvent("new_listing_submitted", { gym_name: form.gymName, suburb: form.gymSuburb });
     } catch {
       setError("Something went wrong — please try again.");
     }

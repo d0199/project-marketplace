@@ -15,6 +15,7 @@ import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 import FeedbackModal from "@/components/FeedbackModal";
 import ClaimModal from "@/components/ClaimModal";
 import ShareButton from "@/components/ShareButton";
+import { trackEvent } from "@/lib/gtag";
 
 const DAYS = [
   "monday",
@@ -175,7 +176,8 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
         setAuthChecked(true);
       });
     track(gym.id, "pageViews");
-  }, [gym.id, gym.ownerId]);
+    trackEvent("view_item", { item_id: gym.id, item_name: gym.name, item_category: gym.address.suburb });
+  }, [gym.id, gym.ownerId, gym.name, gym.address.suburb]);
 
   // Auto-open claim modal if redirected back from login
   useEffect(() => {
@@ -212,6 +214,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
       if (r.ok) {
         setContactStatus("sent");
         track(gym.id, "contactFormSubmissions");
+        trackEvent("generate_lead", { item_id: gym.id, item_name: gym.name });
       } else {
         setContactStatus("error");
       }
@@ -490,7 +493,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                   href={gym.bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => track(gym.id, "bookingClicks")}
+                  onClick={() => { track(gym.id, "bookingClicks"); trackEvent("booking_click", { item_id: gym.id, item_name: gym.name }); }}
                   className="block mt-4 bg-white text-brand-orange text-center font-bold py-2.5 rounded-lg hover:bg-orange-50 transition-colors text-sm"
                 >
                   Book Now →
@@ -551,7 +554,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                       href={gym.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => track(gym.id, "websiteClicks")}
+                      onClick={() => { track(gym.id, "websiteClicks"); trackEvent("website_click", { item_id: gym.id, item_name: gym.name }); }}
                       className="block mt-2 text-center text-orange-100 text-xs hover:underline"
                     >
                       Visit website
@@ -563,7 +566,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                   href={gym.website || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => track(gym.id, "websiteClicks")}
+                  onClick={() => { track(gym.id, "websiteClicks"); trackEvent("website_click", { item_id: gym.id, item_name: gym.name }); }}
                   className="block mt-4 bg-white text-brand-orange text-center font-semibold py-2 rounded-lg hover:bg-orange-50 transition-colors"
                 >
                   Visit Website
@@ -583,7 +586,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                       </svg>
                       <a
                         href={`tel:${gym.phone}`}
-                        onClick={() => track(gym.id, "phoneClicks")}
+                        onClick={() => { track(gym.id, "phoneClicks"); trackEvent("phone_click", { item_id: gym.id, item_name: gym.name }); }}
                         className="hover:underline"
                       >
                         {gym.phone}
@@ -650,7 +653,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => track(gym.id, "directionsClicks")}
+                onClick={() => { track(gym.id, "directionsClicks"); trackEvent("directions_click", { item_id: gym.id, item_name: gym.name }); }}
                 className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

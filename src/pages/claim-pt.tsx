@@ -6,6 +6,7 @@ import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import { ptStore } from "@/lib/ptStore";
 import type { PersonalTrainer } from "@/types";
+import { trackEvent } from "@/lib/gtag";
 
 interface Props {
   pts: Pick<PersonalTrainer, "id" | "name" | "address" | "email" | "specialties">[];
@@ -117,6 +118,7 @@ export default function ClaimPTPage({ pts }: Props) {
       });
       if (!r.ok) throw new Error();
       setDone(true);
+      trackEvent("claim_submitted", { claim_type: "pt", item_id: claimTarget!.id, item_name: claimTarget!.name });
     } catch {
       setError("Something went wrong — please try again.");
     }

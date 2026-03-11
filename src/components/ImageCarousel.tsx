@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { trackEvent } from "@/lib/gtag";
 
 interface Props {
   images: string[];
@@ -66,7 +67,7 @@ export default function ImageCarousel({
         <>
           {/* Prev button */}
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); trackEvent("carousel_interact", { direction: "prev", alt }); prev(); }}
             aria-label="Previous image"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           >
@@ -75,7 +76,7 @@ export default function ImageCarousel({
 
           {/* Next button */}
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); trackEvent("carousel_interact", { direction: "next", alt }); next(); }}
             aria-label="Next image"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           >

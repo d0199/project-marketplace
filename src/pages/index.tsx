@@ -14,6 +14,7 @@ import GymCard from "@/components/GymCard";
 import PTCard, { type PTWithDistance } from "@/components/PTCard";
 import { POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
+import { trackEvent } from "@/lib/gtag";
 
 const DEFAULT_RADIUS = 10;
 const MIN_RADIUS = 1;
@@ -183,6 +184,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
     setHasSearched(true);
     setPageSize(25);
     setPage(1);
+    trackEvent("view_search_results", { search_term: label || pc, search_mode: searchMode });
   }
 
   function handleModeSwitch(mode: SearchMode) {

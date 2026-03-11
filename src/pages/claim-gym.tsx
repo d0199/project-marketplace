@@ -6,6 +6,7 @@ import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import { ownerStore } from "@/lib/ownerStore";
 import type { Gym } from "@/types";
+import { trackEvent } from "@/lib/gtag";
 
 interface Props {
   gyms: Pick<Gym, "id" | "name" | "address" | "website">[];
@@ -114,6 +115,7 @@ export default function ClaimGymPage({ gyms }: Props) {
       });
       if (!r.ok) throw new Error();
       setDone(true);
+      trackEvent("claim_submitted", { claim_type: "gym", item_id: claimTarget!.id, item_name: claimTarget!.name });
     } catch {
       setError("Something went wrong — please try again.");
     }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { POSTCODE_COORDS } from "@/lib/utils";
+import { trackEvent } from "@/lib/gtag";
 
 /** Find the nearest postcode to a given lat/lng using Haversine distance */
 function findNearestPostcode(lat: number, lng: number): { postcode: string; distance: number } | null {
@@ -141,6 +142,7 @@ export default function SearchBar({
     setValue(`${s.name}, ${s.state}`);
     setOpen(false);
     setError("");
+    trackEvent("search", { search_term: `${s.name}, ${s.state}`, postcode: s.postcode });
     onSearch(s.postcode, `${s.name}, ${s.state}`);
   }
 
@@ -209,6 +211,7 @@ export default function SearchBar({
       }
       setError("");
       setOpen(false);
+      trackEvent("search", { search_term: t, postcode: t });
       onSearch(t);
     } else if (suburbMatches.length > 0) {
       pickSuburb(suburbMatches[0]);
