@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/chatSystemPrompt";
+import { chatTranscriptStore, type TranscriptMessage } from "@/lib/chatTranscriptStore";
 
 let anthropicKey = "";
 
@@ -50,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { messages } = req.body as { messages?: unknown };
+  const { messages, sessionId, page } = req.body as { messages?: unknown; sessionId?: string; page?: string };
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "messages array is required" });
@@ -106,6 +107,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await response.json();
     const reply = data?.content?.[0]?.text ?? "Sorry, I couldn't generate a response.";
+
+    // Save transcript (fire-and-forget — don't block the response)
+    if (sessionId) {
+      const now = new Date().toISOString();
+      const transcript: TranscriptMessage[] = clean.map((m) => ({
+        role: m.role,
+        content: m.content,
+        timestamp: now,
+      }));
+      transcript.push({ role: "assistant", content: reply, timestamp: now });
+      chatTranscriptStore
+        .save(sessionId, transcript, {
+          userAgent: req.headers["user-agent"],
+          page: page ?? "",
+        })
+        .catch((err) => console.error("[chat] Transcript save failed:", err));
+    }
 
     return res.json({ reply });
   } catch (err) {

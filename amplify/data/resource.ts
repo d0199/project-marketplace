@@ -271,6 +271,19 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
+  // AI chatbot conversation transcripts for admin review.
+  ChatTranscript: a
+    .model({
+      sessionId: a.string().required(),    // unique per conversation
+      messages: a.string().required(),     // JSON array of {role, content, timestamp}
+      messageCount: a.integer(),           // total messages in conversation
+      startedAt: a.string().required(),    // ISO timestamp
+      lastMessageAt: a.string().required(),// ISO timestamp
+      userAgent: a.string(),              // browser user agent
+      page: a.string(),                   // page the chat was started from
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // User-submitted feedback / issue reports on listings.
   FeedbackReport: a
     .model({

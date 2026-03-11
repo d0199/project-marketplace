@@ -8,6 +8,10 @@ interface Message {
 const GREETING =
   "G'day! I'm the mynextgym.com.au AI Assistant. I can help you find gyms, understand our platform, or answer questions about listing your business. What can I help with?";
 
+function generateSessionId() {
+  return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export default function ChatWidget() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -18,6 +22,7 @@ export default function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sessionIdRef = useRef(generateSessionId());
 
   // Check feature flag on mount and every 5 minutes (for schedule changes)
   useEffect(() => {
@@ -71,7 +76,11 @@ export default function ChatWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          sessionId: sessionIdRef.current,
+          page: window.location.pathname,
+        }),
       });
 
       const data = await res.json();
