@@ -425,6 +425,47 @@ function PTEditPanel({
   const [memberOfferSearch, setMemberOfferSearch] = useState("");
   const [availableMemberOffers, setAvailableMemberOffers] = useState<string[]>([]);
 
+  // AI description generation (admin — unlimited)
+  const [aiSuggestion, setAiSuggestion] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+
+  async function generateDescription() {
+    setAiLoading(true);
+    setAiError("");
+    setAiSuggestion("");
+    try {
+      const context = {
+        name: pt.name,
+        suburb: pt.address.suburb,
+        postcode: pt.address.postcode,
+        state: pt.address.state,
+        specialties: pt.specialties,
+        qualifications: pt.qualifications,
+        experienceYears: pt.experienceYears,
+        languages: pt.languages,
+        memberOffers: pt.memberOffers,
+        pricePerSession: pt.pricePerSession,
+        sessionDuration: pt.sessionDuration,
+        availability: pt.availability,
+        website: pt.website,
+        description: pt.description,
+        gender: pt.gender,
+      };
+      const r = await adminFetch("/api/owner/description-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "pt", context }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "AI request failed");
+      setAiSuggestion(data.result);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "AI request failed");
+    }
+    setAiLoading(false);
+  }
+
   useEffect(() => {
     fetch("/api/datasets/pt-specialties")
       .then((r) => (r.ok ? r.json() : null))
@@ -670,8 +711,58 @@ function PTEditPanel({
                 <input className={inputCls} value={pt.name} onChange={(e) => update({ name: e.target.value })} />
               </div>
               <div className="col-span-2">
-                <label className={labelCls}>Description</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <button
+                    type="button"
+                    onClick={generateDescription}
+                    disabled={aiLoading}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors disabled:opacity-50"
+                  >
+                    {aiLoading ? (
+                      <>
+                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Generating…
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                        </svg>
+                        Write with AI
+                      </>
+                    )}
+                  </button>
+                </div>
                 <textarea className={inputCls} rows={3} value={pt.description} onChange={(e) => update({ description: e.target.value })} />
+                {aiError && (
+                  <p className="mt-2 text-sm text-red-600">{aiError}</p>
+                )}
+                {aiSuggestion && (
+                  <div className="mt-2 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <p className="text-xs font-medium text-purple-700 mb-2">AI Suggestion</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{aiSuggestion}</p>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        type="button"
+                        onClick={() => { update({ description: aiSuggestion }); setAiSuggestion(""); }}
+                        className="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAiSuggestion("")}
+                        className="px-3 py-1.5 text-xs font-medium text-purple-700 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className={labelCls}>Gender</label>
