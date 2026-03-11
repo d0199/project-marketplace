@@ -66,3 +66,9 @@ text-brand-orange                 (logo, accent text)
 ### Workflow rule
 
 Every code change must be committed to git (user instruction from prior session).
+
+### Git branching
+
+- **`staging`** — push all work here first (`git push origin staging`)
+- **`master`** — production branch, connected to Amplify Hosting. **Never push directly to master.** Changes reach master only via merge from staging.
+- When asked to "push" or "push staging", always push to the `staging` branch.
