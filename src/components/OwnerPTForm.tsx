@@ -117,7 +117,10 @@ export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Prop
   }
 
   function removeQualification(q: string) {
-    update({ qualifications: form.qualifications.filter((x) => x !== q) });
+    update({
+      qualifications: form.qualifications.filter((x) => x !== q),
+      qualificationsVerifiedList: (form.qualificationsVerifiedList ?? []).filter((x) => x !== q),
+    });
   }
 
   function addLanguage(val: string) {
@@ -408,16 +411,27 @@ export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Prop
       {/* Qualifications */}
       <section>
         <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Qualifications</h3>
-        {form.qualifications.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {form.qualifications.map((qual) => (
-              <span key={qual} className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 rounded-full px-3 py-1 text-sm">
-                {qual}
-                <button onClick={() => removeQualification(qual)} className="text-blue-400 hover:text-red-500 ml-1">&times;</button>
-              </span>
-            ))}
-          </div>
-        )}
+        {form.qualifications.length > 0 && (() => {
+          const verifiedSet = new Set(form.qualificationsVerifiedList ?? []);
+          return (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {form.qualifications.map((qual) => {
+                const isVerified = verifiedSet.has(qual);
+                return (
+                  <span key={qual} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm ${isVerified ? "bg-green-50 text-green-800 border border-green-200" : "bg-blue-50 text-blue-800"}`}>
+                    {isVerified && (
+                      <svg className="w-3.5 h-3.5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {qual}
+                    <button onClick={() => removeQualification(qual)} className={`${isVerified ? "text-green-400 hover:text-red-500" : "text-blue-400 hover:text-red-500"} ml-1`}>&times;</button>
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })()}
         <div className="flex gap-2">
           <input
             className={inputCls}
@@ -428,26 +442,36 @@ export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Prop
           />
           <button onClick={addQualification} className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
         </div>
-        {!form.qualificationsVerified && form.qualifications.length > 0 && onVerifyQualifications && (
-          <button
-            type="button"
-            onClick={onVerifyQualifications}
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium hover:bg-amber-100 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            Verify my qualifications
-          </button>
-        )}
-        {form.qualificationsVerified && (
-          <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            Qualifications verified
-          </p>
-        )}
+        {(() => {
+          const verifiedSet = new Set(form.qualificationsVerifiedList ?? []);
+          const unverifiedQuals = form.qualifications.filter((q) => !verifiedSet.has(q));
+          const hasVerified = verifiedSet.size > 0;
+          if (unverifiedQuals.length > 0 && onVerifyQualifications) {
+            return (
+              <button
+                type="button"
+                onClick={onVerifyQualifications}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium hover:bg-amber-100 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                {hasVerified ? "Verify new qualifications" : "Verify my qualifications"}
+              </button>
+            );
+          }
+          if (form.qualificationsVerified && form.qualifications.length > 0) {
+            return (
+              <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                All qualifications verified
+              </p>
+            );
+          }
+          return null;
+        })()}
       </section>
 
       {/* Languages */}

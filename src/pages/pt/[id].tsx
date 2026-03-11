@@ -321,33 +321,51 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
             )}
 
             {/* Qualifications */}
-            {pt.qualifications.length > 0 && (
-              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900">Qualifications</h2>
-                <ul className="space-y-2">
-                  {pt.qualifications.map((q) => (
-                    <li key={q} className="flex items-center gap-2 text-sm text-gray-700">
-                      <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            {pt.qualifications.length > 0 && (() => {
+              const verifiedSet = new Set(pt.qualificationsVerifiedList ?? []);
+              const verifiedQuals = pt.qualifications.filter((q) => verifiedSet.has(q));
+              const unverifiedQuals = pt.qualifications.filter((q) => !verifiedSet.has(q));
+              return (
+                <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                  <h2 className="text-xl font-semibold mb-4 text-gray-900">Qualifications</h2>
+                  {verifiedQuals.length > 0 && (
+                    <>
+                      <ul className="space-y-2">
+                        {verifiedQuals.map((q) => (
+                          <li key={q} className="flex items-center gap-2 text-sm text-gray-700">
+                            <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            {q}
+                            <span className="text-xs text-green-600 font-medium">Verified</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  {unverifiedQuals.length > 0 && (
+                    <ul className={`space-y-2 ${verifiedQuals.length > 0 ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
+                      {unverifiedQuals.map((q) => (
+                        <li key={q} className="flex items-center gap-2 text-sm text-gray-500">
+                          <svg className="w-4 h-4 shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          {q}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {verifiedQuals.length > 0 && unverifiedQuals.length === 0 && (
+                    <p className="mt-3 text-xs text-green-600 flex items-center gap-1">
+                      <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      {q}
-                    </li>
-                  ))}
-                </ul>
-                {pt.qualificationsVerified ? (
-                  <p className="mt-3 text-xs text-green-600 flex items-center gap-1">
-                    <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Verified
-                  </p>
-                ) : (
-                  <p className="mt-3 text-xs text-gray-400">
-                    Unverified
-                  </p>
-                )}
-              </section>
-            )}
+                      All qualifications verified
+                    </p>
+                  )}
+                </section>
+              );
+            })()}
 
             {/* Affiliated Gyms */}
             {affiliatedGyms.length > 0 && (

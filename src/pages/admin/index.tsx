@@ -563,6 +563,7 @@ const DIFF_LABELS_PT: Record<string, string> = {
   "address.street": "Address", "address.suburb": "Suburb", "address.postcode": "Postcode",
   specialties: "Specialties", qualifications: "Qualifications",
   qualificationsVerified: "Qualifications verified",
+  qualificationsVerifiedList: "Verified qualifications list",
   qualificationEvidence: "Qualification evidence",
   memberOffers: "Member offers", memberOffersNotes: "Benefits / affiliations",
   memberOffersTnC: "Terms & Conditions",
@@ -856,11 +857,11 @@ function ModerationTab({ onPendingCount, adminEmail }: { onPendingCount?: (n: nu
                 {isVerification && proposed && (
                   <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
                     <p className="text-xs font-semibold text-amber-800 mb-2">Qualification Evidence</p>
-                    {proposed.qualifications?.length > 0 && (
+                    {(proposed._verificationRequestQuals ?? proposed.qualifications)?.length > 0 && (
                       <div className="mb-2">
-                        <p className="text-xs text-gray-500 mb-1">Qualifications:</p>
+                        <p className="text-xs text-gray-500 mb-1">Qualifications requested for verification:</p>
                         <ul className="text-sm text-gray-700 space-y-0.5 pl-4 list-disc">
-                          {proposed.qualifications.map((q: string, i: number) => <li key={i}>{q}</li>)}
+                          {(proposed._verificationRequestQuals ?? proposed.qualifications).map((q: string, i: number) => <li key={i}>{q}</li>)}
                         </ul>
                       </div>
                     )}
@@ -900,7 +901,7 @@ function ModerationTab({ onPendingCount, adminEmail }: { onPendingCount?: (n: nu
                       </div>
                     )}
                     <p className="text-xs text-amber-600 mt-2">
-                      Approving will mark qualifications as verified on this PT&apos;s profile.
+                      Approving will mark the selected qualifications as verified on this PT&apos;s profile.
                     </p>
                   </div>
                 )}

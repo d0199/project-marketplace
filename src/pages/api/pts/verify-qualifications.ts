@@ -19,11 +19,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const pt = await ptStore.getById(ptId);
   if (!pt) return res.status(404).json({ error: "PT not found" });
 
-  // Build the proposed changes — mark qualifications as pending verification
-  // and store the evidence for admin review
+  // Build the proposed changes — store which specific quals are being verified
   const proposed = {
     ...pt,
     qualificationEvidence: evidence,
+    // Store which specific quals this request is for (ephemeral — only in GymEdit proposedChanges)
+    _verificationRequestQuals: qualifications as string[],
     // Store file keys as comma-separated string if provided
     ...(fileKeys?.length && { qualificationEvidenceFiles: (fileKeys as string[]).join(",") }),
   };

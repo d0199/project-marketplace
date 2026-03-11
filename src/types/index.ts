@@ -83,7 +83,8 @@ export interface PersonalTrainer {
   gymIds: string[];
   specialties: string[];
   qualifications: string[];
-  qualificationsVerified?: boolean;
+  qualificationsVerifiedList?: string[]; // names of individually verified quals
+  qualificationsVerified?: boolean; // convenience: true if ALL quals verified (derived)
   qualificationsNotes?: string;
   qualificationEvidence?: string; // URL or text description of evidence submitted
   memberOffers?: string[];

@@ -171,6 +171,7 @@ export default function EditPTPage() {
             ptId={pt.id}
             ptName={pt.name}
             qualifications={pt.qualifications}
+            verifiedQualifications={pt.qualificationsVerifiedList ?? []}
             onClose={() => setShowVerify(false)}
           />
         )}

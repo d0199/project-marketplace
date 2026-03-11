@@ -12,6 +12,20 @@ const seedPTs: PersonalTrainer[] = require("../../data/pts.json");
 // ---------------------------------------------------------------------------
 type PTRecord = Schema["PersonalTrainer"]["type"];
 
+/** Resolve per-qualification verification with backward compat for old boolean flag */
+function resolveQualifications(r: PTRecord) {
+  const quals = (r.qualifications?.filter(Boolean) ?? []) as string[];
+  const rawList = ((r as Record<string, unknown>).qualificationsVerifiedList as string[] | null | undefined);
+  const verifiedList = rawList?.filter(Boolean) as string[] ?? [];
+  // Backward compat: if old boolean is true but no per-qual list, treat all as verified
+  const resolvedList = verifiedList.length > 0 ? verifiedList : (r.qualificationsVerified === true ? [...quals] : []);
+  return {
+    qualifications: quals,
+    qualificationsVerifiedList: resolvedList,
+    qualificationsVerified: resolvedList.length > 0 && resolvedList.length >= quals.length,
+  };
+}
+
 function toPT(r: PTRecord): PersonalTrainer {
   return {
     id: r.id,
@@ -44,8 +58,7 @@ function toPT(r: PTRecord): PersonalTrainer {
     ...(r.imageFocalPoints != null && { imageFocalPoints: r.imageFocalPoints.filter((v) => v != null) as number[] }),
     gymIds: (r.gymIds?.filter(Boolean) ?? []) as string[],
     specialties: (r.specialties?.filter(Boolean) ?? []) as string[],
-    qualifications: (r.qualifications?.filter(Boolean) ?? []) as string[],
-    ...(r.qualificationsVerified != null && { qualificationsVerified: r.qualificationsVerified }),
+    ...resolveQualifications(r),
     ...(r.qualificationsNotes != null && { qualificationsNotes: r.qualificationsNotes }),
     ...(r.qualificationEvidence != null && { qualificationEvidence: r.qualificationEvidence }),
     memberOffers: (r.memberOffers?.filter(Boolean) ?? []) as string[],
@@ -95,7 +108,9 @@ function fromPT(pt: PersonalTrainer) {
     gymIds: pt.gymIds,
     specialties: pt.specialties,
     qualifications: pt.qualifications,
-    qualificationsVerified: pt.qualificationsVerified,
+    qualificationsVerifiedList: pt.qualificationsVerifiedList ?? [],
+    qualificationsVerified: (pt.qualificationsVerifiedList?.length ?? 0) > 0
+      && pt.qualificationsVerifiedList!.length >= pt.qualifications.length,
     qualificationsNotes: pt.qualificationsNotes,
     qualificationEvidence: pt.qualificationEvidence,
     memberOffers: pt.memberOffers,
@@ -248,6 +263,7 @@ export const ptStore = {
       gymIds: pt.gymIds,
       specialties: pt.specialties,
       qualifications: pt.qualifications,
+      qualificationsVerifiedList: pt.qualificationsVerifiedList ?? [],
       qualificationsVerified: pt.qualificationsVerified,
       qualificationsNotes: pt.qualificationsNotes,
       qualificationEvidence: pt.qualificationEvidence,

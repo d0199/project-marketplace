@@ -99,12 +99,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
           console.log(`[moderation] Bulk edit approved: ${applied}/${proposed.gymIds.length} gyms updated`);
         } else if (editType === "pt-verification") {
-          // Qualification verification approval — set verified flag on PT
-          const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
+          // Qualification verification approval — merge verified quals per-qualification
+          const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer & { _verificationRequestQuals?: string[] };
+          const currentPT = await ptStore.getById(String(edit.gymId));
+          if (!currentPT) return res.status(404).json({ error: "PT not found" });
+
+          // Merge: add newly approved quals to existing verified list
+          const requestedQuals = proposed._verificationRequestQuals ?? proposed.qualifications ?? [];
+          const existingVerified = new Set(currentPT.qualificationsVerifiedList ?? []);
+          for (const q of requestedQuals) existingVerified.add(q);
+          const newVerifiedList = [...existingVerified];
+
           await ptStore.update({
-            ...proposed,
-            qualificationsVerified: true,
+            ...currentPT,
+            qualificationsVerifiedList: newVerifiedList,
+            qualificationsVerified: newVerifiedList.length >= currentPT.qualifications.length,
             qualificationsNotes: notes ?? "Verified by admin",
+            qualificationEvidence: proposed.qualificationEvidence,
           });
         } else if (editType === "pt") {
           const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;

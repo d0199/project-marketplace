@@ -165,6 +165,7 @@ const schema = a.schema({
       gymIds: a.string().array(),
       specialties: a.string().array(),
       qualifications: a.string().array(),
+      qualificationsVerifiedList: a.string().array(),
       qualificationsVerified: a.boolean(),
       qualificationsNotes: a.string(),
       qualificationEvidence: a.string(),

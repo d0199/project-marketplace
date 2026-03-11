@@ -6,10 +6,11 @@ interface Props {
   ptId: string;
   ptName: string;
   qualifications: string[];
+  verifiedQualifications?: string[];
   onClose: () => void;
 }
 
-export default function QualificationVerifyModal({ ptId, ptName, qualifications, onClose }: Props) {
+export default function QualificationVerifyModal({ ptId, ptName, qualifications, verifiedQualifications = [], onClose }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [evidence, setEvidence] = useState("");
@@ -18,6 +19,11 @@ export default function QualificationVerifyModal({ ptId, ptName, qualifications,
   const [uploadProgress, setUploadProgress] = useState("");
   const [status, setStatus] = useState<"form" | "success" | "error">("form");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Unverified quals — these are selectable
+  const verifiedSet = new Set(verifiedQualifications);
+  const unverifiedQuals = qualifications.filter((q) => !verifiedSet.has(q));
+  const [selectedQuals, setSelectedQuals] = useState<string[]>([...unverifiedQuals]);
 
   // Pre-fill if logged in
   useEffect(() => {
@@ -29,6 +35,12 @@ export default function QualificationVerifyModal({ ptId, ptName, qualifications,
       })
       .catch(() => {});
   }, []);
+
+  function toggleQual(q: string) {
+    setSelectedQuals((prev) =>
+      prev.includes(q) ? prev.filter((x) => x !== q) : [...prev, q]
+    );
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? []);
@@ -43,7 +55,7 @@ export default function QualificationVerifyModal({ ptId, ptName, qualifications,
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim() || !evidence.trim()) return;
+    if (!email.trim() || !evidence.trim() || selectedQuals.length === 0) return;
     setSubmitting(true);
 
     try {
@@ -81,7 +93,7 @@ export default function QualificationVerifyModal({ ptId, ptName, qualifications,
           name: name.trim(),
           email: email.trim(),
           evidence: evidence.trim(),
-          qualifications,
+          qualifications: selectedQuals,
           fileKeys,
         }),
       });
@@ -157,23 +169,40 @@ export default function QualificationVerifyModal({ ptId, ptName, qualifications,
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <p className="text-sm text-gray-500">
-              Submit evidence of your qualifications for verification. Upload certificates
-              or provide details like certificate numbers and issuing bodies.
+              Select the qualifications you want to verify and submit evidence.
+              Upload certificates or provide details like certificate numbers and issuing bodies.
             </p>
 
-            {/* Qualifications being verified */}
+            {/* Qualifications selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Qualifications to verify</label>
-              <ul className="bg-gray-50 rounded-lg p-3 space-y-1">
-                {qualifications.map((q) => (
-                  <li key={q} className="flex items-center gap-2 text-sm text-gray-700">
-                    <svg className="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 20 20" stroke="currentColor" strokeWidth={2}>
-                      <circle cx="10" cy="10" r="7" />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Select qualifications to verify</label>
+              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                {/* Already verified — shown greyed out */}
+                {qualifications.filter((q) => verifiedSet.has(q)).map((q) => (
+                  <label key={q} className="flex items-center gap-2 text-sm text-gray-400 cursor-not-allowed">
+                    <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {q}
-                  </li>
+                    <span className="line-through">{q}</span>
+                    <span className="text-xs text-green-600 ml-1">Verified</span>
+                  </label>
                 ))}
-              </ul>
+                {/* Unverified — checkboxes */}
+                {unverifiedQuals.map((q) => (
+                  <label key={q} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                    <input
+                      type="checkbox"
+                      checked={selectedQuals.includes(q)}
+                      onChange={() => toggleQual(q)}
+                      className="w-4 h-4 rounded accent-brand-orange"
+                    />
+                    {q}
+                  </label>
+                ))}
+              </div>
+              {selectedQuals.length === 0 && (
+                <p className="text-xs text-red-500 mt-1">Select at least one qualification to verify.</p>
+              )}
             </div>
 
             <div>
@@ -265,10 +294,10 @@ export default function QualificationVerifyModal({ ptId, ptName, qualifications,
 
             <button
               type="submit"
-              disabled={submitting || !email.trim() || !evidence.trim()}
+              disabled={submitting || !email.trim() || !evidence.trim() || selectedQuals.length === 0}
               className="w-full py-2.5 bg-brand-orange text-white rounded-lg text-sm font-semibold hover:bg-brand-orange-dark transition-colors disabled:opacity-50"
             >
-              {submitting ? (uploadProgress || "Submitting...") : "Submit for Verification"}
+              {submitting ? (uploadProgress || "Submitting...") : `Submit ${selectedQuals.length} qualification${selectedQuals.length !== 1 ? "s" : ""} for Verification`}
             </button>
           </form>
         )}

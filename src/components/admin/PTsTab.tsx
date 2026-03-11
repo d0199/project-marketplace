@@ -568,18 +568,37 @@ function PTEditPanel({
           <section className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Qualification Verification</h3>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pt.qualificationsVerified ?? false}
-                  onChange={(e) => update({ qualificationsVerified: e.target.checked })}
-                  className="w-4 h-4 accent-green-600"
-                />
-                <span className={`text-xs font-semibold ${pt.qualificationsVerified ? "text-green-700" : "text-gray-400"}`}>
-                  {pt.qualificationsVerified ? "Verified" : "Unverified"}
-                </span>
-              </label>
+              <span className={`text-xs font-semibold ${pt.qualificationsVerified ? "text-green-700" : "text-gray-400"}`}>
+                {pt.qualificationsVerified ? "All Verified" : `${(pt.qualificationsVerifiedList ?? []).length}/${pt.qualifications?.length ?? 0} Verified`}
+              </span>
             </div>
+            {(pt.qualifications?.length ?? 0) > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3 space-y-1.5">
+                {pt.qualifications.map((q: string) => {
+                  const isVerified = (pt.qualificationsVerifiedList ?? []).includes(q);
+                  return (
+                    <label key={q} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-1 py-0.5">
+                      <input
+                        type="checkbox"
+                        checked={isVerified}
+                        onChange={() => {
+                          const current = new Set(pt.qualificationsVerifiedList ?? []);
+                          if (isVerified) current.delete(q); else current.add(q);
+                          const newList = [...current];
+                          update({
+                            qualificationsVerifiedList: newList,
+                            qualificationsVerified: newList.length >= (pt.qualifications?.length ?? 0),
+                          });
+                        }}
+                        className="w-4 h-4 accent-green-600"
+                      />
+                      <span className={isVerified ? "text-green-700" : "text-gray-700"}>{q}</span>
+                      {isVerified && <span className="text-xs text-green-600 font-medium ml-auto">Verified</span>}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
             <div>
               <label className={labelCls}>Verification notes</label>
               <input
