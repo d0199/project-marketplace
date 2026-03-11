@@ -146,37 +146,57 @@ export default function AboutPage() {
             </p>
 
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">What we offer</h2>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-brand-orange font-bold mt-0.5">&#10003;</span>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-brand-orange rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <span>
                   <strong>Search by location</strong> — find gyms and PTs within your chosen
                   radius, sorted by distance
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-orange font-bold mt-0.5">&#10003;</span>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-brand-orange rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <span>
                   <strong>Compare at a glance</strong> — prices, amenities, opening hours, and
                   member offers side by side
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-orange font-bold mt-0.5">&#10003;</span>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-brand-orange rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <span>
                   <strong>Verified information</strong> — gym details and PT qualifications
                   reviewed by our team
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-orange font-bold mt-0.5">&#10003;</span>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-brand-orange rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <span>
                   <strong>Free listings</strong> — gym owners and personal trainers can create a
                   profile at no cost
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-orange font-bold mt-0.5">&#10003;</span>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-brand-orange rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <span>
                   <strong>National coverage</strong> — WA, NSW, VIC, QLD, SA, and TAS with more
                   suburbs added weekly
