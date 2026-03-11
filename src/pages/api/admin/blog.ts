@@ -23,16 +23,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (existing) {
       return res.status(409).json({ error: `Slug "${slug}" already exists` });
     }
-    const post = await blogStore.create({
-      ...req.body,
-      status: status || "draft",
-      authorName: req.body.authorName || "",
-      authorEmail: req.body.authorEmail || adminEmail,
-      tags: req.body.tags || [],
-      publishedAt: status === "published" ? new Date().toISOString() : "",
-    });
-    logAdminAction({ adminEmail, action: "blog.create", entityType: "blog", entityId: post.id, entityName: title });
-    return res.status(201).json(post);
+    try {
+      const post = await blogStore.create({
+        ...req.body,
+        status: status || "draft",
+        authorName: req.body.authorName || "",
+        authorEmail: req.body.authorEmail || adminEmail,
+        tags: req.body.tags || [],
+        publishedAt: status === "published" ? new Date().toISOString() : "",
+      });
+      logAdminAction({ adminEmail, action: "blog.create", entityType: "blog", entityId: post.id, entityName: title });
+      return res.status(201).json(post);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[blog] Create failed:", msg, err);
+      return res.status(500).json({ error: `Create failed: ${msg}` });
+    }
   }
 
   if (req.method === "PUT") {
@@ -43,13 +49,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // If publishing for the first time, set publishedAt
     const isNewlyPublished = req.body.status === "published" && existing.status !== "published";
-    const post = await blogStore.update({
-      ...existing,
-      ...req.body,
-      publishedAt: isNewlyPublished ? new Date().toISOString() : (req.body.publishedAt ?? existing.publishedAt),
-    });
-    logAdminAction({ adminEmail, action: "blog.update", entityType: "blog", entityId: post.id, entityName: post.title });
-    return res.json(post);
+    try {
+      const post = await blogStore.update({
+        ...existing,
+        ...req.body,
+        publishedAt: isNewlyPublished ? new Date().toISOString() : (req.body.publishedAt ?? existing.publishedAt),
+      });
+      logAdminAction({ adminEmail, action: "blog.update", entityType: "blog", entityId: post.id, entityName: post.title });
+      return res.json(post);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[blog] Update failed:", msg, err);
+      return res.status(500).json({ error: `Update failed: ${msg}` });
+    }
   }
 
   if (req.method === "DELETE") {
