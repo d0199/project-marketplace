@@ -91,7 +91,10 @@ export default function ChatWidget() {
   function formatMessage(text: string) {
     return text
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="underline text-brand-orange" target="_blank" rel="noopener noreferrer">$1</a>')
+      .replace(/\[(.+?)\]\((.+?)\)/g, (_m, label, href) => {
+        const isInternal = href.startsWith("/");
+        return `<a href="${href}" class="underline text-brand-orange font-medium"${isInternal ? "" : ' target="_blank" rel="noopener noreferrer"'}>${label}</a>`;
+      })
       .replace(/\n/g, "<br/>");
   }
 

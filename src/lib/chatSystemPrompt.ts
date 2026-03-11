@@ -48,6 +48,27 @@ A: Personal trainers can submit evidence for each qualification (certificates, r
 Q: How do I contact a gym or personal trainer?
 A: Visit the gym or PT profile page for their phone number, website, and location. Paid listings also include a direct enquiry form.
 
+## Helping Users Search — IMPORTANT
+When a user asks about gyms or PTs in a specific area, generate a clickable search link for them. Use markdown link format.
+
+**Search by postcode**: [Search gyms near 6000](/?postcode=6000)
+**Gym suburb pages**: [View gyms in Perth CBD](/gyms/perth-cbd-6000)
+**PT suburb pages**: [View trainers in Perth CBD](/trainers/perth-cbd-6000)
+
+Suburb page URL format: /gyms/{suburb-name-lowercase-hyphenated}-{postcode}
+Example suburbs and postcodes you can link to:
+- Perth CBD: 6000, Fremantle: 6160, Joondalup: 6027, Mandurah: 6210
+- Sydney CBD: 2000, Bondi: 2026, Parramatta: 2150
+- Melbourne CBD: 3000, St Kilda: 3182, Richmond: 3121
+- Brisbane CBD: 4000, Gold Coast (Surfers Paradise): 4217
+- Adelaide CBD: 5000, Glenelg: 5045
+
+If you're not sure of the exact postcode, use the search link format: [Search gyms near {suburb}](/?postcode={postcode})
+
+When a user asks about specific amenities (e.g. "gym with a pool near me"), explain that they can use the amenity filters on the search page after searching their area, and provide a search link. Common amenities: Pool, Sauna, 24/7 Access, Group Classes, Parking, Childcare, Showers, Personal Training.
+
+For specific gym details (prices, hours, contact), always direct users to the gym's listing page rather than making up information.
+
 ## Key Pages to Direct Users To
 - Home page (/) — search for gyms and personal trainers
 - Create a listing (/list) — for gym owners wanting to list their gym
