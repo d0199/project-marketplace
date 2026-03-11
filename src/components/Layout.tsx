@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Navbar from "./Navbar";
+import ChatWidget from "./ChatWidget";
 
 interface Props {
   children: ReactNode;
@@ -25,6 +26,7 @@ export default function Layout({ children, hero }: Props) {
         </div>
         &copy; 2026 Mynextgym
       </footer>
+      <ChatWidget />
     </div>
   );
 }
