@@ -36,6 +36,8 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("owned");
+  const [stateFilter, setStateFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
   const [editOwnerVal, setEditOwnerVal] = useState("");
@@ -69,6 +71,10 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const filtered = pts.filter((pt) => {
     if (activeFilter === "active" && pt.isActive === false) return false;
     if (activeFilter === "inactive" && pt.isActive !== false) return false;
+    const isUnclaimed = !pt.ownerId || pt.ownerId === "unclaimed" || pt.ownerId === "owner-3";
+    if (ownerFilter === "owned" && isUnclaimed) return false;
+    if (ownerFilter === "unclaimed" && !isUnclaimed) return false;
+    if (stateFilter !== "all" && pt.address.state !== stateFilter) return false;
     if (planFilter === "featured" && !pt.isFeatured) return false;
     if (planFilter === "paid" && (!pt.isPaid || pt.isFeatured)) return false;
     if (planFilter === "free" && (pt.isPaid || pt.isFeatured)) return false;
@@ -78,7 +84,9 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
         !pt.name.toLowerCase().includes(search) &&
         !pt.email.toLowerCase().includes(search) &&
         !pt.address.suburb.toLowerCase().includes(search) &&
-        !pt.id.toLowerCase().includes(search)
+        !pt.id.toLowerCase().includes(search) &&
+        !(pt.ownerId ?? "").toLowerCase().includes(search) &&
+        !pt.address.postcode.toLowerCase().includes(search)
       ) return false;
     }
     return true;
@@ -214,52 +222,80 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <form onSubmit={(e) => { e.preventDefault(); load(); }} className="flex gap-2">
+      {/* Search bar */}
+      <div className="flex items-center gap-4 mb-4">
+        <form onSubmit={(e) => { e.preventDefault(); load(); }} className="flex gap-2 flex-1">
           <input
-            type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search PTs..."
-            className="px-3 py-2 border rounded-lg text-sm w-64"
+            placeholder="Search by name, ID, owner, suburb, or postcode…"
+            className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
           />
           <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg">
             Search
           </button>
-          </form>
-          <select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)} className="px-2 py-2 border rounded-lg text-sm">
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value as typeof planFilter)} className="px-2 py-2 border rounded-lg text-sm">
-            <option value="all">All Plans</option>
-            <option value="free">Free</option>
-            <option value="paid">Paid</option>
-            <option value="featured">Featured</option>
-          </select>
-          <button
-            onClick={() => { setQ(""); setActiveFilter("all"); setPlanFilter("all"); }}
-            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
-          >
-            Clear
-          </button>
-          <button
-            onClick={() => { setQ(""); setActiveFilter("active"); setPlanFilter("all"); }}
-            className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
-          >
-            Reset
-          </button>
-          <span className="text-sm text-gray-500">{filtered.length} PTs</span>
-        </div>
+        </form>
         <button
           onClick={() => setPanel({ pt: { ...EMPTY_PT }, isNew: true })}
-          className="px-4 py-2 bg-brand-orange text-white rounded-lg text-sm font-medium"
+          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
         >
           + New PT
         </button>
+      </div>
+
+      {/* Filter controls */}
+      <div className="flex items-center gap-3 mb-4">
+        <select
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active only</option>
+          <option value="inactive">Inactive only</option>
+        </select>
+        <select
+          value={ownerFilter}
+          onChange={(e) => setOwnerFilter(e.target.value as typeof ownerFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All owners</option>
+          <option value="owned">Owned</option>
+          <option value="unclaimed">Unclaimed</option>
+        </select>
+        <select
+          value={stateFilter}
+          onChange={(e) => setStateFilter(e.target.value)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All states</option>
+          {["WA", "NSW", "VIC", "QLD", "SA", "TAS", "ACT", "NT"].map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value as typeof planFilter)}
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        >
+          <option value="all">All plans</option>
+          <option value="featured">Featured</option>
+          <option value="paid">Paid</option>
+          <option value="free">Free</option>
+        </select>
+        <button
+          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Clear
+        </button>
+        <button
+          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
+          className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
+        >
+          Reset
+        </button>
+        <span className="text-sm text-gray-400">{filtered.length} PT{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
       {/* Table */}
