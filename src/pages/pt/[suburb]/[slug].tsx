@@ -757,18 +757,22 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const suburbParam = params?.suburb as string;
   const slugParam = params?.slug as string;
 
+  // Prime all caches in parallel to avoid sequential DynamoDB scans on cold start
   // eslint-disable-next-line prefer-const
-  let [pt, flags] = await Promise.all([
-    ptStore.getBySuburbAndSlug(suburbParam, slugParam),
+  let [allPTs, allGyms, flags] = await Promise.all([
+    ptStore.getAll(),
+    ownerStore.getAll(),
     featureFlagStore.get(),
   ]);
 
+  const pt = allPTs.find((p) => p.suburbSlug === suburbParam && p.slug === slugParam);
+
   if (!pt || pt.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
-  // Resolve affiliated gym names
+  // Resolve affiliated gym names from cached gym list
   const affiliatedGyms: AffiliatedGym[] = [];
   for (const gymId of pt.gymIds) {
-    const gym = await ownerStore.getById(gymId);
+    const gym = allGyms.find((g) => g.id === gymId);
     if (gym && gym.isActive !== false) {
       affiliatedGyms.push({
         id: gym.id,

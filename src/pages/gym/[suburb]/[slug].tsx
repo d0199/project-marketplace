@@ -714,14 +714,16 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   const suburbParam = params?.suburb as string;
   const slugParam = params?.slug as string;
 
-  const gym = await ownerStore.getBySuburbAndSlug(suburbParam, slugParam);
+  // Prime both caches in parallel to avoid sequential DynamoDB scans on cold start
+  const [allGyms, allPTs] = await Promise.all([ownerStore.getAll(), ptStore.getAll()]);
+
+  const gym = allGyms.find((g) => g.suburbSlug === suburbParam && g.slug === slugParam);
 
   if (!gym || gym.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
-  // Fetch personal trainers affiliated with this gym
-  const allPTs = await ptStore.getByGymId(gym.id);
+  // Filter PTs affiliated with this gym (cache already warm from above)
   const personalTrainers: PTSummary[] = allPTs
-    .filter((pt) => pt.isActive !== false)
+    .filter((pt) => pt.isActive !== false && pt.gymIds.includes(gym.id))
     .map((pt) => ({
       id: pt.id,
       slug: pt.slug,
