@@ -18,6 +18,7 @@ export interface OpeningHours {
 export interface Gym {
   id: string;
   slug: string;
+  suburbSlug: string;
   ownerId: string;
   isActive?: boolean;
   isTest?: boolean;
@@ -59,6 +60,7 @@ export interface Gym {
 export interface PersonalTrainer {
   id: string;
   slug: string;
+  suburbSlug: string;
   ownerId: string;
   isActive?: boolean;
   isTest?: boolean;

@@ -9,7 +9,7 @@ import BlogTab from "@/components/admin/BlogTab";
 import FeatureFlagsTab from "@/components/admin/FeatureFlagsTab";
 import { ALL_AMENITIES, ALL_SPECIALTIES, AMENITY_ICONS } from "@/lib/utils";
 import { adminFetch } from "@/lib/adminFetch";
-import { gymUrl, ptUrl } from "@/lib/slugify";
+import { gymUrl } from "@/lib/slugify";
 
 // ---------------------------------------------------------------------------
 // Types

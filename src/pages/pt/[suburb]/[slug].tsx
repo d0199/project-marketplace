@@ -16,11 +16,12 @@ import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
 import { BASE_URL } from "@/lib/siteUrl";
-import { POSTCODE_META } from "@/lib/utils";
+import { gymUrl, ptUrl } from "@/lib/slugify";
 
 interface AffiliatedGym {
   id: string;
-  slug?: string;
+  slug: string;
+  suburbSlug: string;
   name: string;
   suburb: string;
   state: string;
@@ -30,11 +31,10 @@ interface Props {
   pt: PersonalTrainer;
   affiliatedGyms: AffiliatedGym[];
   flags: FeatureFlags;
-  suburbSlug?: string;
 }
 
 function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
-  const url = `${BASE_URL}/pt/${pt.slug}`;
+  const url = `${BASE_URL}${ptUrl(pt)}`;
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -87,7 +87,7 @@ function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
     jsonLd.worksFor = affiliatedGyms.map((g) => ({
       "@type": "SportsActivityLocation",
       name: g.name,
-      url: `${BASE_URL}/gym/${g.id}`,
+      url: `${BASE_URL}${gymUrl(g)}`,
       address: { "@type": "PostalAddress", addressLocality: g.suburb, addressRegion: g.state },
     }));
   }
@@ -95,17 +95,13 @@ function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
   return jsonLd;
 }
 
-function buildBreadcrumbJsonLd(pt: PersonalTrainer, suburbSlug?: string) {
+function buildBreadcrumbJsonLd(pt: PersonalTrainer) {
   const items = [
     { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
     { "@type": "ListItem", position: 2, name: "Personal Trainers", item: `${BASE_URL}/` },
+    { "@type": "ListItem", position: 3, name: `Trainers in ${pt.address.suburb}`, item: `${BASE_URL}/trainers/${pt.suburbSlug}` },
+    { "@type": "ListItem", position: 4, name: pt.name, item: `${BASE_URL}${ptUrl(pt)}` },
   ];
-  if (suburbSlug) {
-    items.push({ "@type": "ListItem", position: 3, name: `Trainers in ${pt.address.suburb}`, item: `${BASE_URL}/trainers/${suburbSlug}` });
-    items.push({ "@type": "ListItem", position: 4, name: pt.name, item: `${BASE_URL}/pt/${pt.slug ?? pt.id}` });
-  } else {
-    items.push({ "@type": "ListItem", position: 3, name: pt.name, item: `${BASE_URL}/pt/${pt.slug ?? pt.id}` });
-  }
   return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items };
 }
 
@@ -117,7 +113,7 @@ function track(ptId: string, event: string) {
   }).catch(() => {});
 }
 
-export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props) {
+export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -150,12 +146,10 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
       });
   }, [pt.ownerId]);
 
-  // Track page view on mount
   useEffect(() => {
     track(pt.id, "pageViews");
   }, [pt.id]);
 
-  // Auto-open claim modal if redirected back from login
   useEffect(() => {
     if (authChecked && router.query.claim === "true") {
       setShowClaim(true);
@@ -165,7 +159,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
     }
   }, [authChecked, router]);
 
-  // Block non-internal users from viewing test PTs
   useEffect(() => {
     if (authChecked && pt.isTest && !isInternalUser) {
       router.replace("/");
@@ -202,6 +195,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
   const effectivePaid = pt.isPaid || pt.isFeatured;
   const customFields: CustomLeadField[] = pt.customLeadFields ?? [];
   const metaDesc = `${pt.name} — personal trainer in ${pt.address.suburb}. View specialties, rates and availability on MyNextGym.`;
+  const canonicalUrl = `${BASE_URL}${ptUrl(pt)}`;
 
   return (
     <>
@@ -212,20 +206,20 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
         <meta property="og:title" content={`${pt.name} — Personal Trainer | mynextgym.com.au`} />
         <meta property="og:description" content={metaDesc} />
         <meta property="og:type" content="profile" />
-        <meta property="og:url" content={`${BASE_URL}/pt/${pt.slug}`} />
+        <meta property="og:url" content={canonicalUrl} />
         {pt.images.length > 0 && <meta property="og:image" content={pt.images[0]} />}
         <meta name="twitter:card" content={pt.images.length > 0 ? "summary_large_image" : "summary"} />
         <meta name="twitter:title" content={`${pt.name} — Personal Trainer | mynextgym.com.au`} />
         <meta name="twitter:description" content={metaDesc} />
         {pt.images.length > 0 && <meta name="twitter:image" content={pt.images[0]} />}
-        <link rel="canonical" href={`${BASE_URL}/pt/${pt.slug}`} />
+        <link rel="canonical" href={canonicalUrl} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(pt, affiliatedGyms)) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(pt, suburbSlug)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(pt)) }}
         />
       </Head>
       <Layout>
@@ -234,17 +228,8 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
           <div>
             <Link href="/" className="hover:text-brand-orange">Home</Link>
             {" / "}
-            {suburbSlug ? (
-              <>
-                <Link href={`/trainers/${suburbSlug}`} className="hover:text-brand-orange">Trainers in {pt.address.suburb}</Link>
-                {" / "}
-              </>
-            ) : (
-              <>
-                <span>Personal Trainers</span>
-                {" / "}
-              </>
-            )}
+            <Link href={`/trainers/${pt.suburbSlug}`} className="hover:text-brand-orange">Trainers in {pt.address.suburb}</Link>
+            {" / "}
             <span className="text-gray-800 font-medium">{pt.name}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -273,7 +258,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
 
         {/* Banner */}
         <div className="relative rounded-2xl h-72 sm:h-80 bg-brand-black mb-6">
-          {/* Background — carousel from images[1+] (first image is profile photo only) */}
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
             {pt.images.length > 1 ? (
               <div className="absolute inset-0 opacity-60">
@@ -296,7 +280,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
           </div>
-          {/* Profile photo — only shown when image is populated */}
           {hasImages && (
           <div className="absolute left-6 top-0 bottom-[5.5rem] flex items-center z-10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -307,7 +290,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               />
           </div>
           )}
-          {/* Text — pinned to bottom, matching gym banner layout */}
           <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none">
             <p className="text-orange-200 text-sm font-medium mb-0.5">Personal Trainer</p>
             <h1 className="text-3xl font-bold text-white drop-shadow-md">{pt.name}</h1>
@@ -320,7 +302,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* About */}
             {pt.description && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-3 text-gray-900">About</h2>
@@ -328,7 +309,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               </section>
             )}
 
-            {/* Specialties */}
             {pt.specialties.length > 0 && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">Specialties</h2>
@@ -342,7 +322,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               </section>
             )}
 
-            {/* Member Offers — paid feature */}
             {effectivePaid && (pt.memberOffers?.length || pt.memberOffersNotes) && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">Member Offers</h2>
@@ -375,7 +354,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               </section>
             )}
 
-            {/* Qualifications */}
             {pt.qualifications.length > 0 && (() => {
               const verifiedSet = new Set(pt.qualificationsVerifiedList ?? []);
               const verifiedQuals = pt.qualifications.filter((q) => verifiedSet.has(q));
@@ -384,19 +362,17 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                 <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                   <h2 className="text-xl font-semibold mb-4 text-gray-900">Qualifications</h2>
                   {verifiedQuals.length > 0 && (
-                    <>
-                      <ul className="space-y-2">
-                        {verifiedQuals.map((q) => (
-                          <li key={q} className="flex items-center gap-2 text-sm text-gray-700">
-                            <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            {q}
-                            <span className="text-xs text-green-600 font-medium">Verified</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
+                    <ul className="space-y-2">
+                      {verifiedQuals.map((q) => (
+                        <li key={q} className="flex items-center gap-2 text-sm text-gray-700">
+                          <svg className="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          {q}
+                          <span className="text-xs text-green-600 font-medium">Verified</span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                   {unverifiedQuals.length > 0 && (
                     <ul className={`space-y-2 ${verifiedQuals.length > 0 ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
@@ -422,7 +398,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               );
             })()}
 
-            {/* Affiliated Gyms */}
             {affiliatedGyms.length > 0 && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">Affiliated Gyms</h2>
@@ -430,7 +405,7 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                   {affiliatedGyms.map((gym) => (
                     <Link
                       key={gym.id}
-                      href={`/gym/${gym.slug}`}
+                      href={gymUrl(gym)}
                       className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition-colors group"
                     >
                       <div>
@@ -449,7 +424,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
 
           {/* Sidebar */}
           <aside className="space-y-4">
-            {/* Pricing */}
             <div className="bg-brand-orange rounded-xl p-5 text-white">
               <p className="text-orange-100 text-sm mb-1">Session Rate</p>
               {pt.pricePerSession ? (
@@ -494,7 +468,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                 </a>
               )}
 
-              {/* Contact form for paid PTs with email */}
               {effectivePaid && pt.email && (
                 <div className="mt-4">
                   {contactStatus === "sent" ? (
@@ -503,7 +476,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                       <p className="text-orange-100 text-sm mt-1">They&apos;ll be in touch shortly.</p>
                     </div>
                   ) : customFields.length > 0 ? (
-                    /* Has custom fields — show CTA button, form opens in modal */
                     <button
                       onClick={() => setShowContactModal(true)}
                       className="w-full bg-white text-brand-orange font-semibold py-2.5 rounded-lg hover:bg-orange-50 transition-colors"
@@ -511,7 +483,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                       Send an Enquiry →
                     </button>
                   ) : (
-                    /* Standard fields only — inline form */
                     <form onSubmit={handleContactSubmit} className="space-y-2">
                       <p className="text-orange-100 text-sm font-medium mb-2">Send an enquiry</p>
                       <input
@@ -558,7 +529,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               )}
             </div>
 
-            {/* Details */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
               <h3 className="font-semibold text-gray-900 mb-3">Details</h3>
               <dl className="space-y-2 text-sm">
@@ -589,7 +559,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               </dl>
             </div>
 
-            {/* Contact */}
             {(pt.phone || pt.instagram || pt.facebook || pt.tiktok || isUnclaimed) && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
@@ -640,7 +609,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
               </div>
             )}
 
-            {/* Location */}
             {pt.address.street && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-2">Location</h3>
@@ -663,7 +631,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                 </a>
               </div>
             )}
-            {/* Feedback link */}
             <div className="text-center mt-3">
               <button
                 onClick={() => setShowFeedback(true)}
@@ -674,7 +641,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
             </div>
           </aside>
         </div>
-        {/* Enquiry modal — shown when PT has custom fields */}
         {showContactModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowContactModal(false)}>
             <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -723,7 +689,6 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
                     onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
                   />
-                  {/* Custom fields defined by PT */}
                   {customFields.map((field) => (
                     <div key={field.label}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}{field.required ? " *" : ""}</label>
@@ -789,23 +754,14 @@ export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props)
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
-  const param = params?.id as string;
+  const suburbParam = params?.suburb as string;
+  const slugParam = params?.slug as string;
 
-  // Try direct ID lookup first (handles old /pt/pt-001 URLs)
   // eslint-disable-next-line prefer-const
   let [pt, flags] = await Promise.all([
-    ptStore.getById(param),
+    ptStore.getBySuburbAndSlug(suburbParam, slugParam),
     featureFlagStore.get(),
   ]);
-  if (pt && pt.isActive !== false && param !== pt.slug) {
-    // 301 redirect from old ID URL to new slug URL
-    return { redirect: { destination: `/pt/${pt.slug}`, permanent: true } };
-  }
-
-  // If not found by ID, try slug lookup
-  if (!pt) {
-    pt = await ptStore.getBySlug(param);
-  }
 
   if (!pt || pt.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
@@ -817,6 +773,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
       affiliatedGyms.push({
         id: gym.id,
         slug: gym.slug,
+        suburbSlug: gym.suburbSlug,
         name: gym.name,
         suburb: gym.address.suburb,
         state: gym.address.state,
@@ -824,9 +781,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     }
   }
 
-  // Resolve suburb slug for breadcrumb
-  const meta = POSTCODE_META[pt.address.postcode];
-  const suburbSlug = meta?.slug;
-
-  return { props: { pt, affiliatedGyms, flags, suburbSlug } };
+  return { props: { pt, affiliatedGyms, flags } };
 };

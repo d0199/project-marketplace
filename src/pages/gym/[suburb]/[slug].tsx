@@ -17,7 +17,7 @@ import ClaimModal from "@/components/ClaimModal";
 import ShareButton from "@/components/ShareButton";
 import { trackEvent } from "@/lib/gtag";
 import { BASE_URL } from "@/lib/siteUrl";
-import { POSTCODE_META } from "@/lib/utils";
+import { gymUrl, ptUrl } from "@/lib/slugify";
 
 const DAYS = [
   "monday",
@@ -31,7 +31,8 @@ const DAYS = [
 
 interface PTSummary {
   id: string;
-  slug?: string;
+  slug: string;
+  suburbSlug: string;
   name: string;
   specialties: string[];
   images: string[];
@@ -42,7 +43,6 @@ interface PTSummary {
 interface Props {
   gym: Gym;
   personalTrainers: PTSummary[];
-  suburbSlug?: string;
 }
 
 const SCHEMA_DAY_MAP: Record<string, string> = {
@@ -51,7 +51,6 @@ const SCHEMA_DAY_MAP: Record<string, string> = {
 };
 
 function parseHoursRange(dayName: string, value: string) {
-  // Try to parse "6:00 AM - 9:00 PM" or "06:00 - 21:00" into Schema.org format
   const match = value.match(/(\d{1,2}[:.]\d{2}\s*(?:AM|PM)?)\s*[-–]\s*(\d{1,2}[:.]\d{2}\s*(?:AM|PM)?)/i);
   if (!match) return null;
 
@@ -74,22 +73,18 @@ function parseHoursRange(dayName: string, value: string) {
   };
 }
 
-function buildBreadcrumbJsonLd(gym: Gym, suburbSlug?: string) {
+function buildBreadcrumbJsonLd(gym: Gym) {
   const items = [
     { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
     { "@type": "ListItem", position: 2, name: "Gyms", item: `${BASE_URL}/` },
+    { "@type": "ListItem", position: 3, name: `Gyms in ${gym.address.suburb}`, item: `${BASE_URL}/gyms/${gym.suburbSlug}` },
+    { "@type": "ListItem", position: 4, name: gym.name, item: `${BASE_URL}${gymUrl(gym)}` },
   ];
-  if (suburbSlug) {
-    items.push({ "@type": "ListItem", position: 3, name: `Gyms in ${gym.address.suburb}`, item: `${BASE_URL}/gyms/${suburbSlug}` });
-    items.push({ "@type": "ListItem", position: 4, name: gym.name, item: `${BASE_URL}/gym/${gym.slug ?? gym.id}` });
-  } else {
-    items.push({ "@type": "ListItem", position: 3, name: gym.name, item: `${BASE_URL}/gym/${gym.slug ?? gym.id}` });
-  }
   return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items };
 }
 
 function buildJsonLd(gym: Gym) {
-  const url = `${BASE_URL}/gym/${gym.slug}`;
+  const url = `${BASE_URL}${gymUrl(gym)}`;
 
   const openingHours = Object.entries(gym.hours)
     .filter(([, v]) => v && v.toLowerCase() !== "closed")
@@ -161,7 +156,7 @@ interface ContactForm {
   message: string;
 }
 
-export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Props) {
+export default function GymProfilePage({ gym, personalTrainers }: Props) {
   const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -174,7 +169,6 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
 
-  // Profile page always respects isPaid — admins edit via admin panel, not the listing view
   const effectivePaid = !!gym.isPaid;
 
   useEffect(() => {
@@ -190,32 +184,27 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
         setAuthChecked(true);
       })
       .catch(() => {
-        // Not signed in — isOwner/isAdmin/isInternalUser stay false
         setAuthChecked(true);
       });
     track(gym.id, "pageViews");
     trackEvent("view_item", { item_id: gym.id, item_name: gym.name, item_category: gym.address.suburb });
   }, [gym.id, gym.ownerId, gym.name, gym.address.suburb]);
 
-  // Auto-open claim modal if redirected back from login
   useEffect(() => {
     if (authChecked && router.query.claim === "true") {
       setShowClaim(true);
-      // Clean the URL without reload
       const q = { ...router.query };
       delete q.claim;
       router.replace({ pathname: router.pathname, query: q }, undefined, { shallow: true });
     }
   }, [authChecked, router]);
 
-  // Block non-internal users from viewing test gyms
   useEffect(() => {
     if (authChecked && gym.isTest && !isInternalUser) {
       router.replace("/");
     }
   }, [authChecked, gym.isTest, isInternalUser, router]);
 
-  // Don't render test gym content until auth is verified
   if (gym.isTest && !isInternalUser) {
     return null;
   }
@@ -241,6 +230,8 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
     }
   }
 
+  const canonicalUrl = `${BASE_URL}${gymUrl(gym)}`;
+
   return (
     <>
       <Head>
@@ -250,20 +241,20 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
         <meta property="og:title" content={`${gym.name} — mynextgym.com.au`} />
         <meta property="og:description" content={gym.description || `${gym.name} in ${gym.address.suburb}, ${gym.address.state}`} />
         <meta property="og:type" content="business.business" />
-        <meta property="og:url" content={`${BASE_URL}/gym/${gym.slug}`} />
+        <meta property="og:url" content={canonicalUrl} />
         {gym.images.length > 0 && <meta property="og:image" content={gym.images[0]} />}
         <meta name="twitter:card" content={gym.images.length > 0 ? "summary_large_image" : "summary"} />
         <meta name="twitter:title" content={`${gym.name} — mynextgym.com.au`} />
         <meta name="twitter:description" content={gym.description || `${gym.name} in ${gym.address.suburb}, ${gym.address.state}`} />
         {gym.images.length > 0 && <meta name="twitter:image" content={gym.images[0]} />}
-        <link rel="canonical" href={`${BASE_URL}/gym/${gym.slug}`} />
+        <link rel="canonical" href={canonicalUrl} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(gym)) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(gym, suburbSlug)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(gym)) }}
         />
       </Head>
       <Layout>
@@ -272,17 +263,8 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
           <div>
             <Link href="/" className="hover:text-brand-orange">Home</Link>
             {" / "}
-            {suburbSlug ? (
-              <>
-                <Link href={`/gyms/${suburbSlug}`} className="hover:text-brand-orange">Gyms in {gym.address.suburb}</Link>
-                {" / "}
-              </>
-            ) : (
-              <>
-                <span>Gyms</span>
-                {" / "}
-              </>
-            )}
+            <Link href={`/gyms/${gym.suburbSlug}`} className="hover:text-brand-orange">Gyms in {gym.address.suburb}</Link>
+            {" / "}
             <span className="text-gray-800 font-medium">{gym.name}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -415,7 +397,7 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
                   <ul className="space-y-1 mb-2">
                     {gym.memberOffersNotes.split(/[,;]+/).map((item) => item.trim()).filter(Boolean).map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm font-semibold text-gray-800">
-                        <span className="text-brand-orange mt-0.5">•</span>
+                        <span className="text-brand-orange mt-0.5">&bull;</span>
                         {item}
                       </li>
                     ))}
@@ -430,7 +412,7 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
               </section>
             )}
 
-            {/* Hours — only shown if at least one day is populated */}
+            {/* Hours */}
             {DAYS.some((day) => gym.hours[day]) && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
@@ -467,7 +449,7 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
                   {personalTrainers.map((trainer) => (
                     <Link
                       key={trainer.id}
-                      href={`/pt/${trainer.slug}`}
+                      href={ptUrl(trainer)}
                       className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition-colors group"
                     >
                       {trainer.images.length > 0 ? (
@@ -527,7 +509,6 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
                 </p>
               )}
 
-              {/* Contact form for paid gyms with email; otherwise Visit Website button */}
               {effectivePaid && gym.bookingUrl && (
                 <a
                   href={gym.bookingUrl}
@@ -614,7 +595,7 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
               )}
             </div>
 
-            {/* Contact — only shown if there is something to display */}
+            {/* Contact */}
             {(gym.phone || (effectivePaid && (gym.instagram || gym.facebook)) || gym.ownerId === "unclaimed" || gym.ownerId === "owner-3") && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
@@ -730,19 +711,10 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   params,
 }) => {
-  const param = params?.id as string;
+  const suburbParam = params?.suburb as string;
+  const slugParam = params?.slug as string;
 
-  // Try direct ID lookup first (handles old /gym/gym-044 URLs)
-  let gym = await ownerStore.getById(param);
-  if (gym && gym.isActive !== false && param !== gym.slug) {
-    // 301 redirect from old ID URL to new slug URL
-    return { redirect: { destination: `/gym/${gym.slug}`, permanent: true } };
-  }
-
-  // If not found by ID, try slug lookup
-  if (!gym) {
-    gym = await ownerStore.getBySlug(param);
-  }
+  const gym = await ownerStore.getBySuburbAndSlug(suburbParam, slugParam);
 
   if (!gym || gym.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
@@ -753,6 +725,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     .map((pt) => ({
       id: pt.id,
       slug: pt.slug,
+      suburbSlug: pt.suburbSlug,
       name: pt.name,
       specialties: pt.specialties,
       images: pt.images,
@@ -760,9 +733,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       sessionDuration: pt.sessionDuration,
     }));
 
-  // Resolve suburb slug for breadcrumb
-  const meta = POSTCODE_META[gym.address.postcode];
-  const suburbSlug = meta?.slug;
-
-  return { props: { gym, personalTrainers, suburbSlug } };
+  return { props: { gym, personalTrainers } };
 };
