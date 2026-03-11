@@ -318,7 +318,10 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
   ];
 
   // Sidebar radius widget (shared between desktop and mobile)
-  const RadiusSlider = () => (
+  // NOTE: This is JSX stored in a variable, NOT an inline component function.
+  // Using an inline component (const RadiusSlider = () => ...) causes React to
+  // unmount/remount the <input> on every re-render, which kills the drag interaction.
+  const radiusSliderJsx = (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-3">
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">Search Radius</h3>
@@ -514,7 +517,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
         <div className="flex gap-6">
           {/* Sidebar — desktop */}
           <div className="w-52 shrink-0 hidden sm:block">
-            {flags.radiusSlider && <RadiusSlider />}
+            {flags.radiusSlider && radiusSliderJsx}
             {isGymMode ? <GymSidebarFilters /> : <PTSidebarFilters />}
           </div>
 
@@ -522,7 +525,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
           <div className="flex-1 min-w-0">
             {/* Sidebar — mobile */}
             <div className="sm:hidden mb-4">
-              {flags.radiusSlider && <RadiusSlider />}
+              {flags.radiusSlider && radiusSliderJsx}
               {isGymMode ? <GymSidebarFilters /> : <PTSidebarFilters />}
             </div>
 
