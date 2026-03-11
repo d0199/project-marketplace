@@ -412,10 +412,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
   const match = slug?.match(/^(.*?)-?(\d{4})$/);
   const postcode = match?.[2];
+  const UPPER_WORDS = new Set(["cbd", "wa", "nsw", "vic", "qld", "sa", "tas", "nt", "act"]);
   const suburbFromSlug =
     match?.[1]
       ?.split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .map((w) => UPPER_WORDS.has(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ") ?? "";
 
   if (!postcode || !POSTCODE_COORDS[postcode]) {
