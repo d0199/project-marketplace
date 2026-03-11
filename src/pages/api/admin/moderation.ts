@@ -5,6 +5,7 @@ import { ptStore } from "@/lib/ptStore";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/auditLog";
 import type { Gym, PersonalTrainer } from "@/types";
+import { gymUrl, ptUrl } from "@/lib/slugify";
 
 async function listAllEdits() {
   const results: Record<string, unknown>[] = [];
@@ -95,6 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               (updated as any)[proposed.field] = proposed.value;
             }
             await ownerStore.update(updated);
+            try { await res.revalidate(gymUrl(updated)); } catch { /* ignore */ }
             applied++;
           }
           console.log(`[moderation] Bulk edit approved: ${applied}/${proposed.gymIds.length} gyms updated`);
@@ -110,19 +112,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           for (const q of requestedQuals) existingVerified.add(q);
           const newVerifiedList = [...existingVerified];
 
-          await ptStore.update({
+          const updatedPT = {
             ...currentPT,
             qualificationsVerifiedList: newVerifiedList,
             qualificationsVerified: newVerifiedList.length >= currentPT.qualifications.length,
             qualificationsNotes: notes ?? "Verified by admin",
             qualificationEvidence: proposed.qualificationEvidence,
-          });
+          };
+          await ptStore.update(updatedPT);
+          try { await res.revalidate(ptUrl(updatedPT)); } catch { /* ignore */ }
         } else if (editType === "pt") {
           const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
           await ptStore.update(proposed);
+          try { await res.revalidate(ptUrl(proposed)); } catch { /* ignore */ }
         } else {
           const proposed = JSON.parse(edit.proposedChanges as string) as Gym;
           await ownerStore.update(proposed);
+          try { await res.revalidate(gymUrl(proposed)); } catch { /* ignore */ }
         }
 
         await dataClient.models.GymEdit.update({

@@ -34,6 +34,8 @@ export default async function handler(
     // Internal staff or dev mode (no backend) → apply immediately
     if (isInternal || !isAmplifyConfigured()) {
       await ownerStore.update(updated);
+      // Revalidate the ISR-cached gym profile page
+      try { await res.revalidate(`/gym/${updated.suburbSlug}/${updated.slug}`); } catch { /* ignore */ }
       return res.status(200).json(updated);
     }
 

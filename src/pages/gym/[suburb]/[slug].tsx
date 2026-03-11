@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GetServerSideProps } from "next";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -708,20 +708,22 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
-  params,
-}) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  return { paths: [], fallback: "blocking" };
+};
+
+export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   const suburbParam = params?.suburb as string;
   const slugParam = params?.slug as string;
 
-  // Prime both caches in parallel to avoid sequential DynamoDB scans on cold start
+  // Fetch gyms and PTs in parallel
   const [allGyms, allPTs] = await Promise.all([ownerStore.getAll(), ptStore.getAll()]);
 
   const gym = allGyms.find((g) => g.suburbSlug === suburbParam && g.slug === slugParam);
 
-  if (!gym || gym.isActive === false) return { redirect: { destination: "/", permanent: false } };
+  if (!gym || gym.isActive === false) return { notFound: true };
 
-  // Filter PTs affiliated with this gym (cache already warm from above)
+  // Filter PTs affiliated with this gym
   const personalTrainers: PTSummary[] = allPTs
     .filter((pt) => pt.isActive !== false && pt.gymIds.includes(gym.id))
     .map((pt) => ({
@@ -735,5 +737,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       sessionDuration: pt.sessionDuration,
     }));
 
-  return { props: { gym, personalTrainers } };
+  return { props: { gym, personalTrainers }, revalidate: 60 };
 };

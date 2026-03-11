@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GetServerSideProps } from "next";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
@@ -753,13 +753,16 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  return { paths: [], fallback: "blocking" };
+};
+
+export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   const suburbParam = params?.suburb as string;
   const slugParam = params?.slug as string;
 
-  // Prime all caches in parallel to avoid sequential DynamoDB scans on cold start
-  // eslint-disable-next-line prefer-const
-  let [allPTs, allGyms, flags] = await Promise.all([
+  // Fetch all data in parallel
+  const [allPTs, allGyms, flags] = await Promise.all([
     ptStore.getAll(),
     ownerStore.getAll(),
     featureFlagStore.get(),
@@ -767,7 +770,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
   const pt = allPTs.find((p) => p.suburbSlug === suburbParam && p.slug === slugParam);
 
-  if (!pt || pt.isActive === false) return { redirect: { destination: "/", permanent: false } };
+  if (!pt || pt.isActive === false) return { notFound: true };
 
   // Resolve affiliated gym names from cached gym list
   const affiliatedGyms: AffiliatedGym[] = [];
@@ -785,5 +788,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     }
   }
 
-  return { props: { pt, affiliatedGyms, flags } };
+  return { props: { pt, affiliatedGyms, flags }, revalidate: 60 };
 };

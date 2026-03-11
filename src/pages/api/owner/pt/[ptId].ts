@@ -33,6 +33,7 @@ export default async function handler(
     // Internal staff or dev mode → apply immediately
     if (isInternal || !isAmplifyConfigured()) {
       await ptStore.update(updated);
+      try { await res.revalidate(`/pt/${updated.suburbSlug}/${updated.slug}`); } catch { /* ignore */ }
       return res.status(200).json(updated);
     }
 

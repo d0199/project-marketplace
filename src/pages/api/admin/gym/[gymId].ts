@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const gym = req.body as Gym;
     if (gym.id !== gymId) return res.status(400).json({ error: "ID mismatch" });
     await ownerStore.update(gym);
+    try { await res.revalidate(`/gym/${gym.suburbSlug}/${gym.slug}`); } catch { /* ignore */ }
     logAdminAction({ adminEmail, action: "gym.update", entityType: "gym", entityId: gymId, entityName: gym.name });
     return res.status(200).json({ ok: true });
   }

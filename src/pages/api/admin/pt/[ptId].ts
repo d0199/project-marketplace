@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!pt) return res.status(404).json({ error: "Not found" });
     const updated = { ...pt, ...req.body, id: ptId };
     await ptStore.update(updated);
+    try { await res.revalidate(`/pt/${updated.suburbSlug}/${updated.slug}`); } catch { /* ignore */ }
     logAdminAction({ adminEmail, action: "pt.update", entityType: "pt", entityId: ptId, entityName: updated.name });
     return res.json({ ok: true });
   }
