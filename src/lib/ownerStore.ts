@@ -3,9 +3,14 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { Gym } from "@/types";
 import { postcodeToState } from "./utils";
+import { generateSlug } from "./slugify";
 
 const require = createRequire(import.meta.url);
-const seedGyms: Gym[] = require("../../data/gyms.json");
+const seedGymsRaw: Omit<Gym, "slug">[] = require("../../data/gyms.json");
+const seedGyms: Gym[] = seedGymsRaw.map((g) => ({
+  ...g,
+  slug: generateSlug(g.name, g.address.suburb),
+}));
 
 // ---------------------------------------------------------------------------
 // Shape converters between the flat DynamoDB record and the nested Gym type
@@ -15,6 +20,7 @@ type GymRecord = Schema["Gym"]["type"];
 function toGym(r: GymRecord): Gym {
   return {
     id: r.id,
+    slug: generateSlug(r.name ?? "", r.addressSuburb ?? ""),
     ownerId: r.ownerId ?? "",
     isActive: r.isActive ?? true,
     isTest: r.isTest ?? false,
@@ -171,6 +177,11 @@ export const ownerStore = {
     return data ? toGym(data) : undefined;
   },
 
+  async getBySlug(slug: string): Promise<Gym | undefined> {
+    const all = await this.getAll();
+    return all.find((g) => g.slug === slug);
+  },
+
   async getByOwner(ownerId: string): Promise<Gym[]> {
     if (!isAmplifyConfigured())
       return seedGyms.filter((g) => g.ownerId === ownerId);
@@ -212,7 +223,7 @@ export const ownerStore = {
     if (errors?.length) console.error("[ownerStore.updateBilling] errors:", JSON.stringify(errors));
   },
 
-  async create(gym: Omit<Gym, "id">): Promise<Gym> {
+  async create(gym: Omit<Gym, "id" | "slug">): Promise<Gym> {
     if (!isAmplifyConfigured()) throw new Error("Backend not configured");
     const { data } = await dataClient.models.Gym.create({
       ownerId: gym.ownerId,

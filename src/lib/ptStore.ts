@@ -3,9 +3,14 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { PersonalTrainer } from "@/types";
 import { postcodeToState } from "./utils";
+import { generateSlug } from "./slugify";
 
 const require = createRequire(import.meta.url);
-const seedPTs: PersonalTrainer[] = require("../../data/pts.json");
+const seedPTsRaw: Omit<PersonalTrainer, "slug">[] = require("../../data/pts.json");
+const seedPTs: PersonalTrainer[] = seedPTsRaw.map((p) => ({
+  ...p,
+  slug: generateSlug(p.name, p.address.suburb),
+}));
 
 // ---------------------------------------------------------------------------
 // Shape converters between the flat DynamoDB record and the nested PT type
@@ -29,6 +34,7 @@ function resolveQualifications(r: PTRecord) {
 function toPT(r: PTRecord): PersonalTrainer {
   return {
     id: r.id,
+    slug: generateSlug(r.name ?? "", r.addressSuburb ?? ""),
     ownerId: r.ownerId ?? "",
     isActive: r.isActive ?? true,
     isTest: r.isTest ?? false,
@@ -195,6 +201,11 @@ export const ptStore = {
     }
   },
 
+  async getBySlug(slug: string): Promise<PersonalTrainer | undefined> {
+    const all = await this.getAll();
+    return all.find((p) => p.slug === slug);
+  },
+
   async getByOwner(ownerId: string): Promise<PersonalTrainer[]> {
     if (!isModelAvailable()) return seedPTs.filter((p) => p.ownerId === ownerId);
     try {
@@ -234,7 +245,7 @@ export const ptStore = {
     invalidateCache();
   },
 
-  async create(pt: Omit<PersonalTrainer, "id">): Promise<PersonalTrainer> {
+  async create(pt: Omit<PersonalTrainer, "id" | "slug">): Promise<PersonalTrainer> {
     if (!isModelAvailable()) throw new Error("PersonalTrainer model not available");
     const { data } = await dataClient.models.PersonalTrainer.create({
       ownerId: pt.ownerId,

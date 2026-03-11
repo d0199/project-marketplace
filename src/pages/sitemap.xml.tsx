@@ -44,11 +44,11 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     ),
     // Individual gym pages
     ...activeGyms.map((g) =>
-      entry(`${BASE}/gym/${g.id}`, "0.7", "weekly", today)
+      entry(`${BASE}/gym/${g.slug}`, "0.7", "weekly", today)
     ),
     // Individual PT pages
     ...activePTs.map((p) =>
-      entry(`${BASE}/pt/${p.id}`, "0.7", "weekly", today)
+      entry(`${BASE}/pt/${p.slug}`, "0.7", "weekly", today)
     ),
     `</urlset>`,
   ];

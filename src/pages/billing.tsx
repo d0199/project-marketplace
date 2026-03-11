@@ -200,7 +200,7 @@ function GymRow({
           )}
           {!bulkMode && (
           <Link
-            href={`/gym/${gym.id}`}
+            href={`/gym/${gym.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"
@@ -481,7 +481,7 @@ function PTRow({
             Edit listing →
           </Link>
           <Link
-            href={`/pt/${pt.id}`}
+            href={`/pt/${pt.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"

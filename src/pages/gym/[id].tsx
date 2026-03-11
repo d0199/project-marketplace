@@ -16,6 +16,7 @@ import FeedbackModal from "@/components/FeedbackModal";
 import ClaimModal from "@/components/ClaimModal";
 import ShareButton from "@/components/ShareButton";
 import { trackEvent } from "@/lib/gtag";
+import { BASE_URL } from "@/lib/siteUrl";
 
 const DAYS = [
   "monday",
@@ -29,6 +30,7 @@ const DAYS = [
 
 interface PTSummary {
   id: string;
+  slug?: string;
   name: string;
   specialties: string[];
   images: string[];
@@ -70,8 +72,19 @@ function parseHoursRange(dayName: string, value: string) {
   };
 }
 
+function buildBreadcrumbJsonLd(gym: Gym) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+      { "@type": "ListItem", position: 2, name: gym.name, item: `${BASE_URL}/gym/${gym.slug}` },
+    ],
+  };
+}
+
 function buildJsonLd(gym: Gym) {
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/gym/${gym.id}`;
+  const url = `${BASE_URL}/gym/${gym.slug}`;
 
   const openingHours = Object.entries(gym.hours)
     .filter(([, v]) => v && v.toLowerCase() !== "closed")
@@ -227,12 +240,25 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
     <>
       <Head>
         <title>{gym.name} — mynextgym.com.au</title>
-        <meta name="description" content={gym.description} />
+        <meta name="description" content={`${gym.name} in ${gym.address.suburb} — view memberships, facilities, opening hours and reviews. Find your next gym on MyNextGym.`} />
         {gym.isTest && <meta name="robots" content="noindex, nofollow" />}
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/gym/${gym.id}`} />
+        <meta property="og:title" content={`${gym.name} — mynextgym.com.au`} />
+        <meta property="og:description" content={gym.description || `${gym.name} in ${gym.address.suburb}, ${gym.address.state}`} />
+        <meta property="og:type" content="business.business" />
+        <meta property="og:url" content={`${BASE_URL}/gym/${gym.slug}`} />
+        {gym.images.length > 0 && <meta property="og:image" content={gym.images[0]} />}
+        <meta name="twitter:card" content={gym.images.length > 0 ? "summary_large_image" : "summary"} />
+        <meta name="twitter:title" content={`${gym.name} — mynextgym.com.au`} />
+        <meta name="twitter:description" content={gym.description || `${gym.name} in ${gym.address.suburb}, ${gym.address.state}`} />
+        {gym.images.length > 0 && <meta name="twitter:image" content={gym.images[0]} />}
+        <link rel="canonical" href={`${BASE_URL}/gym/${gym.slug}`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(gym)) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(gym)) }}
         />
       </Head>
       <Layout>
@@ -427,7 +453,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                   {personalTrainers.map((trainer) => (
                     <Link
                       key={trainer.id}
-                      href={`/pt/${trainer.id}`}
+                      href={`/pt/${trainer.slug}`}
                       className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition-colors group"
                     >
                       {trainer.images.length > 0 ? (
@@ -690,15 +716,29 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   params,
 }) => {
-  const gym = await ownerStore.getById(params?.id as string);
+  const param = params?.id as string;
+
+  // Try direct ID lookup first (handles old /gym/gym-044 URLs)
+  let gym = await ownerStore.getById(param);
+  if (gym && gym.isActive !== false && param !== gym.slug) {
+    // 301 redirect from old ID URL to new slug URL
+    return { redirect: { destination: `/gym/${gym.slug}`, permanent: true } };
+  }
+
+  // If not found by ID, try slug lookup
+  if (!gym) {
+    gym = await ownerStore.getBySlug(param);
+  }
+
   if (!gym || gym.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
   // Fetch personal trainers affiliated with this gym
-  const allPTs = await ptStore.getByGymId(params?.id as string);
+  const allPTs = await ptStore.getByGymId(gym.id);
   const personalTrainers: PTSummary[] = allPTs
     .filter((pt) => pt.isActive !== false)
     .map((pt) => ({
       id: pt.id,
+      slug: pt.slug,
       name: pt.name,
       specialties: pt.specialties,
       images: pt.images,

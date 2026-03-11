@@ -15,9 +15,11 @@ import ShareButton from "@/components/ShareButton";
 import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
+import { BASE_URL } from "@/lib/siteUrl";
 
 interface AffiliatedGym {
   id: string;
+  slug?: string;
   name: string;
   suburb: string;
   state: string;
@@ -29,8 +31,8 @@ interface Props {
   flags: FeatureFlags;
 }
 
-function buildJsonLd(pt: PersonalTrainer) {
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/pt/${pt.id}`;
+function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
+  const url = `${BASE_URL}/pt/${pt.slug}`;
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -51,6 +53,11 @@ function buildJsonLd(pt: PersonalTrainer) {
       "@type": "GeoCoordinates",
       latitude: pt.lat,
       longitude: pt.lng,
+    },
+    areaServed: {
+      "@type": "City",
+      name: pt.address.suburb,
+      containedInPlace: { "@type": "State", name: pt.address.state },
     },
   };
 
@@ -74,8 +81,27 @@ function buildJsonLd(pt: PersonalTrainer) {
       ...(pt.sessionDuration && { description: `${pt.sessionDuration} minute session` }),
     };
   }
+  if (affiliatedGyms.length > 0) {
+    jsonLd.worksFor = affiliatedGyms.map((g) => ({
+      "@type": "SportsActivityLocation",
+      name: g.name,
+      url: `${BASE_URL}/gym/${g.id}`,
+      address: { "@type": "PostalAddress", addressLocality: g.suburb, addressRegion: g.state },
+    }));
+  }
 
   return jsonLd;
+}
+
+function buildBreadcrumbJsonLd(pt: PersonalTrainer) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+      { "@type": "ListItem", position: 2, name: pt.name, item: `${BASE_URL}/pt/${pt.slug}` },
+    ],
+  };
 }
 
 function track(ptId: string, event: string) {
@@ -170,7 +196,7 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   const isUnclaimed = pt.ownerId === "unclaimed" || pt.ownerId === "owner-3";
   const effectivePaid = pt.isPaid || pt.isFeatured;
   const customFields: CustomLeadField[] = pt.customLeadFields ?? [];
-  const metaDesc = pt.description || `${pt.name} — Personal Trainer in ${pt.address.suburb}, ${pt.address.state}`;
+  const metaDesc = `${pt.name} — personal trainer in ${pt.address.suburb}. View specialties, rates and availability on MyNextGym.`;
 
   return (
     <>
@@ -178,10 +204,23 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
         <title>{`${pt.name} — Personal Trainer | mynextgym.com.au`}</title>
         <meta name="description" content={metaDesc} />
         {pt.isTest && <meta name="robots" content="noindex, nofollow" />}
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/pt/${pt.id}`} />
+        <meta property="og:title" content={`${pt.name} — Personal Trainer | mynextgym.com.au`} />
+        <meta property="og:description" content={metaDesc} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={`${BASE_URL}/pt/${pt.slug}`} />
+        {pt.images.length > 0 && <meta property="og:image" content={pt.images[0]} />}
+        <meta name="twitter:card" content={pt.images.length > 0 ? "summary_large_image" : "summary"} />
+        <meta name="twitter:title" content={`${pt.name} — Personal Trainer | mynextgym.com.au`} />
+        <meta name="twitter:description" content={metaDesc} />
+        {pt.images.length > 0 && <meta name="twitter:image" content={pt.images[0]} />}
+        <link rel="canonical" href={`${BASE_URL}/pt/${pt.slug}`} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(pt)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(pt, affiliatedGyms)) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(pt)) }}
         />
       </Head>
       <Layout>
@@ -375,7 +414,7 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
                   {affiliatedGyms.map((gym) => (
                     <Link
                       key={gym.id}
-                      href={`/gym/${gym.id}`}
+                      href={`/gym/${gym.slug}`}
                       className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition-colors group"
                     >
                       <div>
@@ -734,10 +773,24 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
-  const [pt, flags] = await Promise.all([
-    ptStore.getById(params?.id as string),
+  const param = params?.id as string;
+
+  // Try direct ID lookup first (handles old /pt/pt-001 URLs)
+  // eslint-disable-next-line prefer-const
+  let [pt, flags] = await Promise.all([
+    ptStore.getById(param),
     featureFlagStore.get(),
   ]);
+  if (pt && pt.isActive !== false && param !== pt.slug) {
+    // 301 redirect from old ID URL to new slug URL
+    return { redirect: { destination: `/pt/${pt.slug}`, permanent: true } };
+  }
+
+  // If not found by ID, try slug lookup
+  if (!pt) {
+    pt = await ptStore.getBySlug(param);
+  }
+
   if (!pt || pt.isActive === false) return { redirect: { destination: "/", permanent: false } };
 
   // Resolve affiliated gym names
@@ -747,6 +800,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     if (gym && gym.isActive !== false) {
       affiliatedGyms.push({
         id: gym.id,
+        slug: gym.slug,
         name: gym.name,
         suburb: gym.address.suburb,
         state: gym.address.state,

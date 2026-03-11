@@ -6,6 +6,7 @@ import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
 
 export interface PTWithDistance {
   id: string;
+  slug: string;
   ownerId: string;
   name: string;
   description: string;
@@ -102,7 +103,7 @@ export default function PTCard({ pt }: Props) {
         )}
 
         <Link
-          href={`/pt/${pt.id}`}
+          href={`/pt/${pt.slug}`}
           className="block text-center bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
           View Trainer

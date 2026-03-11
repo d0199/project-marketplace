@@ -152,7 +152,7 @@ export default function EditPTPage() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Edit PT Profile</h1>
             <Link
-              href={`/pt/${pt.id}`}
+              href={`/pt/${pt.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"

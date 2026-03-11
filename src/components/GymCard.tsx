@@ -106,7 +106,7 @@ export default function GymCard({ gym, unclaimed = false }: Props) {
         )}
 
         <Link
-          href={`/gym/${gym.id}`}
+          href={`/gym/${gym.slug}`}
           onClick={() => trackEvent("select_content", { content_type: "gym", item_id: gym.id, content_id: gym.name })}
           className="block text-center bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
