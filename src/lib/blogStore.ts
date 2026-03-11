@@ -42,9 +42,9 @@ function toPost(r: BlogRecord): BlogPost {
   };
 }
 
-/** Sanitize HTML content for safe DynamoDB/AppSync storage — collapse newlines that break GraphQL responses */
-function sanitizeContent(html: string): string {
-  return html.replace(/\n/g, "").replace(/\r/g, "");
+/** Strip newlines from strings for safe DynamoDB/AppSync storage — newlines in GraphQL string fields break response parsing */
+function sanitize(val: string): string {
+  return val.replace(/[\n\r]/g, "");
 }
 
 export const blogStore = {
@@ -75,30 +75,27 @@ export const blogStore = {
 
   async getBySlug(slug: string): Promise<BlogPost | null> {
     if (!isAmplifyConfigured()) return null;
-    // Use list with filter — slug GSI method name varies by Amplify codegen
-    const { data } = await dataClient.models.BlogPost.list({
-      filter: { slug: { eq: slug } },
-      limit: 1,
-    });
-    const first = (data ?? [])[0];
-    return first ? toPost(first as unknown as BlogRecord) : null;
+    // Scan all posts and match slug client-side — DynamoDB filter with limit:1
+    // can miss results because limit applies before filter
+    const all = await this.getAll();
+    return all.find((p) => p.slug === slug) ?? null;
   },
 
   async create(post: Omit<BlogPost, "id" | "createdAt" | "updatedAt">): Promise<BlogPost> {
     const { data } = await dataClient.models.BlogPost.create({
       slug: post.slug,
-      title: post.title,
-      excerpt: post.excerpt || null,
-      content: sanitizeContent(post.content),
+      title: sanitize(post.title),
+      excerpt: post.excerpt ? sanitize(post.excerpt) : null,
+      content: sanitize(post.content),
       coverImage: post.coverImage || null,
-      coverImageAlt: post.coverImageAlt || null,
+      coverImageAlt: post.coverImageAlt ? sanitize(post.coverImageAlt) : null,
       authorName: post.authorName || null,
       authorEmail: post.authorEmail || null,
       tags: post.tags.length > 0 ? post.tags : null,
       status: post.status,
       publishedAt: post.publishedAt || null,
-      seoTitle: post.seoTitle || null,
-      seoDescription: post.seoDescription || null,
+      seoTitle: post.seoTitle ? sanitize(post.seoTitle) : null,
+      seoDescription: post.seoDescription ? sanitize(post.seoDescription) : null,
     });
     return toPost(data as unknown as BlogRecord);
   },
@@ -107,18 +104,18 @@ export const blogStore = {
     const { data } = await dataClient.models.BlogPost.update({
       id: post.id,
       slug: post.slug,
-      title: post.title,
-      excerpt: post.excerpt || null,
-      content: sanitizeContent(post.content),
+      title: sanitize(post.title),
+      excerpt: post.excerpt ? sanitize(post.excerpt) : null,
+      content: sanitize(post.content),
       coverImage: post.coverImage || null,
-      coverImageAlt: post.coverImageAlt || null,
+      coverImageAlt: post.coverImageAlt ? sanitize(post.coverImageAlt) : null,
       authorName: post.authorName || null,
       authorEmail: post.authorEmail || null,
       tags: post.tags.length > 0 ? post.tags : null,
       status: post.status,
       publishedAt: post.publishedAt || null,
-      seoTitle: post.seoTitle || null,
-      seoDescription: post.seoDescription || null,
+      seoTitle: post.seoTitle ? sanitize(post.seoTitle) : null,
+      seoDescription: post.seoDescription ? sanitize(post.seoDescription) : null,
     });
     return toPost(data as unknown as BlogRecord);
   },
