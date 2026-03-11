@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "DELETE") {
     const pt = await ptStore.getById(ptId);
     await ptStore.delete(ptId);
+    if (pt) { try { await res.revalidate(`/pt/${pt.suburbSlug}/${pt.slug}`); } catch { /* ignore */ } }
     logAdminAction({ adminEmail, action: "pt.delete", entityType: "pt", entityId: ptId, entityName: pt?.name ?? ptId });
     return res.json({ ok: true });
   }

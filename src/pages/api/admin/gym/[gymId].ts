@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "DELETE") {
     const gym = await ownerStore.getById(gymId);
     await ownerStore.delete(gymId);
+    if (gym) { try { await res.revalidate(`/gym/${gym.suburbSlug}/${gym.slug}`); } catch { /* ignore */ } }
     logAdminAction({ adminEmail, action: "gym.delete", entityType: "gym", entityId: gymId, entityName: gym?.name ?? gymId });
     return res.status(200).json({ ok: true });
   }
