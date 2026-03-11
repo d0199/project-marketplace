@@ -1,6 +1,9 @@
 import type { AppProps } from "next/app";
+import Script from "next/script";
 import { Amplify } from "aws-amplify";
 import "@/styles/globals.css";
+
+const GA_MEASUREMENT_ID = "G-PE18WDRRB4";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const outputs = require("../../amplify_outputs.json");
 
@@ -13,5 +16,21 @@ if (typeof apiKey === "string" && !apiKey.startsWith("PLACEHOLDER")) {
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+  return (
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        strategy="afterInteractive"
+      />
+      <Script id="ga4-init" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_MEASUREMENT_ID}');
+        `}
+      </Script>
+      <Component {...pageProps} />
+    </>
+  );
 }
