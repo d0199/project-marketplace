@@ -2,7 +2,6 @@ import type { GetServerSideProps } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { blogStore } from "@/lib/blogStore";
-import { POSTCODE_META } from "@/lib/utils";
 import { BASE_URL as BASE } from "@/lib/siteUrl";
 import { gymUrl, ptUrl } from "@/lib/slugify";
 
@@ -23,8 +22,9 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const activeGyms = gyms.filter((g) => g.isActive !== false && !g.isTest);
   const activePTs = pts.filter((p) => p.isActive !== false && !p.isTest);
 
-  const suburbSlugs = Object.values(POSTCODE_META).map(({ slug }) => slug);
-
+  // Derive suburb slugs from actual gym/PT data so every suburb with a listing is covered
+  const gymSuburbs = new Set(activeGyms.map((g) => g.suburbSlug));
+  const ptSuburbs = new Set(activePTs.map((p) => p.suburbSlug));
   const lines = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
@@ -35,12 +35,12 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     ...blogPosts.map((p) =>
       entry(`${BASE}/blog/${p.slug}`, "0.7", "monthly", p.updatedAt?.slice(0, 10) ?? today)
     ),
-    // Gym suburb pages
-    ...suburbSlugs.map((slug) =>
+    // Gym suburb pages (only suburbs that have at least one active gym)
+    ...[...gymSuburbs].map((slug) =>
       entry(`${BASE}/gyms/${slug}`, "0.8", "weekly", today)
     ),
-    // Trainer suburb pages
-    ...suburbSlugs.map((slug) =>
+    // Trainer suburb pages (only suburbs that have at least one active PT)
+    ...[...ptSuburbs].map((slug) =>
       entry(`${BASE}/trainers/${slug}`, "0.8", "weekly", today)
     ),
     // Individual gym pages
