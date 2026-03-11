@@ -17,6 +17,7 @@ import ClaimModal from "@/components/ClaimModal";
 import ShareButton from "@/components/ShareButton";
 import { trackEvent } from "@/lib/gtag";
 import { BASE_URL } from "@/lib/siteUrl";
+import { POSTCODE_META } from "@/lib/utils";
 
 const DAYS = [
   "monday",
@@ -41,6 +42,7 @@ interface PTSummary {
 interface Props {
   gym: Gym;
   personalTrainers: PTSummary[];
+  suburbSlug?: string;
 }
 
 const SCHEMA_DAY_MAP: Record<string, string> = {
@@ -72,15 +74,18 @@ function parseHoursRange(dayName: string, value: string) {
   };
 }
 
-function buildBreadcrumbJsonLd(gym: Gym) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
-      { "@type": "ListItem", position: 2, name: gym.name, item: `${BASE_URL}/gym/${gym.slug}` },
-    ],
-  };
+function buildBreadcrumbJsonLd(gym: Gym, suburbSlug?: string) {
+  const items = [
+    { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+    { "@type": "ListItem", position: 2, name: "Gyms", item: `${BASE_URL}/` },
+  ];
+  if (suburbSlug) {
+    items.push({ "@type": "ListItem", position: 3, name: `Gyms in ${gym.address.suburb}`, item: `${BASE_URL}/gyms/${suburbSlug}` });
+    items.push({ "@type": "ListItem", position: 4, name: gym.name, item: `${BASE_URL}/gym/${gym.slug ?? gym.id}` });
+  } else {
+    items.push({ "@type": "ListItem", position: 3, name: gym.name, item: `${BASE_URL}/gym/${gym.slug ?? gym.id}` });
+  }
+  return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items };
 }
 
 function buildJsonLd(gym: Gym) {
@@ -156,7 +161,7 @@ interface ContactForm {
   message: string;
 }
 
-export default function GymProfilePage({ gym, personalTrainers }: Props) {
+export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Props) {
   const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -258,17 +263,26 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(gym)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(gym, suburbSlug)) }}
         />
       </Head>
       <Layout>
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-4 flex items-center justify-between">
+        <nav className="text-sm text-gray-500 mb-4 flex items-center justify-between" aria-label="Breadcrumb">
           <div>
-            <Link href="/" className="hover:text-brand-orange">
-              Home
-            </Link>
+            <Link href="/" className="hover:text-brand-orange">Home</Link>
             {" / "}
+            {suburbSlug ? (
+              <>
+                <Link href={`/gyms/${suburbSlug}`} className="hover:text-brand-orange">Gyms in {gym.address.suburb}</Link>
+                {" / "}
+              </>
+            ) : (
+              <>
+                <span>Gyms</span>
+                {" / "}
+              </>
+            )}
             <span className="text-gray-800 font-medium">{gym.name}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -746,5 +760,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       sessionDuration: pt.sessionDuration,
     }));
 
-  return { props: { gym, personalTrainers } };
+  // Resolve suburb slug for breadcrumb
+  const meta = POSTCODE_META[gym.address.postcode];
+  const suburbSlug = meta?.slug;
+
+  return { props: { gym, personalTrainers, suburbSlug } };
 };

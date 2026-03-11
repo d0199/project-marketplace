@@ -17,6 +17,7 @@ import {
 } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
 import { filterGyms } from "@/lib/utils";
+import { BASE_URL } from "@/lib/siteUrl";
 
 type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
 
@@ -144,11 +145,23 @@ export default function SuburbPage({ postcode, suburbName, slug, gymCount }: Pro
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/gyms/${slug}`} />
+        <link rel="canonical" href={`${BASE_URL}/gyms/${slug}`} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+              { "@type": "ListItem", position: 2, name: "Gyms", item: `${BASE_URL}/` },
+              { "@type": "ListItem", position: 3, name: `Gyms in ${suburbName}`, item: `${BASE_URL}/gyms/${slug}` },
+            ],
+          }) }}
+        />
       </Head>
       <Layout>
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-5">
+        <nav className="text-sm text-gray-500 mb-5" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-brand-orange">Home</Link>
           {" / "}
           <span className="text-gray-800">Gyms in {suburbName}</span>

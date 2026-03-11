@@ -16,6 +16,7 @@ import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
 import { BASE_URL } from "@/lib/siteUrl";
+import { POSTCODE_META } from "@/lib/utils";
 
 interface AffiliatedGym {
   id: string;
@@ -29,6 +30,7 @@ interface Props {
   pt: PersonalTrainer;
   affiliatedGyms: AffiliatedGym[];
   flags: FeatureFlags;
+  suburbSlug?: string;
 }
 
 function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
@@ -93,15 +95,18 @@ function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
   return jsonLd;
 }
 
-function buildBreadcrumbJsonLd(pt: PersonalTrainer) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
-      { "@type": "ListItem", position: 2, name: pt.name, item: `${BASE_URL}/pt/${pt.slug}` },
-    ],
-  };
+function buildBreadcrumbJsonLd(pt: PersonalTrainer, suburbSlug?: string) {
+  const items = [
+    { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+    { "@type": "ListItem", position: 2, name: "Personal Trainers", item: `${BASE_URL}/` },
+  ];
+  if (suburbSlug) {
+    items.push({ "@type": "ListItem", position: 3, name: `Trainers in ${pt.address.suburb}`, item: `${BASE_URL}/trainers/${suburbSlug}` });
+    items.push({ "@type": "ListItem", position: 4, name: pt.name, item: `${BASE_URL}/pt/${pt.slug ?? pt.id}` });
+  } else {
+    items.push({ "@type": "ListItem", position: 3, name: pt.name, item: `${BASE_URL}/pt/${pt.slug ?? pt.id}` });
+  }
+  return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items };
 }
 
 function track(ptId: string, event: string) {
@@ -112,7 +117,7 @@ function track(ptId: string, event: string) {
   }).catch(() => {});
 }
 
-export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
+export default function PTProfilePage({ pt, affiliatedGyms, suburbSlug }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -220,15 +225,26 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(pt)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd(pt, suburbSlug)) }}
         />
       </Head>
       <Layout>
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-4 flex items-center justify-between">
+        <nav className="text-sm text-gray-500 mb-4 flex items-center justify-between" aria-label="Breadcrumb">
           <div>
             <Link href="/" className="hover:text-brand-orange">Home</Link>
             {" / "}
+            {suburbSlug ? (
+              <>
+                <Link href={`/trainers/${suburbSlug}`} className="hover:text-brand-orange">Trainers in {pt.address.suburb}</Link>
+                {" / "}
+              </>
+            ) : (
+              <>
+                <span>Personal Trainers</span>
+                {" / "}
+              </>
+            )}
             <span className="text-gray-800 font-medium">{pt.name}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -808,5 +824,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     }
   }
 
-  return { props: { pt, affiliatedGyms, flags } };
+  // Resolve suburb slug for breadcrumb
+  const meta = POSTCODE_META[pt.address.postcode];
+  const suburbSlug = meta?.slug;
+
+  return { props: { pt, affiliatedGyms, flags, suburbSlug } };
 };

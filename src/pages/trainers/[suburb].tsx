@@ -13,6 +13,7 @@ import {
   haversineKm,
 } from "@/lib/utils";
 import { ptStore } from "@/lib/ptStore";
+import { BASE_URL } from "@/lib/siteUrl";
 
 interface Props {
   postcode: string;
@@ -149,11 +150,23 @@ export default function TrainerSuburbPage({ postcode, suburbName, slug, ptCount 
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au"}/trainers/${slug}`} />
+        <link rel="canonical" href={`${BASE_URL}/trainers/${slug}`} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+              { "@type": "ListItem", position: 2, name: "Personal Trainers", item: `${BASE_URL}/` },
+              { "@type": "ListItem", position: 3, name: `Trainers in ${suburbName}`, item: `${BASE_URL}/trainers/${slug}` },
+            ],
+          }) }}
+        />
       </Head>
       <Layout>
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-5">
+        <nav className="text-sm text-gray-500 mb-5" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-brand-orange">Home</Link>
           {" / "}
           <span className="text-gray-800">Personal trainers in {suburbName}</span>
