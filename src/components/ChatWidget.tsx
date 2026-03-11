@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/router";
 
 interface Message {
   role: "user" | "assistant";
@@ -8,21 +9,58 @@ interface Message {
 const GREETING =
   "G'day! I'm the mynextgym.com.au AI Assistant. I can help you find gyms, understand our platform, or answer questions about listing your business. What can I help with?";
 
+const STORAGE_KEY = "mng-chat";
+
+interface StoredChat {
+  sessionId: string;
+  messages: Message[];
+  isOpen: boolean;
+}
+
+function loadChat(): StoredChat | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function saveChat(data: StoredChat) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch { /* quota exceeded — ignore */ }
+}
+
 function generateSessionId() {
   return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export default function ChatWidget() {
+  const router = useRouter();
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: GREETING },
-  ]);
+
+  // Restore from sessionStorage on mount
+  const stored = useRef(loadChat());
+  const [isOpen, setIsOpen] = useState(stored.current?.isOpen ?? false);
+  const [messages, setMessages] = useState<Message[]>(
+    stored.current?.messages ?? [{ role: "assistant", content: GREETING }]
+  );
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const sessionIdRef = useRef(generateSessionId());
+  const sessionIdRef = useRef(stored.current?.sessionId ?? generateSessionId());
+
+  // Persist chat state to sessionStorage on every change
+  useEffect(() => {
+    saveChat({
+      sessionId: sessionIdRef.current,
+      messages,
+      isOpen,
+    });
+  }, [messages, isOpen]);
 
   // Check feature flag on mount and every 5 minutes (for schedule changes)
   useEffect(() => {
@@ -53,6 +91,19 @@ export default function ChatWidget() {
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
 
+  // Intercept clicks on internal links inside chat messages
+  const handleMessageClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const anchor = target.closest("a");
+    if (!anchor) return;
+
+    const href = anchor.getAttribute("href");
+    if (href && href.startsWith("/")) {
+      e.preventDefault();
+      router.push(href);
+    }
+  }, [router]);
+
   // Don't render anything until flag is checked, or if disabled
   if (enabled !== true) return null;
 
@@ -67,7 +118,6 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     try {
-      // Send only role/content pairs to the API (exclude greeting if it's the only assistant msg)
       const apiMessages = updated.map((m) => ({
         role: m.role,
         content: m.content,
@@ -155,7 +205,7 @@ export default function ChatWidget() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-gray-50" onClick={handleMessageClick}>
         {messages.map((msg, i) => (
           <div
             key={i}
