@@ -178,7 +178,8 @@ export default function BlogPostPage({ post }: Props) {
               prose-a:text-brand-orange prose-a:font-medium hover:prose-a:underline
               prose-li:text-gray-700 prose-ul:my-4 prose-ol:my-4
               prose-strong:text-gray-900
-              prose-img:rounded-xl"
+              prose-img:rounded-xl
+              [&_p:empty]:min-h-[1em] [&_br]:block [&_br]:mt-1"
             dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
           />
 

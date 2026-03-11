@@ -27,7 +27,7 @@ function toPost(r: BlogRecord): BlogPost {
     slug: String(r.slug ?? ""),
     title: String(r.title ?? ""),
     excerpt: String(r.excerpt ?? ""),
-    content: String(r.content ?? ""),
+    content: decodeContent(String(r.content ?? "")),
     coverImage: String(r.coverImage ?? ""),
     coverImageAlt: String(r.coverImageAlt ?? ""),
     authorName: String(r.authorName ?? ""),
@@ -42,9 +42,25 @@ function toPost(r: BlogRecord): BlogPost {
   };
 }
 
-/** Sanitize strings for safe DynamoDB/AppSync storage — newlines in GraphQL string fields break response parsing */
+/** Sanitize single-line strings for safe DynamoDB/AppSync storage — newlines break GraphQL response parsing */
 function sanitize(val: string): string {
-  return val.replace(/[\n\r]/g, "");
+  return val.replace(/[\n\r]/g, " ").replace(/\s{2,}/g, " ").trim();
+}
+
+/** Encode multi-line content (blog body) for safe AppSync storage — uses base64 to preserve all formatting */
+function encodeContent(val: string): string {
+  return Buffer.from(val, "utf-8").toString("base64");
+}
+
+/** Decode stored blog content back to HTML */
+function decodeContent(val: string): string {
+  // If it looks like HTML (legacy unencoded content), return as-is
+  if (/^\s*<[a-z]/i.test(val) || val.includes("</")) return val;
+  try {
+    return Buffer.from(val, "base64").toString("utf-8");
+  } catch {
+    return val; // fallback for plain text
+  }
 }
 
 export const blogStore = {
@@ -86,7 +102,7 @@ export const blogStore = {
       slug: post.slug,
       title: sanitize(post.title),
       excerpt: post.excerpt ? sanitize(post.excerpt) : null,
-      content: sanitize(post.content),
+      content: encodeContent(post.content),
       coverImage: post.coverImage || null,
       coverImageAlt: post.coverImageAlt ? sanitize(post.coverImageAlt) : null,
       authorName: post.authorName || null,
@@ -106,7 +122,7 @@ export const blogStore = {
       slug: post.slug,
       title: sanitize(post.title),
       excerpt: post.excerpt ? sanitize(post.excerpt) : null,
-      content: sanitize(post.content),
+      content: encodeContent(post.content),
       coverImage: post.coverImage || null,
       coverImageAlt: post.coverImageAlt ? sanitize(post.coverImageAlt) : null,
       authorName: post.authorName || null,
