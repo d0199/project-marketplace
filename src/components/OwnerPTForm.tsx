@@ -34,7 +34,7 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
   const isAdminEmail = ownerEmail?.endsWith("@mynextgym.com.au") || isAdmin;
 
   async function generateDescription() {
-    if (!isAdminEmail && aiCallsRef.current >= 3) {
+    if (!isAdminEmail && aiCallsRef.current >= 5) {
       setAiError("You've reached the AI generation limit. Please edit the description manually or try again later.");
       return;
     }

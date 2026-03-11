@@ -88,8 +88,8 @@ export default function BlogEditor({ content, onChange }: Props) {
 
   function insertCta(type: "search-gyms" | "search-pts") {
     const label = type === "search-gyms" ? "Search Gyms Near You" : "Find a Personal Trainer";
-    const href = type === "search-gyms" ? "/" : "/?tab=pts";
-    const html = `<div data-cta="${type}" data-href="${href}" data-label="${label}" class="cta-block"><p>${label}</p></div>`;
+    const href = type === "search-gyms" ? "https://www.mynextgym.com.au/" : "https://www.mynextgym.com.au/?tab=pts";
+    const html = `<div data-cta="${type}" data-href="${href}" data-label="${label}" class="cta-block"><p><a href="${href}">${label}</a></p></div>`;
     editor!.chain().focus().insertContent(html).run();
   }
 
@@ -130,6 +130,9 @@ export default function BlogEditor({ content, onChange }: Props) {
         </button>
         <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setHorizontalRule().run(); }} className={btnCls(false)}>
           —
+        </button>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setHardBreak().run(); }} className={btnCls(false)} title="Line break (Shift+Enter)">
+          ↵ Break
         </button>
         <div className="w-px h-5 bg-gray-300 mx-1" />
         <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().undo().run(); }} className={btnCls(false)} disabled={!editor.can().undo()}>

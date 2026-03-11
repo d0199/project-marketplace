@@ -21,7 +21,7 @@ const inputCls = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm foc
 const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
 type AiAction = "title" | "excerpt" | "content" | "tags" | "seo";
-const MAX_AI_CALLS = 3;
+const MAX_AI_CALLS = 5;
 
 export default function BlogTab({ adminEmail }: Props) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -135,7 +135,7 @@ export default function BlogTab({ adminEmail }: Props) {
     let context = "";
     switch (action) {
       case "title":
-        context = post.content || post.excerpt || post.title || "fitness gym blog post";
+        context = post.title + (post.excerpt ? "\n\n" + post.excerpt : "") + (post.content ? "\n\n" + post.content : "") || "fitness gym blog post";
         break;
       case "excerpt":
         context = (post.title + "\n\n" + post.content).slice(0, 3000);
