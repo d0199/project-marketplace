@@ -716,16 +716,15 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   const suburbParam = params?.suburb as string;
   const slugParam = params?.slug as string;
 
-  // Fetch gyms and PTs in parallel
-  const [allGyms, allPTs] = await Promise.all([ownerStore.getAll(), ptStore.getAll()]);
-
-  const gym = allGyms.find((g) => g.suburbSlug === suburbParam && g.slug === slugParam);
+  // Targeted lookup — filtered DynamoDB scan by postcode instead of loading all gyms
+  const gym = await ownerStore.getBySuburbAndSlug(suburbParam, slugParam);
 
   if (!gym || gym.isActive === false) return { notFound: true };
 
-  // Filter PTs affiliated with this gym
-  const personalTrainers: PTSummary[] = allPTs
-    .filter((pt) => pt.isActive !== false && pt.gymIds.includes(gym.id))
+  // Targeted lookup — filtered DynamoDB scan by gymId instead of loading all PTs
+  const affiliatedPTs = await ptStore.getByGymId(gym.id);
+  const personalTrainers: PTSummary[] = affiliatedPTs
+    .filter((pt) => pt.isActive !== false)
     .map((pt) => ({
       id: pt.id,
       slug: pt.slug,

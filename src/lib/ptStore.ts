@@ -211,6 +211,34 @@ export const ptStore = {
   },
 
   async getBySuburbAndSlug(suburbSlug: string, slug: string): Promise<PersonalTrainer | undefined> {
+    if (!isModelAvailable()) {
+      return seedPTs.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
+    }
+
+    // Extract postcode from suburbSlug (last 4 digits, e.g. "perth-cbd-6000" → "6000")
+    const postcodeMatch = suburbSlug.match(/(\d{4})$/);
+    const postcode = postcodeMatch?.[1];
+
+    if (postcode) {
+      // Narrow DynamoDB scan filtered by postcode — typically 1-5 results per suburb
+      const results: PTRecord[] = [];
+      let nextToken: string | null | undefined;
+      do {
+        const res = await dataClient.models.PersonalTrainer.list({
+          filter: { addressPostcode: { eq: postcode } },
+          limit: 100,
+          nextToken,
+        });
+        results.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+      } while (nextToken);
+
+      const pts = results.map(toPT);
+      const match = pts.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
+      if (match) return match;
+    }
+
+    // Fallback to full scan if postcode extraction failed or no match found
     const all = await this.getAll();
     return all.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
   },
@@ -248,9 +276,24 @@ export const ptStore = {
   },
 
   async getByGymId(gymId: string): Promise<PersonalTrainer[]> {
-    // No GSI on gymIds — filter client-side from cached list
-    const all = await this.getAll();
-    return all.filter((pt) => pt.gymIds.includes(gymId));
+    if (!isModelAvailable()) {
+      return seedPTs.filter((p) => p.gymIds.includes(gymId));
+    }
+
+    // DynamoDB filtered scan using `contains` on the gymIds list field
+    const results: PTRecord[] = [];
+    let nextToken: string | null | undefined;
+    do {
+      const res = await dataClient.models.PersonalTrainer.list({
+        filter: { gymIds: { contains: gymId } },
+        limit: 100,
+        nextToken,
+      });
+      results.push(...(res.data ?? []));
+      nextToken = res.nextToken;
+    } while (nextToken);
+
+    return results.map(toPT);
   },
 
   async update(pt: PersonalTrainer): Promise<void> {

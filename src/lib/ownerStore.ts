@@ -187,6 +187,34 @@ export const ownerStore = {
   },
 
   async getBySuburbAndSlug(suburbSlug: string, slug: string): Promise<Gym | undefined> {
+    if (!isAmplifyConfigured()) {
+      return seedGyms.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
+    }
+
+    // Extract postcode from suburbSlug (last 4 digits, e.g. "perth-cbd-6000" → "6000")
+    const postcodeMatch = suburbSlug.match(/(\d{4})$/);
+    const postcode = postcodeMatch?.[1];
+
+    if (postcode) {
+      // Narrow DynamoDB scan filtered by postcode — typically 1-5 results per suburb
+      const results: GymRecord[] = [];
+      let nextToken: string | null | undefined;
+      do {
+        const res = await dataClient.models.Gym.list({
+          filter: { addressPostcode: { eq: postcode } },
+          limit: 100,
+          nextToken,
+        });
+        results.push(...(res.data ?? []));
+        nextToken = res.nextToken;
+      } while (nextToken);
+
+      const gyms = results.map(toGym);
+      const match = gyms.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
+      if (match) return match;
+    }
+
+    // Fallback to full scan if postcode extraction failed or no match found
     const all = await this.getAll();
     return all.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
   },
