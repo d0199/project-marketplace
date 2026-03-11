@@ -165,7 +165,7 @@ export default function EditPTPage() {
 
           <PlanBanner pt={pt} />
 
-          <OwnerPTForm pt={pt} onSave={handleSave} onVerifyQualifications={() => setShowVerify(true)} />
+          <OwnerPTForm pt={pt} onSave={handleSave} onVerifyQualifications={() => setShowVerify(true)} ownerEmail={session?.email} />
         </div>
 
         {showVerify && pt && (

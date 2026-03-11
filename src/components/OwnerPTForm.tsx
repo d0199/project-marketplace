@@ -3,16 +3,19 @@ import Image from "next/image";
 import type { PersonalTrainer, Address } from "@/types";
 import { POSTCODE_COORDS } from "@/lib/utils";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
+import { adminFetch } from "@/lib/adminFetch";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
 interface Props {
   pt: PersonalTrainer;
+  ownerEmail?: string;
+  isAdmin?: boolean;
   onSave: (updated: PersonalTrainer) => Promise<string | undefined | void> | string | undefined | void;
   onVerifyQualifications?: () => void;
 }
 
-export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Props) {
+export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQualifications }: Props) {
   const [form, setForm] = useState<PersonalTrainer>({ ...pt });
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState(false);
@@ -22,6 +25,54 @@ export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Prop
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
   const [memberOfferSearch, setMemberOfferSearch] = useState("");
   const [availableMemberOffers, setAvailableMemberOffers] = useState<string[]>([]);
+
+  // AI description generation
+  const [aiSuggestion, setAiSuggestion] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const aiCallsRef = useRef(0);
+  const isAdminEmail = ownerEmail?.endsWith("@mynextgym.com.au") || isAdmin;
+
+  async function generateDescription() {
+    if (!isAdminEmail && aiCallsRef.current >= 3) {
+      setAiError("You've reached the AI generation limit. Please edit the description manually or try again later.");
+      return;
+    }
+    setAiLoading(true);
+    setAiError("");
+    setAiSuggestion("");
+    try {
+      const context = {
+        name: form.name,
+        suburb: form.address.suburb,
+        postcode: form.address.postcode,
+        state: form.address.state,
+        specialties: form.specialties,
+        qualifications: form.qualifications,
+        experienceYears: form.experienceYears,
+        languages: form.languages,
+        memberOffers: form.memberOffers,
+        pricePerSession: form.pricePerSession,
+        sessionDuration: form.sessionDuration,
+        availability: form.availability,
+        website: form.website,
+        description: form.description,
+        gender: form.gender,
+      };
+      const r = await adminFetch("/api/owner/description-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "pt", context }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "AI request failed");
+      setAiSuggestion(data.result);
+      if (!isAdminEmail) aiCallsRef.current += 1;
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "AI request failed");
+    }
+    setAiLoading(false);
+  }
 
   useEffect(() => {
     fetch("/api/datasets/pt-specialties")
@@ -174,8 +225,58 @@ export default function OwnerPTForm({ pt, onSave, onVerifyQualifications }: Prop
             <input className={inputCls} value={form.name} onChange={(e) => update({ name: e.target.value })} />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelCls}>Description</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <button
+                type="button"
+                onClick={generateDescription}
+                disabled={aiLoading}
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors disabled:opacity-50"
+              >
+                {aiLoading ? (
+                  <>
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                    </svg>
+                    Write with AI
+                  </>
+                )}
+              </button>
+            </div>
             <textarea className={inputCls} rows={3} value={form.description} onChange={(e) => update({ description: e.target.value })} />
+            {aiError && (
+              <p className="mt-2 text-sm text-red-600">{aiError}</p>
+            )}
+            {aiSuggestion && (
+              <div className="mt-2 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <p className="text-xs font-medium text-purple-700 mb-2">AI Suggestion</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{aiSuggestion}</p>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => { update({ description: aiSuggestion }); setAiSuggestion(""); }}
+                    className="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Apply
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAiSuggestion("")}
+                    className="px-3 py-1.5 text-xs font-medium text-purple-700 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <label className={labelCls}>Gender</label>

@@ -178,7 +178,7 @@ export default function EditGymPage() {
 
           <PlanBanner gym={gym} />
 
-          <OwnerGymForm gym={gym} onSave={handleSave} gymId={gym.id} />
+          <OwnerGymForm gym={gym} onSave={handleSave} gymId={gym.id} ownerEmail={session?.email} />
         </div>
       </Layout>
     </>
