@@ -18,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .map((p) => ({
       id: p.id,
       slug: p.slug,
+      suburbSlug: p.suburbSlug,
       ownerId: p.ownerId,
       name: p.name,
       description: p.description,

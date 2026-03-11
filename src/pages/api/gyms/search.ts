@@ -48,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const cards = results.map((g) => ({
     id: g.id,
     slug: g.slug,
+    suburbSlug: g.suburbSlug,
     ownerId: g.ownerId,
     name: g.name,
     description: g.description,

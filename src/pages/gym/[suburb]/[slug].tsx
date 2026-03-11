@@ -67,7 +67,7 @@ function parseHoursRange(dayName: string, value: string) {
 
   return {
     "@type": "OpeningHoursSpecification",
-    dayOfWeek: `https://schema.org/${dayName}`,
+    dayOfWeek: dayName,
     opens: to24(match[1]),
     closes: to24(match[2]),
   };
