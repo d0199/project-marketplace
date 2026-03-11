@@ -13,19 +13,24 @@ async function getAnthropicKey(): Promise<string> {
     return anthropicKey;
   }
 
-  // SSM fetch for Lambda runtime
+  // SSM fetch for Lambda runtime — try shared path first, then branch-specific
   try {
     const appId = process.env.AMPLIFY_APP_ID ?? "d36uz2q25gygnh";
+    const branch = process.env.AWS_BRANCH ?? "staging";
     const region = process.env.AWS_REGION ?? "ap-southeast-2";
     const client = new SSMClient({ region });
     const result = await client.send(
       new GetParametersCommand({
-        Names: [`/amplify/shared/${appId}/ANTHROPIC_API_KEY`],
+        Names: [
+          `/amplify/shared/${appId}/ANTHROPIC_API_KEY`,
+          `/amplify/${appId}/${branch}/ANTHROPIC_API_KEY`,
+        ],
         WithDecryption: true,
       })
     );
-    const val = result.Parameters?.[0]?.Value;
-    if (val) anthropicKey = val;
+    for (const param of result.Parameters ?? []) {
+      if (param.Value) { anthropicKey = param.Value; break; }
+    }
   } catch (err) {
     console.error("[blog-ai] SSM fetch failed:", err);
   }
@@ -84,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: ACTION_PROMPTS[action](context.slice(0, 4000)) }],
@@ -93,8 +98,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!response.ok) {
       const err = await response.text();
-      console.error("[blog-ai] Anthropic error:", err);
-      return res.status(502).json({ error: "AI request failed" });
+      console.error("[blog-ai] Anthropic error:", response.status, err);
+      // Surface actual error to admin for debugging
+      let detail = "AI request failed";
+      try { detail = JSON.parse(err)?.error?.message || detail; } catch { /* use default */ }
+      return res.status(502).json({ error: detail });
     }
 
     const data = await response.json();
