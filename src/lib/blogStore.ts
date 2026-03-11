@@ -11,7 +11,7 @@ export interface BlogPost {
   authorName: string;
   authorEmail: string;
   tags: string[];
-  status: "draft" | "published";
+  status: "draft" | "published" | "archived";
   publishedAt: string;
   seoTitle: string;
   seoDescription: string;
@@ -33,7 +33,7 @@ function toPost(r: BlogRecord): BlogPost {
     authorName: String(r.authorName ?? ""),
     authorEmail: String(r.authorEmail ?? ""),
     tags: ((r.tags as string[] | null) ?? []).filter(Boolean),
-    status: (r.status === "published" ? "published" : "draft") as BlogPost["status"],
+    status: (r.status === "published" ? "published" : r.status === "archived" ? "archived" : "draft") as BlogPost["status"],
     publishedAt: String(r.publishedAt ?? ""),
     seoTitle: String(r.seoTitle ?? ""),
     seoDescription: String(r.seoDescription ?? ""),

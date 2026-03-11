@@ -18,27 +18,24 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   return { props: { post } };
 };
 
-/** Simple markdown → HTML renderer for blog content */
-function renderMarkdown(md: string): string {
-  let html = md
-    // Headings
+/** Render blog content — if it already contains HTML tags (from TipTap editor), use as-is; otherwise convert legacy markdown */
+function renderContent(content: string): string {
+  // If content starts with an HTML tag, it's from TipTap — use directly
+  if (/^\s*<[a-z]/.test(content)) return content;
+
+  // Legacy markdown fallback
+  let html = content
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
     .replace(/^# (.+)$/gm, "<h2>$1</h2>")
-    // Bold / italic
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    // Links
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener noreferrer">$1</a>')
-    // Unordered lists
     .replace(/^\- (.+)$/gm, "<li>$1</li>")
-    // Ordered lists
     .replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
 
-  // Wrap consecutive <li> in <ul>
   html = html.replace(/(<li>[\s\S]*?<\/li>)(?=\s*(?!<li>))/g, "<ul>$1</ul>");
 
-  // Paragraphs: split on double newlines, wrap non-tag content
   html = html
     .split(/\n\n+/)
     .map((block) => {
@@ -175,7 +172,7 @@ export default function BlogPostPage({ post }: Props) {
               prose-li:text-gray-700 prose-ul:my-4 prose-ol:my-4
               prose-strong:text-gray-900
               prose-img:rounded-xl"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
+            dangerouslySetInnerHTML={{ __html: renderContent(post.content) }}
           />
 
           {/* Footer CTA */}
