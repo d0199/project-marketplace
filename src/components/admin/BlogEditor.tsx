@@ -3,7 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 interface Props {
   content: string;
@@ -18,6 +18,15 @@ const btnCls = (active: boolean) =>
   }`;
 
 export default function BlogEditor({ content, onChange }: Props) {
+  // Track whether the content update came from the editor itself (typing) vs external (AI)
+  const isInternalUpdate = useRef(false);
+
+  const handleUpdate = useCallback(({ editor: e }: { editor: ReturnType<typeof useEditor> }) => {
+    if (!e) return;
+    isInternalUpdate.current = true;
+    onChange(e.getHTML());
+  }, [onChange]);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -40,21 +49,26 @@ export default function BlogEditor({ content, onChange }: Props) {
         class:
           "prose prose-sm max-w-none min-h-[400px] p-4 focus:outline-none " +
           "prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed " +
-          "prose-a:text-brand-orange prose-li:text-gray-700 prose-img:rounded-xl",
+          "prose-a:text-brand-orange prose-li:text-gray-700 prose-img:rounded-xl " +
+          "prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6 " +
+          "prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic",
       },
     },
-    onUpdate: ({ editor: e }) => {
-      onChange(e.getHTML());
-    },
+    onUpdate: handleUpdate,
   });
 
-  // Sync external content changes (e.g. AI-generated content)
+  // Only sync external content changes (e.g. AI-generated content), not internal typing
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (!editor) return;
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
+    // External content change — update editor without disrupting user
+    if (content !== editor.getHTML()) {
       editor.commands.setContent(content);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content]);
+  }, [content, editor]);
 
   if (!editor) return null;
 
@@ -76,39 +90,46 @@ export default function BlogEditor({ content, onChange }: Props) {
     <div className="border border-gray-300 rounded-lg overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
-        <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={btnCls(editor.isActive("heading", { level: 2 }))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run(); }} className={btnCls(editor.isActive("heading", { level: 2 }))}>
           H2
         </button>
-        <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={btnCls(editor.isActive("heading", { level: 3 }))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run(); }} className={btnCls(editor.isActive("heading", { level: 3 }))}>
           H3
         </button>
         <div className="w-px h-5 bg-gray-300 mx-1" />
-        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={btnCls(editor.isActive("bold"))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run(); }} className={btnCls(editor.isActive("bold"))}>
           <strong>B</strong>
         </button>
-        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={btnCls(editor.isActive("italic"))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run(); }} className={btnCls(editor.isActive("italic"))}>
           <em>I</em>
         </button>
         <div className="w-px h-5 bg-gray-300 mx-1" />
-        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={btnCls(editor.isActive("bulletList"))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBulletList().run(); }} className={btnCls(editor.isActive("bulletList"))}>
           &bull; List
         </button>
-        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={btnCls(editor.isActive("orderedList"))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleOrderedList().run(); }} className={btnCls(editor.isActive("orderedList"))}>
           1. List
         </button>
         <div className="w-px h-5 bg-gray-300 mx-1" />
-        <button type="button" onClick={addLink} className={btnCls(editor.isActive("link"))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); addLink(); }} className={btnCls(editor.isActive("link"))}>
           Link
         </button>
-        <button type="button" onClick={addImage} className={btnCls(false)}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); addImage(); }} className={btnCls(false)}>
           Image
         </button>
         <div className="w-px h-5 bg-gray-300 mx-1" />
-        <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={btnCls(editor.isActive("blockquote"))}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBlockquote().run(); }} className={btnCls(editor.isActive("blockquote"))}>
           Quote
         </button>
-        <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={btnCls(false)}>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setHorizontalRule().run(); }} className={btnCls(false)}>
           —
+        </button>
+        <div className="w-px h-5 bg-gray-300 mx-1" />
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().undo().run(); }} className={btnCls(false)} disabled={!editor.can().undo()}>
+          Undo
+        </button>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().redo().run(); }} className={btnCls(false)} disabled={!editor.can().redo()}>
+          Redo
         </button>
       </div>
 
