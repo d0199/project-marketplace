@@ -250,6 +250,25 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
+  // Blog / content pages managed by admins.
+  BlogPost: a
+    .model({
+      slug: a.string().required(),
+      title: a.string().required(),
+      excerpt: a.string(),             // meta description / preview text
+      content: a.string().required(),   // markdown body
+      coverImage: a.string(),           // URL or S3 key
+      coverImageAlt: a.string(),
+      authorName: a.string(),
+      authorEmail: a.string(),
+      tags: a.string().array(),
+      status: a.string().required(),    // "draft" | "published"
+      publishedAt: a.string(),
+      seoTitle: a.string(),             // override for <title>
+      seoDescription: a.string(),       // override for meta description
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // User-submitted feedback / issue reports on listings.
   FeedbackReport: a
     .model({

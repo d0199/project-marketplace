@@ -1,6 +1,7 @@
 import type { GetServerSideProps } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
+import { blogStore } from "@/lib/blogStore";
 import { POSTCODE_META } from "@/lib/utils";
 import { BASE_URL as BASE } from "@/lib/siteUrl";
 
@@ -15,7 +16,7 @@ export default function SitemapXml() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const [gyms, pts] = await Promise.all([ownerStore.getAll(), ptStore.getAll()]);
+  const [gyms, pts, blogPosts] = await Promise.all([ownerStore.getAll(), ptStore.getAll(), blogStore.getPublished()]);
   const today = new Date().toISOString().slice(0, 10);
 
   const activeGyms = gyms.filter((g) => g.isActive !== false && !g.isTest);
@@ -28,6 +29,11 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
     entry(`${BASE}/`, "1.0", "daily", today),
     entry(`${BASE}/about`, "0.8", "monthly", today),
+    entry(`${BASE}/blog`, "0.8", "weekly", today),
+    // Blog posts
+    ...blogPosts.map((p) =>
+      entry(`${BASE}/blog/${p.slug}`, "0.7", "monthly", p.updatedAt?.slice(0, 10) ?? today)
+    ),
     // Gym suburb pages
     ...suburbSlugs.map((slug) =>
       entry(`${BASE}/gyms/${slug}`, "0.8", "weekly", today)

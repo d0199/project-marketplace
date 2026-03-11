@@ -5,6 +5,7 @@ import { getUrl } from "aws-amplify/storage";
 import type { Gym, GymEdit } from "@/types";
 import OwnerGymForm from "@/components/OwnerGymForm";
 import PTsTab from "@/components/admin/PTsTab";
+import BlogTab from "@/components/admin/BlogTab";
 import FeatureFlagsTab from "@/components/admin/FeatureFlagsTab";
 import { ALL_AMENITIES, ALL_SPECIALTIES, AMENITY_ICONS } from "@/lib/utils";
 import { adminFetch } from "@/lib/adminFetch";
@@ -92,7 +93,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "pts" | "users" | "leads" | "datasets" | "flags">("claims");
+  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "pts" | "users" | "leads" | "datasets" | "blog" | "flags">("claims");
   const [adminEmail, setAdminEmail] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
@@ -181,7 +182,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b bg-white px-6">
         <nav className="flex gap-6">
-          {(["claims", "moderation", "gyms", "pts", "users", "leads", "datasets", "flags"] as const).map((t) => (
+          {(["claims", "moderation", "gyms", "pts", "users", "leads", "datasets", "blog", "flags"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -191,7 +192,7 @@ export default function AdminPage() {
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t === "moderation" ? "Moderation" : t === "leads" ? "Leads" : t === "pts" ? "PTs" : t === "flags" ? "Feature Flags" : t}
+              {t === "moderation" ? "Moderation" : t === "leads" ? "Leads" : t === "pts" ? "PTs" : t === "flags" ? "Feature Flags" : t === "blog" ? "Blog" : t}
               {(pendingCounts[t] ?? 0) > 0 && (
                 <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0" />
               )}
@@ -209,6 +210,7 @@ export default function AdminPage() {
         {tab === "users" && <UsersTab isSuperAdmin={isSuperAdmin} />}
         {tab === "leads" && <LeadsTab onPendingCount={setLeadsPending} />}
         {tab === "datasets" && <DatasetsTab isSuperAdmin={isSuperAdmin} />}
+        {tab === "blog" && <BlogTab adminEmail={adminEmail} />}
         {tab === "flags" && <FeatureFlagsTab isSuperAdmin={isSuperAdmin} />}
       </div>
     </div>
