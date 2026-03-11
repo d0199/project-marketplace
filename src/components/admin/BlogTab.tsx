@@ -334,7 +334,7 @@ export default function BlogTab({ adminEmail }: Props) {
               <div>
                 <label className={labelCls}>Slug</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400">/blog/</span>
+                  <span className="text-sm text-gray-400">/resources/</span>
                   <input className={inputCls} value={post.slug} onChange={(e) => update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} placeholder="url-slug" />
                 </div>
               </div>
@@ -532,7 +532,7 @@ export default function BlogTab({ adminEmail }: Props) {
             {filtered.map((post) => (
               <tr key={post.id} className="border-b hover:bg-gray-50">
                 <td className="py-2.5 font-medium text-gray-900">{post.title}</td>
-                <td className="py-2.5 text-gray-500 font-mono text-xs">/blog/{post.slug}</td>
+                <td className="py-2.5 text-gray-500 font-mono text-xs">/resources/{post.slug}</td>
                 <td className="py-2.5">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                     post.status === "published" ? "bg-green-100 text-green-700"
@@ -556,7 +556,7 @@ export default function BlogTab({ adminEmail }: Props) {
                     </button>
                     {post.status === "published" && (
                       <a
-                        href={`/blog/${post.slug}`}
+                        href={`/resources/${post.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-gray-600 text-xs"

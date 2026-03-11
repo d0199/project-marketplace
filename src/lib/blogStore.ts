@@ -42,7 +42,7 @@ function toPost(r: BlogRecord): BlogPost {
   };
 }
 
-/** Strip newlines from strings for safe DynamoDB/AppSync storage — newlines in GraphQL string fields break response parsing */
+/** Sanitize strings for safe DynamoDB/AppSync storage — newlines in GraphQL string fields break response parsing */
 function sanitize(val: string): string {
   return val.replace(/[\n\r]/g, "");
 }

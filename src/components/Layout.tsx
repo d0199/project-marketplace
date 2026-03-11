@@ -19,7 +19,7 @@ export default function Layout({ children, hero }: Props) {
           <span>&middot;</span>
           <Link href="/about#faq" className="hover:text-gray-600 transition-colors">FAQ</Link>
           <span>&middot;</span>
-          <Link href="/blog" className="hover:text-gray-600 transition-colors">Blog</Link>
+          <Link href="/resources" className="hover:text-gray-600 transition-colors">Resources</Link>
           <span>&middot;</span>
           <Link href="/list" className="hover:text-gray-600 transition-colors">List your gym</Link>
         </div>

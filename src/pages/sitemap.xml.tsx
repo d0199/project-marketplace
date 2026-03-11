@@ -30,10 +30,10 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
     entry(`${BASE}/`, "1.0", "daily", today),
     entry(`${BASE}/about`, "0.8", "monthly", today),
-    entry(`${BASE}/blog`, "0.8", "weekly", today),
-    // Blog posts
+    entry(`${BASE}/resources`, "0.8", "weekly", today),
+    // Resources
     ...blogPosts.map((p) =>
-      entry(`${BASE}/blog/${p.slug}`, "0.7", "monthly", p.updatedAt?.slice(0, 10) ?? today)
+      entry(`${BASE}/resources/${p.slug}`, "0.7", "monthly", p.updatedAt?.slice(0, 10) ?? today)
     ),
     // Gym suburb pages (only suburbs that have at least one active gym)
     ...[...gymSuburbs].map((slug) =>

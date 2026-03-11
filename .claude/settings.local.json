@@ -46,7 +46,14 @@
       "Read(//c/Users/david/Desktop/Claude/$TEMP/**)",
       "Read(//c/Users/david/AppData/Local/Temp/**)",
       "WebFetch(domain:www.mngym.com.au)",
-      "WebFetch(domain:mngym.com.au)"
+      "WebFetch(domain:mngym.com.au)",
+      "Bash(aws cloudformation:*)",
+      "Bash(find /c/Users/david/Desktop/Claude -name \"*ptStore*\" -o -name \"*slug*\" 2>/dev/null | head -20)",
+      "Bash(find /c/Users/david/Desktop/Claude/src -name \"*.tsx\" -type f | while read f; do grep -n \"/gym/\\\\|/pt/\" \"$f\" 2>/dev/null | grep -E \"\\\\\\\\\\\\$\\\\{.*\\\\.id\\\\}\" && echo \"FILE: $f\"; done)",
+      "Bash(mkdir -p \"C:/Users/david/Desktop/Claude/src/pages/gym/[suburb]\" && mkdir -p \"C:/Users/david/Desktop/Claude/src/pages/pt/[suburb]\")",
+      "Bash(cd \"C:/Users/david/Desktop/Claude\" && mv src/pages/gym/\\\\[id\\\\].tsx src/pages/gym/\\\\[suburb\\\\].tsx && mv src/pages/pt/\\\\[id\\\\].tsx src/pages/pt/\\\\[suburb\\\\].tsx)",
+      "Bash(find /c/Users/david/Desktop/Claude -name \"*markdown*\" -o -name \"*prose*\" 2>/dev/null | grep -v node_modules | head -20)",
+      "Bash(cd \"C:\\\\Users\\\\david\\\\Desktop\\\\Claude\" && npm ls @tiptap/react 2>&1 | head -5)"
     ]
   }
 }
