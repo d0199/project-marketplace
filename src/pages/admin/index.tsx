@@ -9,6 +9,7 @@ import BlogTab from "@/components/admin/BlogTab";
 import FeatureFlagsTab from "@/components/admin/FeatureFlagsTab";
 import { ALL_AMENITIES, ALL_SPECIALTIES, AMENITY_ICONS } from "@/lib/utils";
 import { adminFetch } from "@/lib/adminFetch";
+import { gymUrl, ptUrl } from "@/lib/slugify";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,6 +54,7 @@ interface CognitoUser {
 const EMPTY_GYM: Gym = {
   id: "",
   slug: "",
+  suburbSlug: "",
   ownerId: "",
   isActive: true,
   name: "",
@@ -1777,7 +1779,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <a
-                      href={`/gym/${g.id}`}
+                      href={gymUrl(g)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline text-sm font-medium"

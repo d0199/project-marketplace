@@ -3,14 +3,15 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { PersonalTrainer } from "@/types";
 import { postcodeToState } from "./utils";
-import { generateSlug, deduplicateSlugs } from "./slugify";
+import { generateSlug, generateNameSlug, generateSuburbSlug, deduplicateSlugs } from "./slugify";
 
 const require = createRequire(import.meta.url);
 const seedPTsRaw: Omit<PersonalTrainer, "slug">[] = require("../../data/pts.json");
 const seedPTs: PersonalTrainer[] = deduplicateSlugs(
   seedPTsRaw.map((p) => ({
     ...p,
-    slug: generateSlug(p.name, p.address.suburb),
+    slug: generateNameSlug(p.name),
+    suburbSlug: generateSuburbSlug(p.address.suburb, p.address.postcode),
   }))
 );
 
@@ -36,7 +37,8 @@ function resolveQualifications(r: PTRecord) {
 function toPT(r: PTRecord): PersonalTrainer {
   return {
     id: r.id,
-    slug: generateSlug(r.name ?? "", r.addressSuburb ?? ""),
+    slug: generateNameSlug(r.name ?? ""),
+    suburbSlug: generateSuburbSlug(r.addressSuburb ?? "", r.addressPostcode ?? ""),
     ownerId: r.ownerId ?? "",
     isActive: r.isActive ?? true,
     isTest: r.isTest ?? false,
@@ -208,6 +210,17 @@ export const ptStore = {
     return all.find((p) => p.slug === slug);
   },
 
+  async getBySuburbAndSlug(suburbSlug: string, slug: string): Promise<PersonalTrainer | undefined> {
+    const all = await this.getAll();
+    return all.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
+  },
+
+  /** Find PT by old combined slug (for backward-compat redirects) */
+  async getByLegacySlug(legacySlug: string): Promise<PersonalTrainer | undefined> {
+    const all = await this.getAll();
+    return all.find((p) => generateSlug(p.name, p.address.suburb) === legacySlug);
+  },
+
   async getByOwner(ownerId: string): Promise<PersonalTrainer[]> {
     if (!isModelAvailable()) return seedPTs.filter((p) => p.ownerId === ownerId);
     try {
@@ -247,7 +260,7 @@ export const ptStore = {
     invalidateCache();
   },
 
-  async create(pt: Omit<PersonalTrainer, "id" | "slug">): Promise<PersonalTrainer> {
+  async create(pt: Omit<PersonalTrainer, "id" | "slug" | "suburbSlug">): Promise<PersonalTrainer> {
     if (!isModelAvailable()) throw new Error("PersonalTrainer model not available");
     const { data } = await dataClient.models.PersonalTrainer.create({
       ownerId: pt.ownerId,

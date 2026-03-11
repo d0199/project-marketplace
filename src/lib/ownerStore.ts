@@ -3,14 +3,15 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { Gym } from "@/types";
 import { postcodeToState } from "./utils";
-import { generateSlug, deduplicateSlugs } from "./slugify";
+import { generateSlug, generateNameSlug, generateSuburbSlug, deduplicateSlugs } from "./slugify";
 
 const require = createRequire(import.meta.url);
 const seedGymsRaw: Omit<Gym, "slug">[] = require("../../data/gyms.json");
 const seedGyms: Gym[] = deduplicateSlugs(
   seedGymsRaw.map((g) => ({
     ...g,
-    slug: generateSlug(g.name, g.address.suburb),
+    slug: generateNameSlug(g.name),
+    suburbSlug: generateSuburbSlug(g.address.suburb, g.address.postcode),
   }))
 );
 
@@ -22,7 +23,8 @@ type GymRecord = Schema["Gym"]["type"];
 function toGym(r: GymRecord): Gym {
   return {
     id: r.id,
-    slug: generateSlug(r.name ?? "", r.addressSuburb ?? ""),
+    slug: generateNameSlug(r.name ?? ""),
+    suburbSlug: generateSuburbSlug(r.addressSuburb ?? "", r.addressPostcode ?? ""),
     ownerId: r.ownerId ?? "",
     isActive: r.isActive ?? true,
     isTest: r.isTest ?? false,
@@ -184,6 +186,17 @@ export const ownerStore = {
     return all.find((g) => g.slug === slug);
   },
 
+  async getBySuburbAndSlug(suburbSlug: string, slug: string): Promise<Gym | undefined> {
+    const all = await this.getAll();
+    return all.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
+  },
+
+  /** Find gym by old combined slug (for backward-compat redirects) */
+  async getByLegacySlug(legacySlug: string): Promise<Gym | undefined> {
+    const all = await this.getAll();
+    return all.find((g) => generateSlug(g.name, g.address.suburb) === legacySlug);
+  },
+
   async getByOwner(ownerId: string): Promise<Gym[]> {
     if (!isAmplifyConfigured())
       return seedGyms.filter((g) => g.ownerId === ownerId);
@@ -225,7 +238,7 @@ export const ownerStore = {
     if (errors?.length) console.error("[ownerStore.updateBilling] errors:", JSON.stringify(errors));
   },
 
-  async create(gym: Omit<Gym, "id" | "slug">): Promise<Gym> {
+  async create(gym: Omit<Gym, "id" | "slug" | "suburbSlug">): Promise<Gym> {
     if (!isAmplifyConfigured()) throw new Error("Backend not configured");
     const { data } = await dataClient.models.Gym.create({
       ownerId: gym.ownerId,

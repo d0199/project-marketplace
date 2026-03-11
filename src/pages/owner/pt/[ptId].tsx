@@ -7,6 +7,7 @@ import Layout from "@/components/Layout";
 import OwnerPTForm from "@/components/OwnerPTForm";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 import type { OwnerSession, PersonalTrainer } from "@/types";
+import { ptUrl } from "@/lib/slugify";
 
 function PlanBanner({ pt }: { pt: PersonalTrainer }) {
   const currentPlan =
@@ -152,7 +153,7 @@ export default function EditPTPage() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Edit PT Profile</h1>
             <Link
-              href={`/pt/${pt.slug}`}
+              href={ptUrl(pt)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"

@@ -4,6 +4,7 @@ import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import { BASE_URL } from "@/lib/siteUrl";
+import { gymUrl } from "@/lib/slugify";
 import type { Gym } from "@/types";
 
 export default async function handler(
@@ -57,7 +58,7 @@ export default async function handler(
       sendSlackNotification("moderation", {
         gym_name: currentGym.name,
         gym_id: id,
-        gym_url: `${BASE_URL}/gym/${id}`,
+        gym_url: `${BASE_URL}${gymUrl(currentGym)}`,
         owner_email: ownerEmail ?? "unknown",
         submitted_at: nowAWST(),
       }),

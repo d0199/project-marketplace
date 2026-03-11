@@ -11,6 +11,7 @@ import PTAffiliationsTab from "@/components/PTAffiliationsTab";
 import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
 import BulkEditModal from "@/components/BulkEditModal";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
+import { gymUrl, ptUrl } from "@/lib/slugify";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -200,7 +201,7 @@ function GymRow({
           )}
           {!bulkMode && (
           <Link
-            href={`/gym/${gym.slug}`}
+            href={gymUrl(gym)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"
@@ -481,7 +482,7 @@ function PTRow({
             Edit listing →
           </Link>
           <Link
-            href={`/pt/${pt.slug}`}
+            href={ptUrl(pt)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-bold text-gray-500 hover:text-brand-orange transition-colors"

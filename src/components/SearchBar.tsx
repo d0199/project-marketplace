@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { POSTCODE_COORDS } from "@/lib/utils";
 import { trackEvent } from "@/lib/gtag";
+import { gymUrl } from "@/lib/slugify";
 
 /** Find the nearest postcode to a given lat/lng using Haversine distance */
 function findNearestPostcode(lat: number, lng: number): { postcode: string; distance: number } | null {
@@ -26,6 +27,7 @@ export interface SuburbSuggestion {
 export interface GymSuggestion {
   id: string;
   slug: string;
+  suburbSlug: string;
   name: string;
   suburb: string;
   state: string;
@@ -149,7 +151,7 @@ export default function SearchBar({
 
   function pickGym(g: GymSuggestion) {
     setOpen(false);
-    router.push(`/gym/${g.slug}`);
+    router.push(gymUrl(g));
   }
 
   const handleLocate = useCallback(() => {

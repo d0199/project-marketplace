@@ -4,6 +4,7 @@ import { ptStore } from "@/lib/ptStore";
 import { blogStore } from "@/lib/blogStore";
 import { POSTCODE_META } from "@/lib/utils";
 import { BASE_URL as BASE } from "@/lib/siteUrl";
+import { gymUrl, ptUrl } from "@/lib/slugify";
 
 function entry(loc: string, priority: string, changefreq: string, lastmod?: string) {
   const lm = lastmod ? `<lastmod>${lastmod}</lastmod>` : "";
@@ -44,11 +45,11 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     ),
     // Individual gym pages
     ...activeGyms.map((g) =>
-      entry(`${BASE}/gym/${g.slug}`, "0.7", "weekly", today)
+      entry(`${BASE}${gymUrl(g)}`, "0.7", "weekly", today)
     ),
     // Individual PT pages
     ...activePTs.map((p) =>
-      entry(`${BASE}/pt/${p.slug}`, "0.7", "weekly", today)
+      entry(`${BASE}${ptUrl(p)}`, "0.7", "weekly", today)
     ),
     `</urlset>`,
   ];

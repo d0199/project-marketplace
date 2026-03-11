@@ -3,10 +3,12 @@ import Link from "next/link";
 import ImageCarousel from "./ImageCarousel";
 import PTClaimModal from "./PTClaimModal";
 import { getStockImage, STOCK_ATTRIBUTION } from "@/lib/stockImages";
+import { ptUrl } from "@/lib/slugify";
 
 export interface PTWithDistance {
   id: string;
   slug: string;
+  suburbSlug: string;
   ownerId: string;
   name: string;
   description: string;
@@ -103,7 +105,7 @@ export default function PTCard({ pt }: Props) {
         )}
 
         <Link
-          href={`/pt/${pt.slug}`}
+          href={ptUrl(pt)}
           className="block text-center bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
           View Trainer

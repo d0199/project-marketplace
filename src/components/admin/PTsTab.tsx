@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
 import { POSTCODE_COORDS } from "@/lib/utils";
+import { ptUrl } from "@/lib/slugify";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 const EMPTY_PT: PersonalTrainer = {
   id: "",
   slug: "",
+  suburbSlug: "",
   ownerId: "unclaimed",
   isActive: true,
   name: "",
@@ -370,7 +372,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <a href={`/pt/${pt.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
+                    <a href={ptUrl(pt)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
                     <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm font-medium ml-3">Edit</button>
                     {pt.ownerId !== "unclaimed" && (
                       <button onClick={() => setConfirmUnclaim(pt.id)} className="text-yellow-600 hover:underline text-sm font-medium ml-3">Unclaim</button>

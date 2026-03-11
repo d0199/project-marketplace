@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, ALL_SPECIALTIES, POSTCODE_COORDS } from "@/lib/utils";
+import { gymUrl } from "@/lib/slugify";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
@@ -643,7 +644,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, onSave }: Props) {
       <div className="flex items-center justify-between">
         {gymId ? (
           <Link
-            href={`/gym/${gymId}`}
+            href={gymUrl(gym)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"
