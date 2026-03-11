@@ -11,11 +11,18 @@ interface Props {
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) => {
   const slug = params?.slug as string;
-  const post = await blogStore.getBySlug(slug);
-  if (!post || post.status !== "published") {
+  try {
+    console.log("[blog] Looking up slug:", slug);
+    const post = await blogStore.getBySlug(slug);
+    console.log("[blog] Found:", post ? `id=${post.id} status=${post.status}` : "null");
+    if (!post || post.status !== "published") {
+      return { notFound: true };
+    }
+    return { props: { post } };
+  } catch (err) {
+    console.error("[blog] Error fetching post:", err);
     return { notFound: true };
   }
-  return { props: { post } };
 };
 
 /** Render blog content — if it already contains HTML tags (from TipTap editor), use as-is; otherwise convert legacy markdown */
