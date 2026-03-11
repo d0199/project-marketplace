@@ -20,6 +20,7 @@ export interface ScrapedFields {
   languages?: string[];
   experienceYears?: number;
   hours?: Record<string, string>;
+  memberOffers?: string[];
 }
 
 interface ScanButtonProps {

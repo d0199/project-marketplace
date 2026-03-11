@@ -91,9 +91,10 @@ Fields to look for:
 - "bookingUrl": online booking URL (Mindbody, Glofox, etc.)
 - "amenities": array of amenities from this list ONLY: ${amenitiesList}
 - "specialties": ${specialtiesHint}
-- "description": a brief description of the gym if found (About Us / bio text)
+- "description": write an SEO-rich 100-200 word description of the gym based on the page content. Highlight key selling points, unique features, location, and target audience. Use a professional, engaging tone suitable for a gym listing directory. Do NOT copy text verbatim from the website — rewrite it in your own words
 - "pricePerWeek": weekly membership price as a number (calculate from weekly/fortnightly/monthly if needed)
 - "hours": object with keys monday-sunday, values as opening hours strings (e.g. "5:00am - 9:00pm")
+- "memberOffers": array of member offer tags from this list ONLY: ["no contract", "contract", "new member trial", "referral scheme", "multiple location access", "gym or community app"]
 
 Return ONLY valid JSON. No markdown, no explanation, no code blocks.`;
 }

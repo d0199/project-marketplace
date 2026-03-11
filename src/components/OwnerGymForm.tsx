@@ -193,6 +193,8 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
                 sunday: h.sunday ?? f.hours.sunday,
               },
             }));
+          } else if (field === "memberOffers" && Array.isArray(val)) {
+            setForm((f) => ({ ...f, memberOffers: [...new Set([...(f.memberOffers ?? []), ...val])] }));
           } else if (field === "amenities" && Array.isArray(val)) {
             setForm((f) => ({ ...f, amenities: [...new Set([...f.amenities, ...val])] }));
           } else if (field === "specialties" && Array.isArray(val)) {
@@ -586,6 +588,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
             </label>
           ))}
         </div>
+        {suggestion("memberOffers")}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelCls}>
