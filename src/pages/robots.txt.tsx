@@ -9,7 +9,7 @@ export default function RobotsTxt() {
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const body = isProduction
-    ? `User-agent: *\nAllow: /\n\nSitemap: ${BASE_URL}/sitemap.xml\n`
+    ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /owner/\nDisallow: /api/\nDisallow: /billing\nDisallow: /list-gym\nDisallow: /list-pt\nDisallow: /claim-gym\nDisallow: /claim-pt\n\nSitemap: ${BASE_URL}/sitemap.xml\n`
     : `User-agent: *\nDisallow: /\n`;
 
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
