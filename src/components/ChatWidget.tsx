@@ -9,6 +9,7 @@ const GREETING =
   "G'day! I'm the mynextgym.com.au AI Assistant. I can help you find gyms, understand our platform, or answer questions about listing your business. What can I help with?";
 
 export default function ChatWidget() {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: GREETING },
@@ -17,6 +18,23 @@ export default function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Check feature flag on mount and every 5 minutes (for schedule changes)
+  useEffect(() => {
+    let mounted = true;
+    async function check() {
+      try {
+        const res = await fetch("/api/chatbot-status");
+        const data = await res.json();
+        if (mounted) setEnabled(data.enabled === true);
+      } catch {
+        if (mounted) setEnabled(false);
+      }
+    }
+    check();
+    const interval = setInterval(check, 5 * 60 * 1000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,6 +47,9 @@ export default function ChatWidget() {
   useEffect(() => {
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
+
+  // Don't render anything until flag is checked, or if disabled
+  if (enabled !== true) return null;
 
   async function handleSend() {
     const text = input.trim();

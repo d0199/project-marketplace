@@ -8,12 +8,15 @@ interface FeatureFlags {
   amenities: boolean;
   radiusSlider: boolean;
   ptMemberOffers: boolean;
+  chatbot: boolean;
+  chatbotSchedule: string;
 }
 
 interface FlagMeta {
   key: keyof FeatureFlags;
   label: string;
   description: string;
+  isToggle?: boolean; // defaults to true
 }
 
 const FLAGS: FlagMeta[] = [
@@ -47,6 +50,11 @@ const FLAGS: FlagMeta[] = [
     label: "PT Member Offers",
     description: "Show member offers on paid PT profiles. When off, member offers are hidden from all PT pages.",
   },
+  {
+    key: "chatbot",
+    label: "AI Chatbot",
+    description: "Show the AI chatbot widget on all pages. When off, the floating chat button is hidden.",
+  },
 ];
 
 export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
@@ -70,7 +78,7 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
 
   function toggleDraft(key: keyof FeatureFlags) {
     if (!draft) return;
-    setDraft({ ...draft, [key]: !draft[key] });
+    setDraft({ ...draft, [key]: !draft[key] as never });
     setSuccess("");
   }
 
@@ -84,11 +92,12 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
   if (liveFlags && draft) {
     for (const f of FLAGS) {
       if (liveFlags[f.key] !== draft[f.key]) {
-        changes.push({ key: f.key, label: f.label, from: liveFlags[f.key], to: draft[f.key] });
+        changes.push({ key: f.key, label: f.label, from: liveFlags[f.key] as boolean, to: draft[f.key] as boolean });
       }
     }
   }
-  const hasChanges = changes.length > 0;
+  const scheduleChanged = liveFlags && draft && liveFlags.chatbotSchedule !== draft.chatbotSchedule;
+  const hasChanges = changes.length > 0 || scheduleChanged;
 
   async function confirmChanges() {
     if (!hasChanges || !draft) return;
@@ -98,7 +107,10 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
     try {
       const partial: Partial<FeatureFlags> = {};
       for (const c of changes) {
-        partial[c.key] = c.to;
+        (partial as Record<string, boolean>)[c.key] = c.to;
+      }
+      if (scheduleChanged && draft) {
+        partial.chatbotSchedule = draft.chatbotSchedule;
       }
       const res = await adminFetch("/api/admin/feature-flags", {
         method: "PUT",
@@ -172,6 +184,16 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
                 </span>
               </div>
             ))}
+            {scheduleChanged && draft && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
+                <span className="font-medium text-gray-900">Chatbot Schedule</span>
+                <span className="text-gray-400">—</span>
+                <span className="text-blue-700">
+                  {draft.chatbotSchedule ? `${draft.chatbotSchedule} AEST` : "Always on (no schedule)"}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex gap-3">
             <button
@@ -196,8 +218,8 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
 
       <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
         {FLAGS.map(({ key, label, description }) => {
-          const enabled = draft[key];
-          const changed = liveFlags[key] !== draft[key];
+          const enabled = Boolean(draft[key]);
+          const changed = draft[key] !== liveFlags[key];
           return (
             <div key={key} className={`flex items-center justify-between px-6 py-5 ${changed ? "bg-amber-50/50" : ""}`}>
               <div className="pr-8">
@@ -230,6 +252,63 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
           );
         })}
       </div>
+
+      {/* Chatbot schedule */}
+      {draft.chatbot && (
+        <div className="mt-4 bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">Chatbot Schedule (AEST)</h3>
+          <p className="text-sm text-gray-500 mb-3">
+            Optionally restrict the chatbot to specific hours. Leave empty for always-on.
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">From</label>
+              <input
+                type="time"
+                value={draft.chatbotSchedule?.split("-")[0] ?? ""}
+                onChange={(e) => {
+                  const end = draft.chatbotSchedule?.split("-")[1] ?? "";
+                  const val = e.target.value && end ? `${e.target.value}-${end}` : "";
+                  setDraft({ ...draft, chatbotSchedule: val });
+                  setSuccess("");
+                }}
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">To</label>
+              <input
+                type="time"
+                value={draft.chatbotSchedule?.split("-")[1] ?? ""}
+                onChange={(e) => {
+                  const start = draft.chatbotSchedule?.split("-")[0] ?? "";
+                  const val = start && e.target.value ? `${start}-${e.target.value}` : "";
+                  setDraft({ ...draft, chatbotSchedule: val });
+                  setSuccess("");
+                }}
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+              />
+            </div>
+            {draft.chatbotSchedule && (
+              <button
+                type="button"
+                onClick={() => { setDraft({ ...draft, chatbotSchedule: "" }); setSuccess(""); }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Clear schedule
+              </button>
+            )}
+          </div>
+          {draft.chatbotSchedule && (
+            <p className="text-xs text-gray-400 mt-2">
+              Chatbot will be active from {draft.chatbotSchedule.split("-")[0]} to {draft.chatbotSchedule.split("-")[1]} AEST daily.
+            </p>
+          )}
+          {!draft.chatbotSchedule && (
+            <p className="text-xs text-gray-400 mt-2">No schedule set — chatbot is always on.</p>
+          )}
+        </div>
+      )}
 
       <p className="text-xs text-gray-400 mt-4">
         Flags are cached server-side for 30 seconds. After confirming, wait a moment then refresh the search page to see the change.

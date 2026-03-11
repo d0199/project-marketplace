@@ -23,6 +23,10 @@ export interface FeatureFlags {
   radiusSlider: boolean;
   /** Show PT member offers on PT profiles (paid feature) */
   ptMemberOffers: boolean;
+  /** Show the AI chatbot widget on all pages */
+  chatbot: boolean;
+  /** Chatbot schedule — empty string means always on (when chatbot=true). Format: "HH:MM-HH:MM" in AEST, e.g. "06:00-22:00" */
+  chatbotSchedule: string;
 
   // Legacy keys — kept so existing DynamoDB records don't break reads
   heroSpecialties?: boolean;
@@ -36,6 +40,8 @@ const DEFAULTS: FeatureFlags = {
   amenities: true,
   radiusSlider: true,
   ptMemberOffers: false,
+  chatbot: false,
+  chatbotSchedule: "",
 };
 
 const RECORD_ID = "global";
@@ -67,6 +73,8 @@ export const featureFlagStore = {
           amenities: data.amenities ?? data.heroAmenities ?? DEFAULTS.amenities,
           radiusSlider: data.radiusSlider ?? DEFAULTS.radiusSlider,
           ptMemberOffers: data.ptMemberOffers ?? DEFAULTS.ptMemberOffers,
+          chatbot: data.chatbot ?? DEFAULTS.chatbot,
+          chatbotSchedule: String(data.chatbotSchedule ?? DEFAULTS.chatbotSchedule),
         };
       } else {
         cached = { ...DEFAULTS };
