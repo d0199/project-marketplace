@@ -3,6 +3,7 @@ import { ownerStore } from "@/lib/ownerStore";
 
 interface GymNameEntry {
   id: string;
+  slug: string;
   name: string;
   suburb: string;
   state: string;
@@ -33,6 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     .slice(0, 8)
     .map((g) => ({
       id: g.id,
+      slug: g.slug,
       name: g.name,
       suburb: g.address?.suburb || "",
       state: g.address?.state || "",

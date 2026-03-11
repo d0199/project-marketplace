@@ -12,6 +12,7 @@ interface Props {
 
 const EMPTY_PT: PersonalTrainer = {
   id: "",
+  slug: "",
   ownerId: "unclaimed",
   isActive: true,
   name: "",

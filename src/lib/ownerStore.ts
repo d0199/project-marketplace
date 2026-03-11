@@ -3,14 +3,16 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { Gym } from "@/types";
 import { postcodeToState } from "./utils";
-import { generateSlug } from "./slugify";
+import { generateSlug, deduplicateSlugs } from "./slugify";
 
 const require = createRequire(import.meta.url);
 const seedGymsRaw: Omit<Gym, "slug">[] = require("../../data/gyms.json");
-const seedGyms: Gym[] = seedGymsRaw.map((g) => ({
-  ...g,
-  slug: generateSlug(g.name, g.address.suburb),
-}));
+const seedGyms: Gym[] = deduplicateSlugs(
+  seedGymsRaw.map((g) => ({
+    ...g,
+    slug: generateSlug(g.name, g.address.suburb),
+  }))
+);
 
 // ---------------------------------------------------------------------------
 // Shape converters between the flat DynamoDB record and the nested Gym type
@@ -165,7 +167,7 @@ export const ownerStore = {
     if (!isAmplifyConfigured()) return seedGyms;
     const now = Date.now();
     if (_allCache && now - _allCacheTime < ALL_CACHE_TTL) return _allCache;
-    const gyms = (await listAllGyms()).map(toGym);
+    const gyms = deduplicateSlugs((await listAllGyms()).map(toGym));
     _allCache = gyms;
     _allCacheTime = now;
     return gyms;

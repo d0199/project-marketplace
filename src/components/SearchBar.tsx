@@ -25,6 +25,7 @@ export interface SuburbSuggestion {
 
 export interface GymSuggestion {
   id: string;
+  slug: string;
   name: string;
   suburb: string;
   state: string;
@@ -148,7 +149,7 @@ export default function SearchBar({
 
   function pickGym(g: GymSuggestion) {
     setOpen(false);
-    router.push(`/gym/${g.id}`);
+    router.push(`/gym/${g.slug}`);
   }
 
   const handleLocate = useCallback(() => {

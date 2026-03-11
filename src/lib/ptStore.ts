@@ -3,14 +3,16 @@ import { dataClient, isAmplifyConfigured } from "./amplifyServerConfig";
 import type { Schema } from "../../amplify/backend";
 import type { PersonalTrainer } from "@/types";
 import { postcodeToState } from "./utils";
-import { generateSlug } from "./slugify";
+import { generateSlug, deduplicateSlugs } from "./slugify";
 
 const require = createRequire(import.meta.url);
 const seedPTsRaw: Omit<PersonalTrainer, "slug">[] = require("../../data/pts.json");
-const seedPTs: PersonalTrainer[] = seedPTsRaw.map((p) => ({
-  ...p,
-  slug: generateSlug(p.name, p.address.suburb),
-}));
+const seedPTs: PersonalTrainer[] = deduplicateSlugs(
+  seedPTsRaw.map((p) => ({
+    ...p,
+    slug: generateSlug(p.name, p.address.suburb),
+  }))
+);
 
 // ---------------------------------------------------------------------------
 // Shape converters between the flat DynamoDB record and the nested PT type
@@ -181,7 +183,7 @@ export const ptStore = {
     const now = Date.now();
     if (_allCache && now - _allCacheTime < ALL_CACHE_TTL) return _allCache;
     try {
-      const pts = (await listAllPTs()).map(toPT);
+      const pts = deduplicateSlugs((await listAllPTs()).map(toPT));
       _allCache = pts;
       _allCacheTime = now;
       return pts;

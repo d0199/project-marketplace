@@ -245,7 +245,7 @@ export default function GymProfilePage({ gym, personalTrainers, suburbSlug }: Pr
     <>
       <Head>
         <title>{gym.name} — mynextgym.com.au</title>
-        <meta name="description" content={`${gym.name} in ${gym.address.suburb} — view memberships, facilities, opening hours and reviews. Find your next gym on MyNextGym.`} />
+        <meta name="description" content={`${gym.name} in ${gym.address.suburb} — memberships, facilities, hours and reviews. Find your next gym on MyNextGym.`.slice(0, 155)} />
         {gym.isTest && <meta name="robots" content="noindex, nofollow" />}
         <meta property="og:title" content={`${gym.name} — mynextgym.com.au`} />
         <meta property="og:description" content={gym.description || `${gym.name} in ${gym.address.suburb}, ${gym.address.state}`} />

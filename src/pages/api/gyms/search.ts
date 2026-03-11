@@ -47,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Return only fields needed for GymCard display
   const cards = results.map((g) => ({
     id: g.id,
+    slug: g.slug,
     ownerId: g.ownerId,
     name: g.name,
     description: g.description,

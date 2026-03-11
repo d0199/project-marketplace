@@ -17,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const withDist = visible
     .map((p) => ({
       id: p.id,
+      slug: p.slug,
       ownerId: p.ownerId,
       name: p.name,
       description: p.description,

@@ -52,6 +52,7 @@ interface CognitoUser {
 // ---------------------------------------------------------------------------
 const EMPTY_GYM: Gym = {
   id: "",
+  slug: "",
   ownerId: "",
   isActive: true,
   name: "",
