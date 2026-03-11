@@ -220,25 +220,28 @@ export const ptStore = {
     const postcode = postcodeMatch?.[1];
 
     if (postcode) {
-      // Narrow DynamoDB scan filtered by postcode — typically 1-5 results per suburb
-      const results: PTRecord[] = [];
-      let nextToken: string | null | undefined;
-      do {
-        const res = await dataClient.models.PersonalTrainer.list({
-          filter: { addressPostcode: { eq: postcode } },
-          limit: 100,
-          nextToken,
-        });
-        results.push(...(res.data ?? []));
-        nextToken = res.nextToken;
-      } while (nextToken);
+      // GSI query on addressPostcode — direct index lookup, no table scan
+      try {
+        const results: PTRecord[] = [];
+        let nextToken: string | null | undefined;
+        do {
+          const res = await dataClient.models.PersonalTrainer.listPersonalTrainerByAddressPostcode(
+            { addressPostcode: postcode },
+            { limit: 100, nextToken },
+          );
+          results.push(...(res.data ?? []));
+          nextToken = res.nextToken;
+        } while (nextToken);
 
-      const pts = results.map(toPT);
-      const match = pts.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
-      if (match) return match;
+        const pts = results.map(toPT);
+        const match = pts.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
+        if (match) return match;
+      } catch (err) {
+        console.warn("[ptStore] GSI query failed, falling back to scan:", err);
+      }
     }
 
-    // Fallback to full scan if postcode extraction failed or no match found
+    // Fallback to full scan if postcode extraction failed or GSI not yet deployed
     const all = await this.getAll();
     return all.find((p) => p.suburbSlug === suburbSlug && p.slug === slug);
   },

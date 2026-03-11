@@ -61,10 +61,8 @@ const schema = a.schema({
       amenitiesNotes: a.string(),
       specialties: a.string().array(),
     })
-    // GSI on ownerId — makes getByOwner O(1) instead of a full table scan.
-    .secondaryIndexes((index) => [index("ownerId")])
-    // API key allows public reads and owner writes from server-side API routes.
-    // The API routes themselves enforce ownership by comparing ownerId values.
+    // GSIs: ownerId for owner portal, addressPostcode for suburb page lookups
+    .secondaryIndexes((index) => [index("ownerId"), index("addressPostcode")])
     .authorization((allow) => [allow.publicApiKey()]),
 
   GymStat: a
@@ -181,7 +179,8 @@ const schema = a.schema({
       languages: a.string().array(),
       customLeadFields: a.string(), // JSON-encoded CustomLeadField[]
     })
-    .secondaryIndexes((index) => [index("ownerId")])
+    // GSIs: ownerId for owner portal, addressPostcode for suburb page lookups
+    .secondaryIndexes((index) => [index("ownerId"), index("addressPostcode")])
     .authorization((allow) => [allow.publicApiKey()]),
 
   Affiliation: a

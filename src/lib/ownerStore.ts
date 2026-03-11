@@ -196,25 +196,28 @@ export const ownerStore = {
     const postcode = postcodeMatch?.[1];
 
     if (postcode) {
-      // Narrow DynamoDB scan filtered by postcode — typically 1-5 results per suburb
-      const results: GymRecord[] = [];
-      let nextToken: string | null | undefined;
-      do {
-        const res = await dataClient.models.Gym.list({
-          filter: { addressPostcode: { eq: postcode } },
-          limit: 100,
-          nextToken,
-        });
-        results.push(...(res.data ?? []));
-        nextToken = res.nextToken;
-      } while (nextToken);
+      // GSI query on addressPostcode — direct index lookup, no table scan
+      try {
+        const results: GymRecord[] = [];
+        let nextToken: string | null | undefined;
+        do {
+          const res = await dataClient.models.Gym.listGymByAddressPostcode(
+            { addressPostcode: postcode },
+            { limit: 100, nextToken },
+          );
+          results.push(...(res.data ?? []));
+          nextToken = res.nextToken;
+        } while (nextToken);
 
-      const gyms = results.map(toGym);
-      const match = gyms.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
-      if (match) return match;
+        const gyms = results.map(toGym);
+        const match = gyms.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
+        if (match) return match;
+      } catch (err) {
+        console.warn("[ownerStore] GSI query failed, falling back to scan:", err);
+      }
     }
 
-    // Fallback to full scan if postcode extraction failed or no match found
+    // Fallback to full scan if postcode extraction failed or GSI not yet deployed
     const all = await this.getAll();
     return all.find((g) => g.suburbSlug === suburbSlug && g.slug === slug);
   },
