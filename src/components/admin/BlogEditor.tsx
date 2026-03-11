@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
@@ -111,21 +111,6 @@ export default function BlogEditor({ content, onChange }: Props) {
           —
         </button>
       </div>
-
-      {/* Bubble menu for inline formatting */}
-      <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-        <div className="flex items-center gap-1 bg-gray-900 text-white px-2 py-1 rounded-lg shadow-lg">
-          <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={`px-1.5 py-0.5 text-xs rounded ${editor.isActive("bold") ? "bg-white/20" : "hover:bg-white/10"}`}>
-            <strong>B</strong>
-          </button>
-          <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={`px-1.5 py-0.5 text-xs rounded ${editor.isActive("italic") ? "bg-white/20" : "hover:bg-white/10"}`}>
-            <em>I</em>
-          </button>
-          <button type="button" onClick={addLink} className={`px-1.5 py-0.5 text-xs rounded ${editor.isActive("link") ? "bg-white/20" : "hover:bg-white/10"}`}>
-            Link
-          </button>
-        </div>
-      </BubbleMenu>
 
       {/* Editor content */}
       <EditorContent editor={editor} />
