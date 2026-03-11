@@ -11,3 +11,18 @@
   display: inline-block;
   animation: marquee 19.8s linear infinite;
 }
+
+/* CTA blocks in blog editor and published pages */
+.cta-block {
+  background: #FFF7ED;
+  border: 2px solid #F97316;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.cta-block p {
+  margin: 0 !important;
+  font-weight: 600;
+  color: #F97316;
+}

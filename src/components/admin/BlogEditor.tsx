@@ -86,6 +86,13 @@ export default function BlogEditor({ content, onChange }: Props) {
     }
   }
 
+  function insertCta(type: "search-gyms" | "search-pts") {
+    const label = type === "search-gyms" ? "Search Gyms Near You" : "Find a Personal Trainer";
+    const href = type === "search-gyms" ? "/" : "/?tab=pts";
+    const html = `<div data-cta="${type}" data-href="${href}" data-label="${label}" class="cta-block"><p>${label}</p></div>`;
+    editor!.chain().focus().insertContent(html).run();
+  }
+
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden">
       {/* Toolbar */}
@@ -130,6 +137,13 @@ export default function BlogEditor({ content, onChange }: Props) {
         </button>
         <button type="button" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().redo().run(); }} className={btnCls(false)} disabled={!editor.can().redo()}>
           Redo
+        </button>
+        <div className="w-px h-5 bg-gray-300 mx-1" />
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); insertCta("search-gyms"); }} className="px-2 py-1 text-xs font-medium rounded bg-orange-50 text-brand-orange hover:bg-orange-100 border border-orange-200">
+          + Search Gyms CTA
+        </button>
+        <button type="button" onMouseDown={(e) => { e.preventDefault(); insertCta("search-pts"); }} className="px-2 py-1 text-xs font-medium rounded bg-orange-50 text-brand-orange hover:bg-orange-100 border border-orange-200">
+          + Search PTs CTA
         </button>
       </div>
 

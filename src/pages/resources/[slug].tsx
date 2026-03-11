@@ -27,11 +27,18 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
 /** Render blog content — if it already contains HTML tags (from TipTap editor), use as-is; otherwise convert legacy markdown */
 function renderContent(content: string): string {
+  // Transform CTA blocks into styled clickable links
+  let html = content.replace(
+    /<div[^>]*data-cta="([^"]*)"[^>]*data-href="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>[\s\S]*?<\/div>/g,
+    (_match, _type, href, label) =>
+      `<div class="cta-block"><a href="${href}" style="display:inline-block;padding:0.75rem 2rem;background:#F97316;color:white;font-weight:700;border-radius:0.5rem;text-decoration:none;font-size:1rem;">${label}</a></div>`
+  );
+
   // If content starts with an HTML tag, it's from TipTap — use directly
-  if (/^\s*<[a-z]/.test(content)) return content;
+  if (/^\s*<[a-z]/.test(html)) return html;
 
   // Legacy markdown fallback
-  let html = content
+  html = html
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
     .replace(/^# (.+)$/gm, "<h2>$1</h2>")
