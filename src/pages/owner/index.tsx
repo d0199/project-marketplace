@@ -200,6 +200,8 @@ export default function OwnerPortalPage() {
       <>
         <Head>
           <title>Owner Portal — mynextgym.com.au</title>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta name="description" content="Sign in to manage your gym or personal trainer listing on mynextgym.com.au." />
         </Head>
         <Layout>
           <div className="max-w-md mx-auto mt-12">

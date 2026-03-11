@@ -139,6 +139,7 @@ export default function EditPTPage() {
     <>
       <Head>
         <title>Edit {pt.name} — mynextgym.com.au</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <Layout>
         <nav className="text-sm text-gray-500 mb-6">

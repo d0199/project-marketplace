@@ -7,6 +7,7 @@ export default function ListChoicePage() {
     <>
       <Head>
         <title>Create a Free Listing — mynextgym.com.au</title>
+        <meta name="description" content="List your gym or personal trainer profile on MyNextGym for free. Manage your listing, connect with local clients and grow your business." />
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto text-center py-8">

@@ -126,6 +126,7 @@ export default function ClaimGymPage({ gyms }: Props) {
     <>
       <Head>
         <title>Claim Your Gym — mynextgym.com.au</title>
+        <meta name="description" content="Own a gym listed on MyNextGym? Claim your free listing to manage photos, pricing, hours and member offers." />
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">

@@ -132,6 +132,7 @@ export default function ListGymPage() {
     <>
       <Head>
         <title>Create a Gym Listing — mynextgym.com.au</title>
+        <meta name="description" content="List your gym on MyNextGym for free. Reach local members searching for gyms by suburb, amenities and price." />
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">

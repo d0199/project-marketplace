@@ -118,6 +118,7 @@ export default function ListPTPage() {
     <>
       <Head>
         <title>Create a PT Listing — mynextgym.com.au</title>
+        <meta name="description" content="Create your free personal trainer profile on MyNextGym. Showcase specialties, qualifications and availability to local clients." />
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">

@@ -1155,6 +1155,8 @@ export default function BillingPage() {
     <>
       <Head>
         <title>Owner Portal — mynextgym.com.au</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="description" content="Manage your gym or PT listing — billing, leads, analytics and affiliations." />
       </Head>
       <Layout>
         {/* Page header */}

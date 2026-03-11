@@ -129,6 +129,7 @@ export default function ClaimPTPage({ pts }: Props) {
     <>
       <Head>
         <title>Claim Your PT Profile — mynextgym.com.au</title>
+        <meta name="description" content="Personal trainer listed on MyNextGym? Claim your free profile to manage specialties, rates and client enquiries." />
       </Head>
       <Layout>
         <div className="max-w-xl mx-auto">

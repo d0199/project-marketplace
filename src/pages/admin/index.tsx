@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
@@ -169,6 +170,10 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Head>
+        <title>Admin — mynextgym.com.au</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
       {/* Header */}
       <div className="bg-brand-black text-white px-6 py-4 flex items-center justify-between">
         <h1 className="text-lg font-bold tracking-tight">

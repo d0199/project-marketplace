@@ -148,6 +148,7 @@ export default function EditGymPage() {
     <>
       <Head>
         <title>Edit {gym.name} — mynextgym.com.au</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <Layout>
         <nav className="text-sm text-gray-500 mb-6">
