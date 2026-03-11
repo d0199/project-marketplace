@@ -12,6 +12,8 @@ import ChatTranscriptsTab from "@/components/admin/ChatTranscriptsTab";
 import { ALL_AMENITIES, ALL_SPECIALTIES, AMENITY_ICONS } from "@/lib/utils";
 import { adminFetch } from "@/lib/adminFetch";
 import { gymUrl } from "@/lib/slugify";
+import { ScanButton } from "@/components/admin/WebsiteScraper";
+import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1082,6 +1084,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmUnclaim, setConfirmUnclaim] = useState<string | null>(null);
+  const [scrapedSuggestions, setScrapedSuggestions] = useState<ScrapedFields | null>(null);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulk, setBulk] = useState<{
@@ -1310,6 +1314,30 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     e.preventDefault();
     search(q);
   }
+
+  // Clear scrape suggestions when switching gyms
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setScrapedSuggestions(null); setDismissedSuggestions(new Set()); }, [panel?.gym?.id]);
+
+  function handleScrapeResults(fields: ScrapedFields) {
+    setScrapedSuggestions(fields);
+    setDismissedSuggestions(new Set());
+  }
+
+  function handleDismissSuggestion(field: string) {
+    setDismissedSuggestions((prev) => {
+      const next = new Set(prev);
+      next.add(field);
+      return next;
+    });
+  }
+
+  // Build filtered suggestions (exclude dismissed)
+  const activeSuggestions: ScrapedFields | null = scrapedSuggestions
+    ? Object.fromEntries(
+        Object.entries(scrapedSuggestions).filter(([k]) => !dismissedSuggestions.has(k))
+      ) as ScrapedFields
+    : null;
 
   async function handleSave(updated: Gym) {
     if (panel?.isNew) {
@@ -1950,7 +1978,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                   </span>
                 </label>
               </div>
-              <OwnerGymForm gym={panel.gym} onSave={handleSave} isAdmin />
+              <ScanButton websiteUrl={panel.gym.website || ""} type="gym" onResults={handleScrapeResults} />
+              <OwnerGymForm gym={panel.gym} onSave={handleSave} isAdmin suggestions={activeSuggestions} onDismissSuggestion={handleDismissSuggestion} />
             </div>
           </div>
         </div>

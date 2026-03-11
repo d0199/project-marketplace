@@ -5,6 +5,8 @@ import { adminFetch } from "@/lib/adminFetch";
 import { POSTCODE_COORDS } from "@/lib/utils";
 import { ptUrl } from "@/lib/slugify";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
+import { ScanButton, FieldSuggestion } from "@/components/admin/WebsiteScraper";
+import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
 
 interface Props {
   adminEmail?: string;
@@ -430,6 +432,51 @@ function PTEditPanel({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
 
+  // Website scraper suggestions
+  const [scrapedSuggestions, setScrapedSuggestions] = useState<ScrapedFields | null>(null);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+
+  function handleScrapeResults(fields: ScrapedFields) {
+    setScrapedSuggestions(fields);
+    setDismissedSuggestions(new Set());
+  }
+
+  function dismissSuggestion(field: string) {
+    setDismissedSuggestions((prev) => { const next = new Set(prev); next.add(field); return next; });
+  }
+
+  function ptSuggestion(field: string, formatFn?: (v: unknown) => string) {
+    if (!scrapedSuggestions) return null;
+    const val = scrapedSuggestions[field as keyof ScrapedFields];
+    if (val === undefined || val === null || val === "" || dismissedSuggestions.has(field)) return null;
+    if (Array.isArray(val) && val.length === 0) return null;
+    const display = formatFn ? formatFn(val) : Array.isArray(val) ? val.join(", ") : String(val);
+    return (
+      <FieldSuggestion
+        value={display}
+        onApply={() => {
+          if (field === "specialties" && Array.isArray(val)) {
+            update({ specialties: [...new Set([...pt.specialties, ...val])] });
+          } else if (field === "qualifications" && Array.isArray(val)) {
+            update({ qualifications: [...new Set([...pt.qualifications, ...val])] });
+          } else if (field === "languages" && Array.isArray(val)) {
+            update({ languages: [...new Set([...(pt.languages ?? []), ...val])] });
+          } else if (field === "pricePerSession") {
+            update({ pricePerSession: Number(val) || undefined });
+          } else if (field === "sessionDuration") {
+            update({ sessionDuration: Number(val) || undefined });
+          } else if (field === "experienceYears") {
+            update({ experienceYears: Number(val) || undefined });
+          } else {
+            update({ [field]: val } as Partial<PersonalTrainer>);
+          }
+          dismissSuggestion(field);
+        }}
+        onDismiss={() => dismissSuggestion(field)}
+      />
+    );
+  }
+
   async function generateDescription() {
     setAiLoading(true);
     setAiError("");
@@ -698,6 +745,9 @@ function PTEditPanel({
 
           <hr className="border-gray-300" />
 
+          {/* Website Scraper */}
+          <ScanButton websiteUrl={pt.website || ""} type="pt" onResults={handleScrapeResults} />
+
           {/* ============================================================= */}
           {/* LISTING FIELDS (mirrors OwnerPTForm)                           */}
           {/* ============================================================= */}
@@ -738,6 +788,7 @@ function PTEditPanel({
                   </button>
                 </div>
                 <textarea className={inputCls} rows={3} value={pt.description} onChange={(e) => update({ description: e.target.value })} />
+                {ptSuggestion("description")}
                 {aiError && (
                   <p className="mt-2 text-sm text-red-600">{aiError}</p>
                 )}
@@ -776,6 +827,7 @@ function PTEditPanel({
               <div>
                 <label className={labelCls}>Experience (years)</label>
                 <input type="number" className={inputCls} value={pt.experienceYears ?? ""} onChange={(e) => update({ experienceYears: e.target.value ? parseInt(e.target.value) : undefined })} />
+                {ptSuggestion("experienceYears", (v) => `${v} years`)}
               </div>
             </div>
           </section>
@@ -787,10 +839,12 @@ function PTEditPanel({
               <div>
                 <label className={labelCls}>Email</label>
                 <input type="email" className={inputCls} value={pt.email} onChange={(e) => update({ email: e.target.value })} />
+                {ptSuggestion("email")}
               </div>
               <div>
                 <label className={labelCls}>Phone</label>
                 <input className={inputCls} value={pt.phone} onChange={(e) => update({ phone: e.target.value })} />
+                {ptSuggestion("phone")}
               </div>
               <div>
                 <label className={labelCls}>Website</label>
@@ -799,18 +853,22 @@ function PTEditPanel({
               <div>
                 <label className={labelCls}>Booking URL</label>
                 <input className={inputCls} value={pt.bookingUrl ?? ""} onChange={(e) => update({ bookingUrl: e.target.value || undefined })} />
+                {ptSuggestion("bookingUrl")}
               </div>
               <div>
                 <label className={labelCls}>Instagram</label>
                 <input className={inputCls} value={pt.instagram ?? ""} onChange={(e) => update({ instagram: e.target.value || undefined })} placeholder="https://instagram.com/..." />
+                {ptSuggestion("instagram")}
               </div>
               <div>
                 <label className={labelCls}>Facebook</label>
                 <input className={inputCls} value={pt.facebook ?? ""} onChange={(e) => update({ facebook: e.target.value || undefined })} placeholder="https://facebook.com/..." />
+                {ptSuggestion("facebook")}
               </div>
               <div>
                 <label className={labelCls}>TikTok</label>
                 <input className={inputCls} value={pt.tiktok ?? ""} onChange={(e) => update({ tiktok: e.target.value || undefined })} placeholder="https://tiktok.com/@..." />
+                {ptSuggestion("tiktok")}
               </div>
             </div>
           </section>
@@ -855,10 +913,12 @@ function PTEditPanel({
               <div>
                 <label className={labelCls}>Price per Session ($)</label>
                 <input type="number" step="0.01" className={inputCls} value={pt.pricePerSession ?? ""} onChange={(e) => update({ pricePerSession: e.target.value ? parseFloat(e.target.value) : undefined })} />
+                {ptSuggestion("pricePerSession", (v) => `$${v}/session`)}
               </div>
               <div>
                 <label className={labelCls}>Session Duration (mins)</label>
                 <input type="number" className={inputCls} value={pt.sessionDuration ?? ""} onChange={(e) => update({ sessionDuration: e.target.value ? parseInt(e.target.value) : undefined })} />
+                {ptSuggestion("sessionDuration", (v) => `${v} mins`)}
               </div>
               <div className="col-span-2">
                 <label className={labelCls}>Pricing Notes</label>
@@ -867,6 +927,7 @@ function PTEditPanel({
               <div className="col-span-2">
                 <label className={labelCls}>Availability</label>
                 <input className={inputCls} value={pt.availability ?? ""} onChange={(e) => update({ availability: e.target.value || undefined })} placeholder="e.g. Mon-Fri 6am-8pm, Sat 7am-12pm" />
+                {ptSuggestion("availability")}
               </div>
             </div>
           </section>
@@ -914,6 +975,7 @@ function PTEditPanel({
                 );
               })()}
             </div>
+            {ptSuggestion("specialties")}
           </section>
 
           {/* Member Offers — search dropdown with pills (mirrors OwnerPTForm) */}
@@ -999,12 +1061,14 @@ function PTEditPanel({
               <input className={inputCls} value={newQualification} onChange={(e) => setNewQualification(e.target.value)} placeholder="e.g. Cert III Fitness, Cert IV PT" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addQualification(); } }} />
               <button onClick={addQualification} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
             </div>
+            {ptSuggestion("qualifications")}
           </section>
 
           {/* Languages */}
           <section>
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Languages</h3>
             <LanguageEditor languages={pt.languages ?? []} onChange={(languages) => update({ languages })} />
+            {ptSuggestion("languages")}
           </section>
 
           {/* Images */}

@@ -5,6 +5,8 @@ import type { Gym, OpeningHours } from "@/types";
 import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, ALL_SPECIALTIES, POSTCODE_COORDS } from "@/lib/utils";
 import { gymUrl } from "@/lib/slugify";
 import { adminFetch } from "@/lib/adminFetch";
+import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
+import { FieldSuggestion } from "@/components/admin/WebsiteScraper";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
@@ -13,6 +15,8 @@ interface Props {
   gymId?: string;
   isAdmin?: boolean;
   ownerEmail?: string;
+  suggestions?: ScrapedFields | null;
+  onDismissSuggestion?: (field: string) => void;
   onSave: (updated: Gym) => Promise<string | undefined | void> | string | undefined | void;
 }
 
@@ -26,7 +30,7 @@ const DAYS: (keyof OpeningHours)[] = [
   "sunday",
 ];
 
-export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }: Props) {
+export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggestions, onDismissSuggestion, onSave }: Props) {
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
@@ -166,6 +170,45 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
     });
   }
 
+  // Inline suggestion helper for scraped fields
+  function suggestion(field: string, formatFn?: (v: unknown) => string) {
+    const val = suggestions?.[field as keyof ScrapedFields];
+    if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) return null;
+    const display = formatFn ? formatFn(val) : Array.isArray(val) ? val.join(", ") : String(val);
+    return (
+      <FieldSuggestion
+        value={display}
+        onApply={() => {
+          if (field === "hours" && typeof val === "object" && !Array.isArray(val)) {
+            const h = val as Record<string, string>;
+            setForm((f) => ({
+              ...f,
+              hours: {
+                monday: h.monday ?? f.hours.monday,
+                tuesday: h.tuesday ?? f.hours.tuesday,
+                wednesday: h.wednesday ?? f.hours.wednesday,
+                thursday: h.thursday ?? f.hours.thursday,
+                friday: h.friday ?? f.hours.friday,
+                saturday: h.saturday ?? f.hours.saturday,
+                sunday: h.sunday ?? f.hours.sunday,
+              },
+            }));
+          } else if (field === "amenities" && Array.isArray(val)) {
+            setForm((f) => ({ ...f, amenities: [...new Set([...f.amenities, ...val])] }));
+          } else if (field === "specialties" && Array.isArray(val)) {
+            setForm((f) => ({ ...f, specialties: [...new Set([...(f.specialties ?? []), ...val])] }));
+          } else if (field === "pricePerWeek") {
+            setField("pricePerWeek", Number(val) || 0);
+          } else {
+            setField(field as keyof Gym, val as Gym[keyof Gym]);
+          }
+          onDismissSuggestion?.(field);
+        }}
+        onDismiss={() => onDismissSuggestion?.(field)}
+      />
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const msg = await onSave(form);
@@ -257,6 +300,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
                 </div>
               </div>
             )}
+            {suggestion("description")}
           </div>
           <div>
             <label className={labelCls}>
@@ -267,6 +311,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
               onChange={(e) => setField("phone", e.target.value)}
               className={inputCls}
             />
+            {suggestion("phone")}
           </div>
           <div>
             <label className={labelCls}>
@@ -278,6 +323,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
               onChange={(e) => setField("email", e.target.value)}
               className={inputCls}
             />
+            {suggestion("email")}
           </div>
           <div>
             <label className={labelCls}>
@@ -304,6 +350,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
               }
               className={inputCls}
             />
+            {suggestion("pricePerWeek", (v) => `$${v}/week`)}
             <label className="flex items-center gap-2 mt-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -348,6 +395,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
               placeholder="https://instagram.com/yourgym"
               className={inputCls}
             />
+            {suggestion("instagram")}
           </div>
           <div>
             <label className={labelCls}>
@@ -360,6 +408,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
               placeholder="https://facebook.com/yourgym"
               className={inputCls}
             />
+            {suggestion("facebook")}
           </div>
           <div className="sm:col-span-2">
             <label className={labelCls}>
@@ -372,6 +421,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
               placeholder="https://app.mindbodyonline.com/... or your booking page"
               className={inputCls}
             />
+            {suggestion("bookingUrl")}
             <p className="text-xs text-gray-400 mt-1">Mindbody, Glofox, Pike13, or any direct booking link. Displays a &ldquo;Book Now&rdquo; button on your profile.</p>
           </div>
         </div>
@@ -440,6 +490,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
             </label>
           ))}
         </div>
+        {suggestion("amenities")}
         <div className="mt-4">
           <label className={labelCls}>
             Amenities note <span className="text-gray-400 font-normal">(shown below amenities)</span>
@@ -512,6 +563,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
             );
           })()}
         </div>
+        {suggestion("specialties")}
       </section>}
 
       {/* Member Offers — paid listings only */}
@@ -712,6 +764,10 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, onSave }
             </div>
           ))}
         </div>
+        {suggestion("hours", (v) => {
+          const h = v as Record<string, string>;
+          return Object.entries(h).map(([d, t]) => `${d}: ${t}`).join(", ");
+        })}
         {(form.isPaid || isAdmin) && (
           <div className="mt-4">
             <label className="flex items-center gap-2 cursor-pointer mb-2">
