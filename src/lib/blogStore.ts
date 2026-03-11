@@ -42,6 +42,11 @@ function toPost(r: BlogRecord): BlogPost {
   };
 }
 
+/** Sanitize HTML content for safe DynamoDB/AppSync storage — collapse newlines that break GraphQL responses */
+function sanitizeContent(html: string): string {
+  return html.replace(/\n/g, "").replace(/\r/g, "");
+}
+
 export const blogStore = {
   async getAll(): Promise<BlogPost[]> {
     if (!isAmplifyConfigured()) return [];
@@ -84,7 +89,7 @@ export const blogStore = {
       slug: post.slug,
       title: post.title,
       excerpt: post.excerpt || null,
-      content: post.content,
+      content: sanitizeContent(post.content),
       coverImage: post.coverImage || null,
       coverImageAlt: post.coverImageAlt || null,
       authorName: post.authorName || null,
@@ -104,7 +109,7 @@ export const blogStore = {
       slug: post.slug,
       title: post.title,
       excerpt: post.excerpt || null,
-      content: post.content,
+      content: sanitizeContent(post.content),
       coverImage: post.coverImage || null,
       coverImageAlt: post.coverImageAlt || null,
       authorName: post.authorName || null,
