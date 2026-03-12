@@ -161,6 +161,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const key = await getAnthropicKey();
   if (!key) return res.status(503).json({ error: "AI service not configured" });
 
+  // force: regenerate all icons (even ones that already exist)
+  // entries: optional array of specific entry names to regenerate
+  const force = req.query.force === "1" || req.body?.force === true;
+  const onlyEntries: string[] | undefined = req.body?.entries;
+
   // Target datasets that use icons
   const iconDatasets = ["amenities", "member-offers", "pt-member-offers"];
   const hardcodedSets: Record<string, Set<string>> = {
@@ -178,10 +183,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const hardcoded = hardcodedSets[dsName] ?? new Set();
     const existingIcons = ds.icons ?? {};
 
-    // Find entries missing icons (not hardcoded AND not already generated)
-    const missing = ds.entries.filter(
-      (e) => !hardcoded.has(e) && !existingIcons[e]
-    );
+    // Find entries to generate icons for
+    // onlyEntries: regenerate specific entries only
+    // force: regenerate all non-hardcoded icons
+    // default: only entries missing icons
+    const missing = ds.entries.filter((e) => {
+      if (hardcoded.has(e)) return false;
+      if (onlyEntries) return onlyEntries.includes(e);
+      return force || !existingIcons[e];
+    });
 
     if (missing.length === 0) continue;
 

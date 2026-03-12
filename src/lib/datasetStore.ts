@@ -11,13 +11,25 @@ export interface Dataset {
   icons?: Record<string, string>; // entry name → SVG markup
 }
 
+/** Fix SVGs where the sanitiser stripped self-closing `/` (e.g. `<path d="...">` → `<path d="..." />`) */
+function repairSvg(svg: string): string {
+  const voidElements = /(<(?:path|circle|ellipse|rect|line|polyline|polygon)\b[^>]*[^/])>/gi;
+  return svg.replace(voidElements, "$1/>");
+}
+
 function toDataset(r: DatasetRecord): Dataset {
   const icons = (r as Record<string, unknown>).icons as string | null | undefined;
+  let parsed: Record<string, string> | undefined;
+  if (icons) {
+    const raw = JSON.parse(icons) as Record<string, string>;
+    parsed = {};
+    for (const [k, v] of Object.entries(raw)) parsed[k] = repairSvg(v);
+  }
   return {
     id: r.id,
     name: r.name,
     entries: (r.entries?.filter(Boolean) ?? []) as string[],
-    ...(icons ? { icons: JSON.parse(icons) } : {}),
+    ...(parsed ? { icons: parsed } : {}),
   };
 }
 

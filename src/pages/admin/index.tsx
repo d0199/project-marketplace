@@ -2756,6 +2756,7 @@ interface DatasetRecord {
   id: string;
   name: string;
   entries: string[];
+  icons?: Record<string, string>;
 }
 
 function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
@@ -2880,15 +2881,24 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
 
   const [generatingIcons, setGeneratingIcons] = useState(false);
 
-  async function generateIcons() {
+  async function generateIcons(opts?: { force?: boolean; entries?: string[] }) {
     setGeneratingIcons(true);
     setStatusMsg(null);
     try {
-      const r = await adminFetch("/api/admin/generate-icons", { method: "POST" });
+      const r = await adminFetch("/api/admin/generate-icons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force: opts?.force, entries: opts?.entries }),
+      });
       const data = await r.json();
       if (r.ok) {
         const total = (data.results ?? []).reduce((sum: number, r: { generated: string[] }) => sum + r.generated.length, 0);
         setStatusMsg({ type: "success", text: total > 0 ? `Generated ${total} icon(s)` : "All icons up to date" });
+        // Refresh dataset to show new icons
+        if (selected) {
+          const fresh = await adminFetch(`/api/datasets/${selected.name}`).then((r) => r.json());
+          if (fresh.icons) setSelected((s) => s ? { ...s, icons: fresh.icons } : s);
+        }
       } else {
         setStatusMsg({ type: "error", text: data.error || "Icon generation failed" });
       }
@@ -3099,11 +3109,18 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   {saving ? "Saving..." : "Save"}
                 </button>
                 <button
-                  onClick={generateIcons}
+                  onClick={() => generateIcons()}
                   disabled={generatingIcons}
                   className="px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {generatingIcons ? "Generating..." : "Generate SVGs"}
+                  {generatingIcons ? "Generating..." : "Generate Missing SVGs"}
+                </button>
+                <button
+                  onClick={() => generateIcons({ force: true })}
+                  disabled={generatingIcons}
+                  className="px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Regenerate All SVGs
                 </button>
                 <button
                   onClick={requestDeleteConfirm}
@@ -3158,9 +3175,20 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     </>
                   ) : (
                     <>
+                      {selected?.icons?.[entry] && (
+                        <span className="w-5 h-5 text-gray-500 flex-shrink-0" dangerouslySetInnerHTML={{ __html: selected.icons[entry] }} />
+                      )}
                       <span className="flex-1 text-sm text-gray-800">{entry}</span>
                       {isSuperAdmin && (
                         <>
+                          <button
+                            onClick={() => generateIcons({ entries: [entry] })}
+                            disabled={generatingIcons}
+                            className="text-xs text-purple-400 hover:text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-30"
+                            title="Regenerate icon"
+                          >
+                            {generatingIcons ? "..." : "SVG"}
+                          </button>
                           <button
                             onClick={() => startEdit(idx)}
                             className="text-xs text-gray-400 hover:text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity"
