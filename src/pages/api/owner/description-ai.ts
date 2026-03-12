@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { AdminGetUserCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { featureFlagStore } from "@/lib/featureFlags";
 
 let anthropicKey = "";
 
@@ -169,6 +170,11 @@ const SYSTEM_PROMPT = `You are an SEO content specialist for mynextgym.com.au, a
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const flags = await featureFlagStore.get();
+  if (!flags.claudeApi) {
+    return res.status(503).json({ error: "AI features are currently disabled" });
+  }
 
   const user = await requireAuth(req, res);
   if (!user) return;

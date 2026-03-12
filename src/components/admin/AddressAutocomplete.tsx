@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { adminFetch } from "@/lib/adminFetch";
+import { useApiFlags } from "@/lib/useApiFlags";
 
 interface PlacePrediction {
   placeId: string;
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function AddressAutocomplete({ onSelect, inputClassName }: Props) {
+  const { googleApi } = useApiFlags();
   const [query, setQuery] = useState("");
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [show, setShow] = useState(false);
@@ -85,6 +87,9 @@ export default function AddressAutocomplete({ onSelect, inputClassName }: Props)
       console.error("[AddressAutocomplete] selectPlace error:", err);
     }
   }
+
+  // Hide when Google API is disabled
+  if (!googleApi) return null;
 
   return (
     <div ref={containerRef} className="relative">

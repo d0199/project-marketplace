@@ -142,7 +142,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gymCount }: Pro
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        {gymCount === 0 && <meta name="robots" content="noindex, follow" />}
+        {/* gymCount is always > 0 here — zero-result pages return 404 */}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
@@ -430,6 +430,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const allGyms = await ownerStore.getAll();
   const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
   const gymCount = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 }).length;
+
+  // Return 404 for suburbs with zero gyms to avoid soft 404 in search engines
+  if (gymCount === 0) {
+    return { notFound: true };
+  }
 
   return { props: { postcode, suburbName, slug, gymCount } };
 };

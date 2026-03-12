@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/chatSystemPrompt";
 import { chatTranscriptStore, type TranscriptMessage } from "@/lib/chatTranscriptStore";
+import { featureFlagStore } from "@/lib/featureFlags";
 
 let anthropicKey = "";
 
@@ -49,6 +50,11 @@ interface ChatMessage {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const flags = await featureFlagStore.get();
+  if (!flags.claudeApi) {
+    return res.status(503).json({ error: "AI features are currently disabled" });
   }
 
   const { messages, sessionId, page } = req.body as { messages?: unknown; sessionId?: string; page?: string };

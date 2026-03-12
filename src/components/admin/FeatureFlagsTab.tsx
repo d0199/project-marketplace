@@ -10,6 +10,8 @@ interface FeatureFlags {
   ptMemberOffers: boolean;
   chatbot: boolean;
   chatbotSchedule: string;
+  claudeApi: boolean;
+  googleApi: boolean;
 }
 
 interface FlagMeta {
@@ -54,6 +56,16 @@ const FLAGS: FlagMeta[] = [
     key: "chatbot",
     label: "AI Chatbot",
     description: "Show the AI chatbot widget on all pages. When off, the floating chat button is hidden.",
+  },
+  {
+    key: "claudeApi",
+    label: "Claude API (Anthropic)",
+    description: "Kill-switch for all Anthropic API usage — chatbot, blog AI, website scraper, and AI description generator. Turn off to block all Claude API calls and stop billing.",
+  },
+  {
+    key: "googleApi",
+    label: "Google Places API",
+    description: "Kill-switch for all Google Places & Geocoding API usage — address autocomplete and geocoding in gym/PT forms. Turn off to block all Google API calls and stop billing.",
   },
 ];
 

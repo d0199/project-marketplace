@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin } from "@/lib/adminAuth";
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 import { datasetStore } from "@/lib/datasetStore";
+import { featureFlagStore } from "@/lib/featureFlags";
 
 let anthropicKey = "";
 
@@ -133,6 +134,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!adminEmail) return;
 
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const flags = await featureFlagStore.get();
+  if (!flags.claudeApi) {
+    return res.status(503).json({ error: "AI features are currently disabled" });
+  }
 
   const { url, type } = req.body as { url?: string; type?: "gym" | "pt" };
 

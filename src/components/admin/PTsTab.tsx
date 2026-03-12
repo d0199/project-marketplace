@@ -9,6 +9,7 @@ import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 import { ScanButton, FieldSuggestion } from "@/components/admin/WebsiteScraper";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
 import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
+import { useApiFlags } from "@/lib/useApiFlags";
 
 interface Props {
   adminEmail?: string;
@@ -250,12 +251,6 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
             Search
           </button>
         </form>
-        <button
-          onClick={() => setPanel({ pt: { ...EMPTY_PT }, isNew: true })}
-          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
-        >
-          + New PT
-        </button>
       </div>
 
       {/* Filter controls */}
@@ -316,6 +311,17 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
           Reset
         </button>
         <span className="text-sm text-gray-400">{filtered.length} PT{filtered.length !== 1 ? "s" : ""}</span>
+      </div>
+
+      {/* Actions bar */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</p>
+        <button
+          onClick={() => setPanel({ pt: { ...EMPTY_PT }, isNew: true })}
+          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
+        >
+          + New PT
+        </button>
       </div>
 
       {/* Table */}
@@ -462,6 +468,7 @@ function PTEditPanel({
   hasDraft: boolean;
   original: PersonalTrainer | null;
 }) {
+  const { claudeApi } = useApiFlags();
   const { pt, isNew } = panel;
 
   function isChanged(field: string): boolean {
@@ -856,6 +863,7 @@ function PTEditPanel({
               <div className="col-span-2">
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium text-gray-700">Description{edited("description")}</label>
+                  {claudeApi && (
                   <button
                     type="button"
                     onClick={generateDescription}
@@ -879,6 +887,7 @@ function PTEditPanel({
                       </>
                     )}
                   </button>
+                  )}
                 </div>
                 <textarea className={inputCls} rows={3} value={pt.description} onChange={(e) => update({ description: e.target.value })} />
                 {ptSuggestion("description")}

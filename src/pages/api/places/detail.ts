@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { AdminGetUserCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
+import { featureFlagStore } from "@/lib/featureFlags";
 
 let cachedKey: string | null = null;
 
@@ -65,6 +66,11 @@ async function requireAuth(req: NextApiRequest, res: NextApiResponse): Promise<s
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await requireAuth(req, res);
   if (!user) return;
+
+  const flags = await featureFlagStore.get();
+  if (!flags.googleApi) {
+    return res.status(503).json({ error: "Google Places API is currently disabled" });
+  }
 
   if (req.method !== "GET") return res.status(405).end();
 

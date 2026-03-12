@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { adminFetch } from "@/lib/adminFetch";
+import { useApiFlags } from "@/lib/useApiFlags";
 
 export interface ScrapedFields {
   phone?: string;
@@ -31,8 +32,11 @@ interface ScanButtonProps {
 
 /** Trigger button — placed at the top of admin edit panels */
 export function ScanButton({ websiteUrl, type, onResults }: ScanButtonProps) {
+  const { claudeApi } = useApiFlags();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  if (!claudeApi) return null;
 
   async function handleScrape() {
     if (!websiteUrl?.trim()) {

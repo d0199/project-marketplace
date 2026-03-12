@@ -8,6 +8,7 @@ import { adminFetch } from "@/lib/adminFetch";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
 import { FieldSuggestion } from "@/components/admin/WebsiteScraper";
 import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
+import { useApiFlags } from "@/lib/useApiFlags";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
@@ -36,6 +37,7 @@ const DAYS: (keyof OpeningHours)[] = [
 export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original, suggestions, onDismissSuggestion, onSave, onFormChange }: Props) {
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
+  const { claudeApi } = useApiFlags();
 
   const [form, setForm] = useState<Gym>({ ...gym });
   const formRef = useRef(form);
@@ -267,6 +269,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
               <label className="block text-sm font-medium text-gray-700">
                 Description{edited("description")}
               </label>
+              {claudeApi && (
               <button
                 type="button"
                 onClick={generateDescription}
@@ -290,6 +293,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
                   </>
                 )}
               </button>
+              )}
             </div>
             <textarea
               rows={4}

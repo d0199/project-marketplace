@@ -147,7 +147,7 @@ export default function TrainerSuburbPage({ postcode, suburbName, slug, ptCount 
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        {ptCount === 0 && <meta name="robots" content="noindex, follow" />}
+        {/* ptCount is always > 0 here — zero-result pages return 404 */}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
@@ -343,6 +343,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const ptCount = activePTs.filter(
     (p) => haversineKm(origin[0], origin[1], p.lat, p.lng) <= 10
   ).length;
+
+  // Return 404 for suburbs with zero PTs to avoid soft 404 in search engines
+  if (ptCount === 0) {
+    return { notFound: true };
+  }
 
   return { props: { postcode, suburbName, slug, ptCount } };
 };

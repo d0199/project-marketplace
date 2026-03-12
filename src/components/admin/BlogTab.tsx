@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { adminFetch } from "@/lib/adminFetch";
 import type { BlogPost } from "@/lib/blogStore";
+import { useApiFlags } from "@/lib/useApiFlags";
 
 const BlogEditor = dynamic(() => import("./BlogEditor"), { ssr: false });
 
@@ -24,6 +25,7 @@ type AiAction = "title" | "excerpt" | "content" | "tags" | "seo";
 const MAX_AI_CALLS = 5;
 
 export default function BlogTab({ adminEmail }: Props) {
+  const { claudeApi } = useApiFlags();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [panel, setPanel] = useState<{ post: BlogPost; isNew: boolean } | null>(null);
@@ -224,6 +226,7 @@ export default function BlogTab({ adminEmail }: Props) {
   }
 
   function AiButton({ action, label }: { action: AiAction; label: string }) {
+    if (!claudeApi) return null;
     const disabled = aiCallsUsed >= MAX_AI_CALLS || aiLoading !== null;
     return (
       <button
@@ -254,9 +257,11 @@ export default function BlogTab({ adminEmail }: Props) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-gray-900">{isNew ? "New Blog Post" : `Edit: ${post.title || "Untitled"}`}</h2>
+            {claudeApi && (
             <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full font-medium">
               AI: {aiCallsUsed}/{MAX_AI_CALLS}
             </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button

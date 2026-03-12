@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAdmin } from "@/lib/adminAuth";
 import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
+import { featureFlagStore } from "@/lib/featureFlags";
 
 let cachedKey: string | null = null;
 
@@ -34,6 +35,11 @@ async function getGoogleApiKey(): Promise<string> {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const adminEmail = await requireAdmin(req, res);
   if (!adminEmail) return;
+
+  const flags = await featureFlagStore.get();
+  if (!flags.googleApi) {
+    return res.status(503).json({ error: "Google Places API is currently disabled" });
+  }
 
   if (req.method !== "GET") return res.status(405).end();
 

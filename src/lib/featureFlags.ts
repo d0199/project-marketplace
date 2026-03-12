@@ -27,6 +27,10 @@ export interface FeatureFlags {
   chatbot: boolean;
   /** Chatbot schedule — empty string means always on (when chatbot=true). Format: "HH:MM-HH:MM" in AEST, e.g. "06:00-22:00" */
   chatbotSchedule: string;
+  /** Kill-switch for all Claude/Anthropic API usage (chat, blog AI, scraper, description AI) */
+  claudeApi: boolean;
+  /** Kill-switch for all Google Places/Geocoding API usage (address autocomplete, geocode) */
+  googleApi: boolean;
 
   // Legacy keys — kept so existing DynamoDB records don't break reads
   heroSpecialties?: boolean;
@@ -42,6 +46,8 @@ const DEFAULTS: FeatureFlags = {
   ptMemberOffers: false,
   chatbot: false,
   chatbotSchedule: "",
+  claudeApi: true,
+  googleApi: true,
 };
 
 const RECORD_ID = "global";
@@ -75,6 +81,8 @@ export const featureFlagStore = {
           ptMemberOffers: data.ptMemberOffers ?? DEFAULTS.ptMemberOffers,
           chatbot: data.chatbot ?? DEFAULTS.chatbot,
           chatbotSchedule: String(data.chatbotSchedule ?? DEFAULTS.chatbotSchedule),
+          claudeApi: data.claudeApi ?? DEFAULTS.claudeApi,
+          googleApi: data.googleApi ?? DEFAULTS.googleApi,
         };
       } else {
         cached = { ...DEFAULTS };

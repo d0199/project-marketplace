@@ -1502,12 +1502,6 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
             Search
           </button>
         </form>
-        <button
-          onClick={() => setPanel({ gym: EMPTY_GYM, isNew: true })}
-          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
-        >
-          + New Gym
-        </button>
       </div>
 
       {/* Filter controls */}
@@ -1817,6 +1811,17 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           </div>
         </div>
       )}
+
+      {/* Actions bar */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500">{filteredGyms.length} result{filteredGyms.length !== 1 ? "s" : ""}</p>
+        <button
+          onClick={() => setPanel({ gym: EMPTY_GYM, isNew: true })}
+          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
+        >
+          + New Gym
+        </button>
+      </div>
 
       {loading ? (
         <div className="text-center py-12"><p className="text-gray-400 text-sm">Loading…</p></div>

@@ -27,7 +27,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   }
 
   if (!gym || gym.isActive === false) {
-    return { redirect: { destination: "/", permanent: false } };
+    return { notFound: true };
   }
 
   // 301 redirect to new nested URL structure

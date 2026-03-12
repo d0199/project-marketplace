@@ -5,6 +5,7 @@ import { POSTCODE_COORDS } from "@/lib/utils";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 import { adminFetch } from "@/lib/adminFetch";
 import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
+import { useApiFlags } from "@/lib/useApiFlags";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQualifications }: Props) {
+  const { claudeApi } = useApiFlags();
   const [form, setForm] = useState<PersonalTrainer>({ ...pt });
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState(false);
@@ -228,6 +230,7 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
           <div className="sm:col-span-2">
             <div className="flex items-center justify-between mb-1">
               <label className="block text-sm font-medium text-gray-700">Description</label>
+              {claudeApi && (
               <button
                 type="button"
                 onClick={generateDescription}
@@ -251,6 +254,7 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
                   </>
                 )}
               </button>
+              )}
             </div>
             <textarea className={inputCls} rows={3} value={form.description} onChange={(e) => update({ description: e.target.value })} />
             {aiError && (
