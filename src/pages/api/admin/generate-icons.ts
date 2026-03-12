@@ -98,7 +98,7 @@ function sanitizeSvg(raw: string): string | null {
   });
 
   // Remove any attributes not in allowlist (preserve element structure)
-  svg = svg.replace(/<([a-z][a-z0-9]*)\s+([^>]*)>/gi, (match, tag, attrs) => {
+  svg = svg.replace(/<([a-z][a-z0-9]*)\s+([^>]*?)(\/?)\s*>/gi, (match, tag, attrs, selfClose) => {
     if (!ALLOWED_ELEMENTS.has(tag.toLowerCase())) return "";
     const cleanAttrs = (attrs as string)
       .match(/[a-z][a-z-]*\s*=\s*(?:"[^"]*"|'[^']*')/gi)
@@ -107,7 +107,7 @@ function sanitizeSvg(raw: string): string | null {
         return ALLOWED_ATTRS.has(name);
       })
       .join(" ") ?? "";
-    return `<${tag}${cleanAttrs ? " " + cleanAttrs : ""}>`;
+    return `<${tag}${cleanAttrs ? " " + cleanAttrs : ""}${selfClose ? "/" : ""}>`;
   });
 
   // Final check: must still be a valid-looking SVG
