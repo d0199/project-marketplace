@@ -93,7 +93,7 @@ Fields to look for:
 - "bookingUrl": online booking URL (Mindbody, Glofox, etc.)
 - "amenities": array of amenities from this list ONLY: ${amenitiesList}
 - "specialties": ${specialtiesHint}
-- "description": write an SEO-rich 100-200 word description of the gym based on the page content. Highlight key selling points, unique features, location, and target audience. Use a professional, engaging tone suitable for a gym listing directory. Do NOT copy text verbatim from the website — rewrite it in your own words
+- "description": write a compelling, SEO-optimized description for this gym listing on mynextgym.com.au. 100–200 words, plain text only (no HTML, no markdown, no headings). Use Australian English spelling. Emphasise the gym's amenities, location, and what makes it stand out. Naturally include the suburb name for local SEO. The tone should be professional but approachable — as if the gym owner is talking to a potential member. Do NOT include the gym name at the start (it's already shown as the page title). Do NOT use bullet points or lists. Write flowing paragraphs only. Do NOT copy text verbatim from the website — rewrite it in your own words
 - "pricePerWeek": weekly membership price as a number (calculate from weekly/fortnightly/monthly if needed)
 - "hours": object with keys monday-sunday, values as opening hours strings (e.g. "5:00am - 9:00pm")
 - "memberOffers": array of member offer tags from this list ONLY: ${memberOffersList}
@@ -121,7 +121,7 @@ Fields to look for:
 - "bookingUrl": online booking URL
 - "specialties": ${specialtiesHint}
 - "qualifications": array of qualifications/certifications found
-- "description": a brief bio or about text
+- "description": write a compelling, SEO-optimized description for this personal trainer listing on mynextgym.com.au. 100–200 words, plain text only (no HTML, no markdown, no headings). Use Australian English spelling. Emphasise their specialties, qualifications, and experience. Naturally include the suburb name for local SEO. The tone should be professional and confident — written in third person as if the directory is introducing the trainer to a potential client. Do NOT include the trainer's name at the start (it's already shown as the page title). Do NOT use bullet points or lists. Write flowing paragraphs only. Do NOT copy text verbatim from the website — rewrite it in your own words
 - "pricePerSession": per-session price as a number
 - "sessionDuration": session duration in minutes as a number
 - "availability": availability text (e.g. "Mon-Fri 6am-8pm")
