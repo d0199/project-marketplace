@@ -20,12 +20,12 @@ function getGymPriceMap() {
 function getPTPriceMap() {
   return {
     paid: {
-      month: serverConfig.STRIPE_PRICE_PAID_MONTHLY_PT,
-      year: serverConfig.STRIPE_PRICE_PAID_ANNUAL_PT,
+      month: serverConfig.STRIPE_PRICE_PAID_MONTHLY_PT || serverConfig.STRIPE_PRICE_PAID_MONTHLY,
+      year: serverConfig.STRIPE_PRICE_PAID_ANNUAL_PT || serverConfig.STRIPE_PRICE_PAID_ANNUAL,
     },
     featured: {
-      month: serverConfig.STRIPE_PRICE_FEATURED_MONTHLY_PT,
-      year: serverConfig.STRIPE_PRICE_FEATURED_ANNUAL_PT,
+      month: serverConfig.STRIPE_PRICE_FEATURED_MONTHLY_PT || serverConfig.STRIPE_PRICE_FEATURED_MONTHLY,
+      year: serverConfig.STRIPE_PRICE_FEATURED_ANNUAL_PT || serverConfig.STRIPE_PRICE_FEATURED_ANNUAL,
     },
   };
 }
