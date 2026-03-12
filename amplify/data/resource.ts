@@ -250,6 +250,7 @@ const schema = a.schema({
     .model({
       name: a.string().required(),   // logical key, unique by convention
       entries: a.string().array(),   // the picklist values
+      icons: a.string(),             // JSON map: { "entry name": "<svg ...>...</svg>" }
     })
     .authorization((allow) => [allow.publicApiKey()]),
 

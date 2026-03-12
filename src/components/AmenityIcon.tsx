@@ -168,14 +168,18 @@ const MEMBER_OFFER_SVG_ICONS: Record<string, () => React.ReactElement> = {
   ),
 };
 
-export function MemberOfferIcon({ offer, className = "w-4 h-4" }: { offer: string; className?: string }) {
+export function MemberOfferIcon({ offer, className = "w-4 h-4", dynamicIcons }: { offer: string; className?: string; dynamicIcons?: Record<string, string> }) {
   const Icon = MEMBER_OFFER_SVG_ICONS[offer];
-  if (!Icon) return null;
-  return <span className={`inline-flex shrink-0 ${className}`}><Icon /></span>;
+  if (Icon) return <span className={`inline-flex shrink-0 ${className}`}><Icon /></span>;
+  const dynamicSvg = dynamicIcons?.[offer];
+  if (dynamicSvg) return <span className={`inline-flex shrink-0 ${className}`} dangerouslySetInnerHTML={{ __html: dynamicSvg }} />;
+  return null;
 }
 
-export default function AmenityIcon({ amenity, className = "w-4 h-4" }: Props) {
+export default function AmenityIcon({ amenity, className = "w-4 h-4", dynamicIcons }: Props & { dynamicIcons?: Record<string, string> }) {
   const Icon = ICONS[amenity];
-  if (!Icon) return null;
-  return <span className={`inline-flex shrink-0 ${className}`}><Icon /></span>;
+  if (Icon) return <span className={`inline-flex shrink-0 ${className}`}><Icon /></span>;
+  const dynamicSvg = dynamicIcons?.[amenity];
+  if (dynamicSvg) return <span className={`inline-flex shrink-0 ${className}`} dangerouslySetInnerHTML={{ __html: dynamicSvg }} />;
+  return null;
 }

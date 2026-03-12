@@ -2878,6 +2878,26 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     } finally { setCreating(false); }
   }
 
+  const [generatingIcons, setGeneratingIcons] = useState(false);
+
+  async function generateIcons() {
+    setGeneratingIcons(true);
+    setStatusMsg(null);
+    try {
+      const r = await adminFetch("/api/admin/generate-icons", { method: "POST" });
+      const data = await r.json();
+      if (r.ok) {
+        const total = (data.results ?? []).reduce((sum: number, r: { generated: string[] }) => sum + r.generated.length, 0);
+        setStatusMsg({ type: "success", text: total > 0 ? `Generated ${total} icon(s)` : "All icons up to date" });
+      } else {
+        setStatusMsg({ type: "error", text: data.error || "Icon generation failed" });
+      }
+    } catch {
+      setStatusMsg({ type: "error", text: "Icon generation failed" });
+    }
+    setGeneratingIcons(false);
+  }
+
   const dirty = selected && JSON.stringify(entries) !== JSON.stringify(selected.entries);
 
   // Compute removed entries (present in original but missing from current)
@@ -3077,6 +3097,13 @@ function DatasetsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={generateIcons}
+                  disabled={generatingIcons}
+                  className="px-4 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {generatingIcons ? "Generating..." : "Generate SVGs"}
                 </button>
                 <button
                   onClick={requestDeleteConfirm}

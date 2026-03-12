@@ -8,13 +8,16 @@ export interface Dataset {
   id: string;
   name: string;
   entries: string[];
+  icons?: Record<string, string>; // entry name → SVG markup
 }
 
 function toDataset(r: DatasetRecord): Dataset {
+  const icons = (r as Record<string, unknown>).icons as string | null | undefined;
   return {
     id: r.id,
     name: r.name,
     entries: (r.entries?.filter(Boolean) ?? []) as string[],
+    ...(icons ? { icons: JSON.parse(icons) } : {}),
   };
 }
 
@@ -84,6 +87,12 @@ export const datasetStore = {
     if (!isAmplifyConfigured()) return;
     const { errors } = await dataClient.models.Dataset.update({ id, entries });
     if (errors?.length) console.error("[datasetStore.update] errors:", JSON.stringify(errors));
+  },
+
+  async updateIcons(id: string, icons: Record<string, string>): Promise<void> {
+    if (!isAmplifyConfigured()) return;
+    const { errors } = await dataClient.models.Dataset.update({ id, icons: JSON.stringify(icons) } as Parameters<typeof dataClient.models.Dataset.update>[0]);
+    if (errors?.length) console.error("[datasetStore.updateIcons] errors:", JSON.stringify(errors));
   },
 
   async delete(id: string): Promise<void> {

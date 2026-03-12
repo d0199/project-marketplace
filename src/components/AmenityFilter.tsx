@@ -9,11 +9,15 @@ interface Props {
 
 export default function AmenityFilter({ selected, onChange }: Props) {
   const [amenities, setAmenities] = useState<string[]>([...ALL_AMENITIES]);
+  const [dynamicIcons, setDynamicIcons] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     fetch("/api/datasets/amenities")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.entries) setAmenities(data.entries); })
+      .then((data) => {
+        if (data?.entries) setAmenities(data.entries);
+        if (data?.icons) setDynamicIcons(data.icons);
+      })
       .catch(() => {});
   }, []);
 
@@ -61,7 +65,7 @@ export default function AmenityFilter({ selected, onChange }: Props) {
                   className="w-4 h-4 rounded accent-brand-orange"
                 />
                 <span className="flex items-center gap-1.5 text-sm text-gray-700 group-hover:text-gray-900">
-                  <AmenityIcon amenity={amenity} className="w-4 h-4 shrink-0 text-gray-500 group-hover:text-brand-orange transition-colors" />
+                  <AmenityIcon amenity={amenity} className="w-4 h-4 shrink-0 text-gray-500 group-hover:text-brand-orange transition-colors" dynamicIcons={dynamicIcons} />
                   <span className="capitalize">{amenity}</span>
                 </span>
               </label>
