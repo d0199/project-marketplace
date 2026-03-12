@@ -64,6 +64,58 @@ Example: {"pool": "<svg viewBox=\\"0 0 24 24\\" fill=\\"none\\" stroke=\\"curren
 
 No markdown, no explanation, no code blocks. ONLY valid JSON.`;
 
+// ---------------------------------------------------------------------------
+// SVG sanitiser — allowlist of elements and attributes
+// ---------------------------------------------------------------------------
+const ALLOWED_ELEMENTS = new Set([
+  "svg", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "g",
+]);
+
+const ALLOWED_ATTRS = new Set([
+  "viewbox", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin",
+  "d", "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry",
+  "width", "height", "points", "transform", "opacity", "stroke-dasharray",
+  "stroke-dashoffset", "fill-rule", "clip-rule", "none",
+]);
+
+function sanitizeSvg(raw: string): string | null {
+  // Must start with <svg and end with </svg>
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("<svg") || !trimmed.endsWith("</svg>")) return null;
+
+  // Strip any <script>, <style>, on* attributes, javascript: URLs, data: URLs
+  let svg = trimmed
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/\bon\w+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\bon\w+\s*=\s*'[^']*'/gi, "")
+    .replace(/javascript\s*:/gi, "")
+    .replace(/data\s*:/gi, "");
+
+  // Remove any elements not in allowlist
+  svg = svg.replace(/<\/?([a-z][a-z0-9]*)\b/gi, (match, tag) => {
+    return ALLOWED_ELEMENTS.has(tag.toLowerCase()) ? match : "";
+  });
+
+  // Remove any attributes not in allowlist (preserve element structure)
+  svg = svg.replace(/<([a-z][a-z0-9]*)\s+([^>]*)>/gi, (match, tag, attrs) => {
+    if (!ALLOWED_ELEMENTS.has(tag.toLowerCase())) return "";
+    const cleanAttrs = (attrs as string)
+      .match(/[a-z][a-z-]*\s*=\s*(?:"[^"]*"|'[^']*')/gi)
+      ?.filter((attr) => {
+        const name = attr.split("=")[0].trim().toLowerCase();
+        return ALLOWED_ATTRS.has(name);
+      })
+      .join(" ") ?? "";
+    return `<${tag}${cleanAttrs ? " " + cleanAttrs : ""}>`;
+  });
+
+  // Final check: must still be a valid-looking SVG
+  if (!svg.includes("<svg") || !svg.includes("</svg>")) return null;
+
+  return svg;
+}
+
 async function generateSvgIcons(entries: string[], key: string): Promise<Record<string, string>> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -134,7 +186,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (missing.length === 0) continue;
 
     try {
-      const generated = await generateSvgIcons(missing, key);
+      const raw = await generateSvgIcons(missing, key);
+
+      // Sanitise each generated SVG — reject any that fail
+      const generated: Record<string, string> = {};
+      for (const [name, svg] of Object.entries(raw)) {
+        const clean = sanitizeSvg(svg);
+        if (clean) {
+          generated[name] = clean;
+        } else {
+          console.warn(`[generate-icons] Rejected unsafe SVG for "${name}"`);
+        }
+      }
 
       // Merge with existing dynamic icons
       const merged = { ...existingIcons, ...generated };
