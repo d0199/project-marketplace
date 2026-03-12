@@ -15,6 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "POST") {
     try {
       const pt = await ptStore.create(req.body);
+      try { await res.revalidate(`/pt/${pt.suburbSlug}/${pt.slug}`); } catch { /* ignore */ }
       logAdminAction({ adminEmail, action: "pt.create", entityType: "pt", entityId: pt.id, entityName: pt.name });
       return res.json(pt);
     } catch (err: unknown) {

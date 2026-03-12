@@ -3,6 +3,7 @@ import { ownerStore } from "@/lib/ownerStore";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/auditLog";
 import type { Gym } from "@/types";
+import { gymUrl } from "@/lib/slugify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const adminEmail = await requireAdmin(req, res);
@@ -32,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!gym.ownerId) gym.ownerId = "unclaimed";
     try {
       const created = await ownerStore.create(gym);
+      try { await res.revalidate(gymUrl(created)); } catch { /* ignore */ }
       logAdminAction({ adminEmail, action: "gym.create", entityType: "gym", entityId: created.id, entityName: created.name });
       return res.status(201).json(created);
     } catch (err) {
