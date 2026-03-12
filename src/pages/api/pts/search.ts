@@ -12,7 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!origin) return res.status(200).json([]);
 
   const allPTs = await ptStore.getAll();
+  console.log(`[pts/search] total PTs: ${allPTs.length}, postcode: ${postcode}, radius: ${radiusKm}`);
   const visible = allPTs.filter((p) => p.isActive !== false && !p.isTest);
+  console.log(`[pts/search] visible (active, non-test): ${visible.length}`);
 
   const withDist = visible
     .map((p) => {
@@ -47,6 +49,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!a.isFeatured && b.isFeatured) return 1;
       return (a.distanceKm ?? 0) - (b.distanceKm ?? 0);
     });
+
+  // Debug: if ?debug=1, include diagnostic info
+  if (req.query.debug === "1") {
+    const chantelle = allPTs.find((p) => p.slug === "chantelle" || p.name.toLowerCase().includes("chantelle"));
+    return res.status(200).json({
+      totalPTs: allPTs.length,
+      visiblePTs: visible.length,
+      matchedPTs: withDist.length,
+      postcode,
+      radiusKm,
+      origin,
+      chantelleDebug: chantelle ? {
+        id: chantelle.id,
+        name: chantelle.name,
+        slug: chantelle.slug,
+        isActive: chantelle.isActive,
+        isTest: chantelle.isTest,
+        lat: chantelle.lat,
+        lng: chantelle.lng,
+        addressPostcode: chantelle.address.postcode,
+        distanceKm: haversineKm(origin[0], origin[1], chantelle.lat, chantelle.lng),
+      } : "NOT FOUND in getAll()",
+      results: withDist,
+    });
+  }
 
   res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   res.status(200).json(withDist);
