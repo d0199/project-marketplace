@@ -97,6 +97,11 @@ export const featureFlagStore = {
 
   /** Update one or more flags (admin only) */
   async update(partial: Partial<FeatureFlags>): Promise<FeatureFlags> {
+    // When claudeApi is turned off, also force chatbot off
+    if (partial.claudeApi === false) {
+      partial.chatbot = false;
+    }
+
     // Invalidate cache
     cached = null;
     cacheTs = 0;

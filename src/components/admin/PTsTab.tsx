@@ -247,7 +247,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
             placeholder="Search by name, ID, owner, suburb, or postcode…"
             className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
           />
-          <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg">
+          <button type="submit" className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg">
             Search
           </button>
         </form>
@@ -318,7 +318,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
         <p className="text-sm text-gray-500">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</p>
         <button
           onClick={() => setPanel({ pt: { ...EMPTY_PT }, isNew: true })}
-          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg whitespace-nowrap"
         >
           + New PT
         </button>
@@ -468,7 +468,7 @@ function PTEditPanel({
   hasDraft: boolean;
   original: PersonalTrainer | null;
 }) {
-  const { claudeApi } = useApiFlags();
+  const { claudeApi, googleApi } = useApiFlags();
   const { pt, isNew } = panel;
 
   function isChanged(field: string): boolean {
@@ -979,18 +979,20 @@ function PTEditPanel({
           <section>
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Address</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className={labelCls}>Search Address</label>
-                <AddressAutocomplete
-                  inputClassName={inputCls}
-                  onSelect={(r) => {
-                    const addr = { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode };
-                    const latLng: Partial<PersonalTrainer> = { address: addr };
-                    if (r.lat != null && r.lng != null) { latLng.lat = r.lat; latLng.lng = r.lng; }
-                    update({ ...latLng, address: addr });
-                  }}
-                />
-              </div>
+              {googleApi && (
+                <div className="col-span-2">
+                  <label className={labelCls}>Search Address</label>
+                  <AddressAutocomplete
+                    inputClassName={inputCls}
+                    onSelect={(r) => {
+                      const addr = { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode };
+                      const latLng: Partial<PersonalTrainer> = { address: addr };
+                      if (r.lat != null && r.lng != null) { latLng.lat = r.lat; latLng.lng = r.lng; }
+                      update({ ...latLng, address: addr });
+                    }}
+                  />
+                </div>
+              )}
               <div className="col-span-2">
                 <label className={labelCls}>Street{edited("address")}</label>
                 <input className={inputCls} value={pt.address.street} onChange={(e) => updateAddress({ street: e.target.value })} />

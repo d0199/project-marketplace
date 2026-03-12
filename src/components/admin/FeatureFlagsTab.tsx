@@ -90,7 +90,12 @@ export default function FeatureFlagsTab({ isSuperAdmin }: { isSuperAdmin: boolea
 
   function toggleDraft(key: keyof FeatureFlags) {
     if (!draft) return;
-    setDraft({ ...draft, [key]: !draft[key] as never });
+    const updated = { ...draft, [key]: !draft[key] as never };
+    // Turning off Claude API also forces chatbot off
+    if (key === "claudeApi" && !updated.claudeApi) {
+      updated.chatbot = false;
+    }
+    setDraft(updated);
     setSuccess("");
   }
 

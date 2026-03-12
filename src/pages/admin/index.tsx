@@ -1497,7 +1497,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg"
+            className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg"
           >
             Search
           </button>
@@ -1817,7 +1817,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         <p className="text-sm text-gray-500">{filteredGyms.length} result{filteredGyms.length !== 1 ? "s" : ""}</p>
         <button
           onClick={() => setPanel({ gym: EMPTY_GYM, isNew: true })}
-          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg whitespace-nowrap"
         >
           + New Gym
         </button>
@@ -2302,7 +2302,7 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg"
+            className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg"
           >
             Search
           </button>
@@ -2329,7 +2329,7 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             setNewForm((f) => ({ ...f, ownerId: autoId }));
             setShowNew(true);
           }}
-          className="px-4 py-2 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg whitespace-nowrap"
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded-lg whitespace-nowrap"
         >
           + New User
         </button>

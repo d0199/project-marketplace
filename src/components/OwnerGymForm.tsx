@@ -37,7 +37,7 @@ const DAYS: (keyof OpeningHours)[] = [
 export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original, suggestions, onDismissSuggestion, onSave, onFormChange }: Props) {
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
-  const { claudeApi } = useApiFlags();
+  const { claudeApi, googleApi } = useApiFlags();
 
   const [form, setForm] = useState<Gym>({ ...gym });
   const formRef = useRef(form);
@@ -459,19 +459,21 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
           Address
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className={labelCls}>Search Address</label>
-            <AddressAutocomplete
-              inputClassName={inputCls}
-              onSelect={(r) => {
-                setForm((f) => ({
-                  ...f,
-                  address: { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode },
-                  ...(r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : {}),
-                }));
-              }}
-            />
-          </div>
+          {googleApi && (
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Search Address</label>
+              <AddressAutocomplete
+                inputClassName={inputCls}
+                onSelect={(r) => {
+                  setForm((f) => ({
+                    ...f,
+                    address: { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode },
+                    ...(r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : {}),
+                  }));
+                }}
+              />
+            </div>
+          )}
           <div className="sm:col-span-2">
             <label className={labelCls}>
               Street{edited("address")}
