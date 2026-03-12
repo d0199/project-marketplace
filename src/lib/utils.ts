@@ -38,6 +38,13 @@ export const ALL_SUBURB_INDEX = [
   ...EASTERN_SUBURB_INDEX,
 ].map((s) => ({ ...s, name: toTitleCase(s.name) }));
 
+// Postcode → suburb name lookup (first/most-common suburb per postcode).
+// Used by ServiceAreaPicker so PTs can choose any known Australian postcode.
+export const POSTCODE_SUBURB_MAP: Record<string, string> = {};
+for (const s of ALL_SUBURB_INDEX) {
+  if (!POSTCODE_SUBURB_MAP[s.postcode]) POSTCODE_SUBURB_MAP[s.postcode] = s.name;
+}
+
 // Derive AU state from postcode prefix
 export function postcodeToState(postcode: string): string {
   const n = parseInt(postcode, 10);

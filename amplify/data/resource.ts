@@ -184,6 +184,7 @@ const schema = a.schema({
       languages: a.string().array(),
       hideAddress: a.boolean(),
       serviceAreas: a.string().array(), // postcodes the PT also services
+      isNational: a.boolean(),           // online PT — shows in every search
       customLeadFields: a.string(), // JSON-encoded CustomLeadField[]
       // admin review tracking
       adminEdited: a.boolean(),

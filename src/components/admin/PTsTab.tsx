@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
-import { POSTCODE_COORDS, POSTCODE_META } from "@/lib/utils";
+import { POSTCODE_COORDS, ALL_SUBURB_INDEX, POSTCODE_SUBURB_MAP } from "@/lib/utils";
 import { ptUrl } from "@/lib/slugify";
 import { geocodeAddress } from "@/lib/geocode";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
@@ -1035,12 +1035,17 @@ function PTEditPanel({
           <section>
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Service Areas{edited("serviceAreas")}</h3>
             <p className="text-xs text-gray-500 mb-3">Add suburbs this PT also services — they&apos;ll appear in search results for these areas.</p>
+            <label className="flex items-center gap-2 mb-3">
+              <input type="checkbox" checked={pt.isNational ?? false} onChange={(e) => update({ isNational: e.target.checked } as Partial<PersonalTrainer>)} className="rounded border-gray-300 text-brand-orange focus:ring-brand-orange" />
+              <span className="text-sm font-medium text-gray-700">National (Online PT)</span>
+              <span className="text-xs text-gray-400">— shows in every search as &quot;Online PT&quot;</span>
+            </label>
             <div className="flex flex-wrap gap-2 mb-3">
               {(pt.serviceAreas ?? []).map((pc) => {
-                const meta = POSTCODE_META[pc];
+                const name = POSTCODE_SUBURB_MAP[pc];
                 return (
                   <span key={pc} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
-                    {meta ? `${meta.name} (${pc})` : pc}
+                    {name ? `${name} (${pc})` : pc}
                     <button type="button" onClick={() => update({ serviceAreas: (pt.serviceAreas ?? []).filter((s) => s !== pc) })} className="text-orange-400 hover:text-orange-700 ml-0.5">&times;</button>
                   </span>
                 );
@@ -1354,9 +1359,19 @@ function LanguageEditor({ languages, onChange }: { languages: string[]; onChange
 
 function AdminServiceAreaPicker({ selected, onChange }: { selected: string[]; onChange: (v: string[]) => void }) {
   const [search, setSearch] = useState("");
-  const options = Object.entries(POSTCODE_META)
-    .filter(([pc, meta]) => !selected.includes(pc) && (meta.name.toLowerCase().includes(search.toLowerCase()) || pc.includes(search)))
-    .slice(0, 8);
+  const q = search.toLowerCase();
+  const seen = new Set<string>(selected);
+  const options: { postcode: string; name: string }[] = [];
+  if (q.length >= 2) {
+    for (const s of ALL_SUBURB_INDEX) {
+      if (seen.has(s.postcode)) continue;
+      if (s.name.toLowerCase().includes(q) || s.postcode.includes(q)) {
+        seen.add(s.postcode);
+        options.push({ postcode: s.postcode, name: s.name });
+        if (options.length >= 8) break;
+      }
+    }
+  }
 
   return (
     <div className="relative">
@@ -1366,16 +1381,16 @@ function AdminServiceAreaPicker({ selected, onChange }: { selected: string[]; on
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search suburb or postcode..."
       />
-      {search.length >= 2 && options.length > 0 && (
+      {options.length > 0 && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-          {options.map(([pc, meta]) => (
-            <li key={pc}>
+          {options.map((o) => (
+            <li key={o.postcode}>
               <button
                 type="button"
                 className="w-full text-left px-3 py-2 text-sm hover:bg-orange-50 transition-colors"
-                onClick={() => { onChange([...selected, pc]); setSearch(""); }}
+                onClick={() => { onChange([...selected, o.postcode]); setSearch(""); }}
               >
-                {meta.name} ({pc})
+                {o.name} ({o.postcode})
               </button>
             </li>
           ))}

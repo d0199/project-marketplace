@@ -23,6 +23,8 @@ export interface PTWithDistance {
   isFeatured?: boolean;
   isPaid?: boolean;
   distanceKm?: number;
+  inServiceArea?: boolean;
+  isNational?: boolean;
   gender?: string;
 }
 
@@ -55,13 +57,21 @@ export default function PTCard({ pt }: Props) {
             ★ Featured
           </span>
         )}
-        {pt.distanceKm !== undefined && (
+        {pt.isNational ? (
+          <span className="absolute top-2 right-2 bg-indigo-600/90 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            Online PT
+          </span>
+        ) : pt.inServiceArea ? (
+          <span className="absolute top-2 right-2 bg-indigo-600/90 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            Services this area
+          </span>
+        ) : pt.distanceKm !== undefined ? (
           <span className="absolute top-2 right-2 bg-brand-black/80 text-white text-xs font-semibold px-2 py-1 rounded-full">
             {pt.distanceKm < 1
               ? `${Math.round(pt.distanceKm * 1000)} m`
               : `${pt.distanceKm.toFixed(1)} km`}
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="p-4 flex flex-col flex-1">

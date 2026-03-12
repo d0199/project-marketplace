@@ -85,6 +85,9 @@ function toPT(r: PTRecord): PersonalTrainer {
     ...((r as Record<string, unknown>).serviceAreas != null && {
       serviceAreas: ((r as Record<string, unknown>).serviceAreas as string[])?.filter(Boolean) ?? [],
     }),
+    ...((r as Record<string, unknown>).isNational != null && {
+      isNational: (r as Record<string, unknown>).isNational as boolean,
+    }),
     ...((r as Record<string, unknown>).customLeadFields != null && {
       customLeadFields: JSON.parse((r as Record<string, unknown>).customLeadFields as string),
     }),
@@ -145,6 +148,7 @@ function fromPT(pt: PersonalTrainer) {
     languages: pt.languages,
     hideAddress: pt.hideAddress,
     serviceAreas: pt.serviceAreas,
+    isNational: pt.isNational,
     customLeadFields: pt.customLeadFields ? JSON.stringify(pt.customLeadFields) : undefined,
     adminEdited: pt.adminEdited,
     adminEditedAt: pt.adminEditedAt,

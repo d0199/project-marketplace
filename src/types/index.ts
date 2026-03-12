@@ -113,6 +113,7 @@ export interface PersonalTrainer {
   languages?: string[];
   hideAddress?: boolean;
   serviceAreas?: string[]; // postcodes the PT also services
+  isNational?: boolean;    // online PT — shows in every search
   customLeadFields?: CustomLeadField[];
   // Admin edit tracking
   adminEdited?: boolean;

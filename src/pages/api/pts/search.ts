@@ -18,8 +18,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const withDist = visible
     .map((p) => {
-      const distanceKm = haversineKm(origin[0], origin[1], p.lat, p.lng);
-      const inServiceArea = p.serviceAreas?.includes(postcode) ?? false;
+      const actualDistanceKm = haversineKm(origin[0], origin[1], p.lat, p.lng);
+      const isNational = p.isNational ?? false;
+      const inServiceArea = isNational || (p.serviceAreas?.includes(postcode) ?? false);
+      // Service-area / national PTs sort at 2.5 km so they appear near the top but behind truly local results
+      const distanceKm = inServiceArea && actualDistanceKm > radiusKm ? 2.5 : actualDistanceKm;
       return {
         id: p.id,
         slug: p.slug,
@@ -40,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         gender: p.gender,
         distanceKm,
         inServiceArea,
+        isNational,
       };
     })
     .filter((p) => (p.distanceKm ?? Infinity) <= radiusKm || p.inServiceArea)
