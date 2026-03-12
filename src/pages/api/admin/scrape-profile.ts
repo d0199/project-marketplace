@@ -73,8 +73,9 @@ async function getDatasetEntries(name: string): Promise<string[]> {
   } catch { return []; }
 }
 
-function buildGymPrompt(amenities: string[], specialties: string[]): string {
+function buildGymPrompt(amenities: string[], specialties: string[], memberOffers: string[]): string {
   const amenitiesList = amenities.length > 0 ? JSON.stringify(amenities) : '["24/7 Access", "Group Classes", "Personal Training", "Pool", "Sauna", "Showers", "Parking", "Childcare", "Cardio Equipment", "Free Weights", "Functional Training", "Boxing", "Yoga", "Pilates", "Spin/Cycle", "CrossFit", "HIIT", "Basketball Court", "Tennis Court", "Squash Court", "Martial Arts", "Climbing Wall", "Juice Bar", "Supplement Shop", "Towel Service", "WiFi", "Air Conditioning", "Women Only Area", "Outdoor Area", "Recovery/Ice Bath", "Physiotherapy", "Massage"]';
+  const memberOffersList = memberOffers.length > 0 ? JSON.stringify(memberOffers) : '["no contract", "contract", "new member trial", "referral scheme", "multiple location access", "gym or community app", "casual classes"]';
   const specialtiesHint = specialties.length > 0
     ? `array of specialties/programs — prefer entries from this list: ${JSON.stringify(specialties.slice(0, 40))}`
     : 'array of specialties/programs (e.g. "Hyrox", "F45", "Olympic Lifting", "Powerlifting", "Rehab", "Seniors Fitness")';
@@ -95,15 +96,16 @@ Fields to look for:
 - "description": write an SEO-rich 100-200 word description of the gym based on the page content. Highlight key selling points, unique features, location, and target audience. Use a professional, engaging tone suitable for a gym listing directory. Do NOT copy text verbatim from the website — rewrite it in your own words
 - "pricePerWeek": weekly membership price as a number (calculate from weekly/fortnightly/monthly if needed)
 - "hours": object with keys monday-sunday, values as opening hours strings (e.g. "5:00am - 9:00pm")
-- "memberOffers": array of member offer tags from this list ONLY: ["no contract", "contract", "new member trial", "referral scheme", "multiple location access", "gym or community app"]
+- "memberOffers": array of member offer tags from this list ONLY: ${memberOffersList}
 
 Return ONLY valid JSON. No markdown, no explanation, no code blocks.`;
 }
 
-function buildPtPrompt(specialties: string[]): string {
+function buildPtPrompt(specialties: string[], memberOffers: string[]): string {
   const specialtiesHint = specialties.length > 0
     ? `array of training specialties — prefer entries from this list: ${JSON.stringify(specialties.slice(0, 40))}`
     : 'array of training specialties (e.g. "Weight Loss", "Strength Training", "HIIT", "Boxing", "Yoga", "Pre/Post Natal", "Rehabilitation", "Sports Performance", "Bodybuilding", "Functional Training", "Hyrox", "CrossFit")';
+  const memberOffersList = memberOffers.length > 0 ? JSON.stringify(memberOffers) : '["no contract", "contract", "new member trial", "referral scheme", "casual classes"]';
 
   return `You are analyzing a personal trainer's website. Extract as much useful profile information as possible from the page content.
 
@@ -125,6 +127,7 @@ Fields to look for:
 - "availability": availability text (e.g. "Mon-Fri 6am-8pm")
 - "languages": array of languages spoken
 - "experienceYears": years of experience as a number
+- "memberOffers": array of member offer tags from this list ONLY: ${memberOffersList}
 
 Return ONLY valid JSON. No markdown, no explanation, no code blocks.`;
 }
@@ -204,14 +207,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Build prompt with current dataset lists
     let systemPrompt: string;
     if (type === "gym") {
-      const [amenities, specialties] = await Promise.all([
+      const [amenities, specialties, memberOffers] = await Promise.all([
         getDatasetEntries("amenities"),
         getDatasetEntries("specialties"),
+        getDatasetEntries("memberOffers"),
       ]);
-      systemPrompt = buildGymPrompt(amenities, specialties);
+      systemPrompt = buildGymPrompt(amenities, specialties, memberOffers);
     } else {
-      const ptSpecialties = await getDatasetEntries("pt-specialties");
-      systemPrompt = buildPtPrompt(ptSpecialties);
+      const [ptSpecialties, ptMemberOffers] = await Promise.all([
+        getDatasetEntries("pt-specialties"),
+        getDatasetEntries("pt-member-offers"),
+      ]);
+      systemPrompt = buildPtPrompt(ptSpecialties, ptMemberOffers);
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
