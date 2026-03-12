@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
-import { POSTCODE_COORDS } from "@/lib/utils";
+import { POSTCODE_COORDS, POSTCODE_META } from "@/lib/utils";
 import { ptUrl } from "@/lib/slugify";
 import { geocodeAddress } from "@/lib/geocode";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
@@ -1020,6 +1020,36 @@ function PTEditPanel({
                 </div>
               </div>
             </div>
+            <label className="flex items-center gap-2 mt-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={pt.hideAddress ?? false}
+                onChange={(e) => update({ hideAddress: e.target.checked })}
+                className="rounded border-gray-300 text-brand-orange focus:ring-brand-orange"
+              />
+              <span className="text-sm text-gray-700">Hide address on public profile{edited("hideAddress")}</span>
+            </label>
+          </section>
+
+          {/* Service Areas */}
+          <section>
+            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Service Areas{edited("serviceAreas")}</h3>
+            <p className="text-xs text-gray-500 mb-3">Add suburbs this PT also services — they&apos;ll appear in search results for these areas.</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {(pt.serviceAreas ?? []).map((pc) => {
+                const meta = POSTCODE_META[pc];
+                return (
+                  <span key={pc} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
+                    {meta ? `${meta.name} (${pc})` : pc}
+                    <button type="button" onClick={() => update({ serviceAreas: (pt.serviceAreas ?? []).filter((s) => s !== pc) })} className="text-orange-400 hover:text-orange-700 ml-0.5">&times;</button>
+                  </span>
+                );
+              })}
+            </div>
+            <AdminServiceAreaPicker
+              selected={pt.serviceAreas ?? []}
+              onChange={(areas) => update({ serviceAreas: areas })}
+            />
           </section>
 
           {/* Pricing */}
@@ -1318,6 +1348,39 @@ function LanguageEditor({ languages, onChange }: { languages: string[]; onChange
         />
         <button onClick={add} className="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 shrink-0">Add</button>
       </div>
+    </div>
+  );
+}
+
+function AdminServiceAreaPicker({ selected, onChange }: { selected: string[]; onChange: (v: string[]) => void }) {
+  const [search, setSearch] = useState("");
+  const options = Object.entries(POSTCODE_META)
+    .filter(([pc, meta]) => !selected.includes(pc) && (meta.name.toLowerCase().includes(search.toLowerCase()) || pc.includes(search)))
+    .slice(0, 8);
+
+  return (
+    <div className="relative">
+      <input
+        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search suburb or postcode..."
+      />
+      {search.length >= 2 && options.length > 0 && (
+        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          {options.map(([pc, meta]) => (
+            <li key={pc}>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-orange-50 transition-colors"
+                onClick={() => { onChange([...selected, pc]); setSearch(""); }}
+              >
+                {meta.name} ({pc})
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

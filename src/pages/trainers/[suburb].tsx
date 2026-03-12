@@ -341,7 +341,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   const activePTs = allPTs.filter((p) => p.isActive !== false && !p.isTest);
   const origin = POSTCODE_COORDS[postcode];
   const ptCount = activePTs.filter(
-    (p) => haversineKm(origin[0], origin[1], p.lat, p.lng) <= 10
+    (p) => haversineKm(origin[0], origin[1], p.lat, p.lng) <= 10 || (p.serviceAreas?.includes(postcode) ?? false)
   ).length;
 
   // Return 404 for suburbs with zero PTs to avoid soft 404 in search engines

@@ -16,6 +16,7 @@ import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
 import { BASE_URL } from "@/lib/siteUrl";
+import { POSTCODE_META } from "@/lib/utils";
 import { gymUrl, ptUrl } from "@/lib/slugify";
 
 interface AffiliatedGym {
@@ -45,7 +46,7 @@ function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
     jobTitle: "Personal Trainer",
     address: {
       "@type": "PostalAddress",
-      streetAddress: pt.address.street,
+      ...(pt.hideAddress ? {} : { streetAddress: pt.address.street }),
       addressLocality: pt.address.suburb,
       addressRegion: pt.address.state,
       postalCode: pt.address.postcode,
@@ -617,7 +618,7 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
               </div>
             )}
 
-            {pt.address.street && (
+            {pt.address.street && !pt.hideAddress && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-2">Location</h3>
                 <address className="not-italic text-sm text-gray-700 leading-relaxed">
@@ -637,6 +638,21 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
                   </svg>
                   Get Directions
                 </a>
+              </div>
+            )}
+            {pt.serviceAreas && pt.serviceAreas.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-semibold text-gray-900 mb-2">Service Areas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {pt.serviceAreas.map((pc) => {
+                    const meta = POSTCODE_META[pc];
+                    return (
+                      <span key={pc} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
+                        {meta ? meta.name : pc}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             )}
             <div className="text-center mt-3">

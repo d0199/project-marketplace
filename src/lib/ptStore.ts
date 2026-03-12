@@ -81,6 +81,10 @@ function toPT(r: PTRecord): PersonalTrainer {
     ...(r.availability != null && { availability: r.availability }),
     ...(r.gender != null && { gender: r.gender }),
     languages: (r.languages?.filter(Boolean) ?? []) as string[],
+    ...(r.hideAddress != null && { hideAddress: r.hideAddress }),
+    ...((r as Record<string, unknown>).serviceAreas != null && {
+      serviceAreas: ((r as Record<string, unknown>).serviceAreas as string[])?.filter(Boolean) ?? [],
+    }),
     ...((r as Record<string, unknown>).customLeadFields != null && {
       customLeadFields: JSON.parse((r as Record<string, unknown>).customLeadFields as string),
     }),
@@ -139,6 +143,8 @@ function fromPT(pt: PersonalTrainer) {
     availability: pt.availability,
     gender: pt.gender,
     languages: pt.languages,
+    hideAddress: pt.hideAddress,
+    serviceAreas: pt.serviceAreas,
     customLeadFields: pt.customLeadFields ? JSON.stringify(pt.customLeadFields) : undefined,
     adminEdited: pt.adminEdited,
     adminEditedAt: pt.adminEditedAt,
@@ -359,6 +365,8 @@ export const ptStore = {
       availability: pt.availability,
       gender: pt.gender,
       languages: pt.languages,
+      hideAddress: pt.hideAddress,
+      serviceAreas: pt.serviceAreas,
       customLeadFields: pt.customLeadFields ? JSON.stringify(pt.customLeadFields) : undefined,
     });
     if (!data) throw new Error("Failed to create PT");

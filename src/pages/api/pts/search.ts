@@ -15,27 +15,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const visible = allPTs.filter((p) => p.isActive !== false && !p.isTest);
 
   const withDist = visible
-    .map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      suburbSlug: p.suburbSlug,
-      ownerId: p.ownerId,
-      name: p.name,
-      description: p.description,
-      address: p.address,
-      specialties: p.specialties,
-      qualifications: p.qualifications,
-      experienceYears: p.experienceYears,
-      pricePerSession: p.pricePerSession,
-      sessionDuration: p.sessionDuration,
-      images: p.images,
-      imageFocalPoints: p.imageFocalPoints,
-      isFeatured: p.isFeatured,
-      isPaid: p.isPaid,
-      gender: p.gender,
-      distanceKm: haversineKm(origin[0], origin[1], p.lat, p.lng),
-    }))
-    .filter((p) => (p.distanceKm ?? Infinity) <= radiusKm)
+    .map((p) => {
+      const distanceKm = haversineKm(origin[0], origin[1], p.lat, p.lng);
+      const inServiceArea = p.serviceAreas?.includes(postcode) ?? false;
+      return {
+        id: p.id,
+        slug: p.slug,
+        suburbSlug: p.suburbSlug,
+        ownerId: p.ownerId,
+        name: p.name,
+        description: p.description,
+        address: p.address,
+        specialties: p.specialties,
+        qualifications: p.qualifications,
+        experienceYears: p.experienceYears,
+        pricePerSession: p.pricePerSession,
+        sessionDuration: p.sessionDuration,
+        images: p.images,
+        imageFocalPoints: p.imageFocalPoints,
+        isFeatured: p.isFeatured,
+        isPaid: p.isPaid,
+        gender: p.gender,
+        distanceKm,
+        inServiceArea,
+      };
+    })
+    .filter((p) => (p.distanceKm ?? Infinity) <= radiusKm || p.inServiceArea)
     .sort((a, b) => {
       // Featured first, then by distance
       if (a.isFeatured && !b.isFeatured) return -1;

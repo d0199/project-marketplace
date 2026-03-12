@@ -182,6 +182,8 @@ const schema = a.schema({
       availability: a.string(),
       gender: a.string(),
       languages: a.string().array(),
+      hideAddress: a.boolean(),
+      serviceAreas: a.string().array(), // postcodes the PT also services
       customLeadFields: a.string(), // JSON-encoded CustomLeadField[]
       // admin review tracking
       adminEdited: a.boolean(),
