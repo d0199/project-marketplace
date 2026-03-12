@@ -35,7 +35,7 @@ function resolveQualifications(r: PTRecord) {
 }
 
 function toPT(r: PTRecord): PersonalTrainer {
-  return {
+  const pt: PersonalTrainer = {
     id: r.id,
     slug: generateNameSlug(r.name ?? ""),
     suburbSlug: generateSuburbSlug(r.addressSuburb ?? "", r.addressPostcode ?? ""),
@@ -44,6 +44,7 @@ function toPT(r: PTRecord): PersonalTrainer {
     isTest: r.isTest ?? false,
     isFeatured: r.isFeatured ?? false,
     isPaid: r.isPaid ?? false,
+    ...(r.trialExpiresAt != null && { trialExpiresAt: r.trialExpiresAt }),
     ...(r.stripeSubscriptionId != null && { stripeSubscriptionId: r.stripeSubscriptionId }),
     ...(r.stripePlan != null && { stripePlan: r.stripePlan as "paid" | "featured" }),
     ...(r.createdBy != null && { createdBy: r.createdBy }),
@@ -98,6 +99,13 @@ function toPT(r: PTRecord): PersonalTrainer {
       adminEditHistory: JSON.parse((r as Record<string, unknown>).adminEditHistory as string),
     }),
   };
+  // Auto-expire trial: clear paid/featured when trial date has passed
+  if (pt.trialExpiresAt && new Date(pt.trialExpiresAt) < new Date()) {
+    pt.isPaid = false;
+    pt.isFeatured = false;
+    delete pt.trialExpiresAt;
+  }
+  return pt;
 }
 
 function fromPT(pt: PersonalTrainer) {
@@ -108,6 +116,7 @@ function fromPT(pt: PersonalTrainer) {
     isTest: pt.isTest ?? false,
     isFeatured: pt.isFeatured ?? false,
     isPaid: pt.isPaid ?? false,
+    trialExpiresAt: pt.trialExpiresAt,
     stripeSubscriptionId: pt.stripeSubscriptionId,
     stripePlan: pt.stripePlan,
     createdBy: pt.createdBy,
@@ -334,6 +343,7 @@ export const ptStore = {
       isTest: pt.isTest ?? false,
       isFeatured: pt.isFeatured ?? false,
       isPaid: pt.isPaid ?? false,
+      trialExpiresAt: pt.trialExpiresAt,
       createdBy: pt.createdBy,
       name: pt.name,
       description: pt.description,

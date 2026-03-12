@@ -21,7 +21,7 @@ const seedGyms: Gym[] = deduplicateSlugs(
 type GymRecord = Schema["Gym"]["type"];
 
 function toGym(r: GymRecord): Gym {
-  return {
+  const gym: Gym = {
     id: r.id,
     slug: generateNameSlug(r.name ?? ""),
     suburbSlug: generateSuburbSlug(r.addressSuburb ?? "", r.addressPostcode ?? ""),
@@ -31,6 +31,7 @@ function toGym(r: GymRecord): Gym {
     isFeatured: r.isFeatured ?? false,
     priceVerified: r.priceVerified ?? false,
     isPaid: r.isPaid ?? false,
+    ...(r.trialExpiresAt != null && { trialExpiresAt: r.trialExpiresAt }),
     ...(r.stripeSubscriptionId != null && { stripeSubscriptionId: r.stripeSubscriptionId }),
     ...(r.stripePlan != null && { stripePlan: r.stripePlan as "paid" | "featured" }),
     ...(r.googlePlaceId != null && { googlePlaceId: r.googlePlaceId }),
@@ -81,6 +82,13 @@ function toGym(r: GymRecord): Gym {
       adminEditHistory: JSON.parse((r as Record<string, unknown>).adminEditHistory as string),
     }),
   };
+  // Auto-expire trial: clear paid/featured when trial date has passed
+  if (gym.trialExpiresAt && new Date(gym.trialExpiresAt) < new Date()) {
+    gym.isPaid = false;
+    gym.isFeatured = false;
+    delete gym.trialExpiresAt;
+  }
+  return gym;
 }
 
 function fromGym(gym: Gym) {
@@ -92,6 +100,7 @@ function fromGym(gym: Gym) {
     isFeatured: gym.isFeatured ?? false,
     priceVerified: gym.priceVerified ?? false,
     isPaid: gym.isPaid ?? false,
+    trialExpiresAt: gym.trialExpiresAt,
     stripeSubscriptionId: gym.stripeSubscriptionId,
     stripePlan: gym.stripePlan,
     googlePlaceId: gym.googlePlaceId,
@@ -288,6 +297,7 @@ export const ownerStore = {
       isFeatured: gym.isFeatured ?? false,
       priceVerified: gym.priceVerified ?? false,
       isPaid: gym.isPaid ?? false,
+      trialExpiresAt: gym.trialExpiresAt,
       createdBy: gym.createdBy,
       name: gym.name,
       description: gym.description,

@@ -41,6 +41,7 @@ const schema = a.schema({
       hoursComment: a.string(),
       // paid listing flag
       isPaid: a.boolean(),
+      trialExpiresAt: a.string(), // ISO date — auto-clears isPaid/isFeatured when past
       // Stripe billing
       stripeSubscriptionId: a.string(),
       stripePlan: a.string(), // "paid" | "featured" | null
@@ -143,6 +144,7 @@ const schema = a.schema({
       isTest: a.boolean(),
       isFeatured: a.boolean(),
       isPaid: a.boolean(),
+      trialExpiresAt: a.string(),
       stripeSubscriptionId: a.string(),
       stripePlan: a.string(),
       createdBy: a.string(),
