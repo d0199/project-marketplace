@@ -7,6 +7,7 @@ import { gymUrl } from "@/lib/slugify";
 import { adminFetch } from "@/lib/adminFetch";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
 import { FieldSuggestion } from "@/components/admin/WebsiteScraper";
+import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
@@ -18,6 +19,7 @@ interface Props {
   suggestions?: ScrapedFields | null;
   onDismissSuggestion?: (field: string) => void;
   onSave: (updated: Gym) => Promise<string | undefined | void> | string | undefined | void;
+  onFormChange?: (updated: Gym) => void;
 }
 
 const DAYS: (keyof OpeningHours)[] = [
@@ -30,11 +32,28 @@ const DAYS: (keyof OpeningHours)[] = [
   "sunday",
 ];
 
-export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggestions, onDismissSuggestion, onSave }: Props) {
+export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggestions, onDismissSuggestion, onSave, onFormChange }: Props) {
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
   const [form, setForm] = useState<Gym>({ ...gym });
+  const formRef = useRef(form);
+  formRef.current = form;
+  const originalRef = useRef(gym);
+  const onFormChangeRef = useRef(onFormChange);
+  onFormChangeRef.current = onFormChange;
+  useEffect(() => { onFormChangeRef.current?.(form); }, [form]);
+
+  function isChanged(field: string): boolean {
+    if (!isAdmin) return false;
+    const a = JSON.stringify((originalRef.current as unknown as Record<string, unknown>)[field] ?? "");
+    const b = JSON.stringify((form as unknown as Record<string, unknown>)[field] ?? "");
+    return a !== b;
+  }
+  function edited(field: string) {
+    return isChanged(field) ? <span className="text-amber-500 font-bold ml-0.5">*</span> : null;
+  }
+
   const [toast, setToast] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
 
@@ -219,7 +238,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form id="gym-edit-form" onSubmit={handleSubmit} className="space-y-8">
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.includes("review") || toast.includes("submitted") ? "bg-blue-600" : toast.includes("Error") ? "bg-red-600" : "bg-green-600"}`}>
           {toast}
@@ -234,7 +253,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={labelCls}>
-              Gym Name
+              Gym Name{edited("name")}
             </label>
             <input
               value={form.name}
@@ -245,7 +264,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           <div className="sm:col-span-2">
             <div className="flex items-center justify-between mb-1">
               <label className="block text-sm font-medium text-gray-700">
-                Description
+                Description{edited("description")}
               </label>
               <button
                 type="button"
@@ -306,7 +325,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Phone
+              Phone{edited("phone")}
             </label>
             <input
               value={form.phone}
@@ -317,7 +336,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Email
+              Email{edited("email")}
             </label>
             <input
               type="email"
@@ -329,7 +348,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Website
+              Website{edited("website")}
             </label>
             <input
               type="url"
@@ -340,7 +359,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Price per Week ($)
+              Price per Week ($){edited("pricePerWeek")}
             </label>
             <input
               type="number"
@@ -388,7 +407,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelCls}>
-              Instagram URL
+              Instagram URL{edited("instagram")}
             </label>
             <input
               type="url"
@@ -401,7 +420,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Facebook URL
+              Facebook URL{edited("facebook")}
             </label>
             <input
               type="url"
@@ -414,7 +433,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div className="sm:col-span-2">
             <label className={labelCls}>
-              Online Booking URL
+              Online Booking URL{edited("bookingUrl")}
             </label>
             <input
               type="url"
@@ -436,8 +455,21 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
+            <label className={labelCls}>Search Address</label>
+            <AddressAutocomplete
+              inputClassName={inputCls}
+              onSelect={(r) => {
+                setForm((f) => ({
+                  ...f,
+                  address: { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode },
+                  ...(r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : {}),
+                }));
+              }}
+            />
+          </div>
+          <div className="sm:col-span-2">
             <label className={labelCls}>
-              Street
+              Street{edited("address")}
             </label>
             <input
               value={form.address.street}
@@ -447,7 +479,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Suburb
+              Suburb{edited("address")}
             </label>
             <input
               value={form.address.suburb}
@@ -457,7 +489,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
           </div>
           <div>
             <label className={labelCls}>
-              Postcode
+              Postcode{edited("address")}
             </label>
             <input
               value={form.address.postcode}
@@ -472,7 +504,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
       {/* Amenities */}
       <section>
         <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
-          Amenities
+          Amenities{edited("amenities")}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {availableAmenities.map((amenity) => (
@@ -795,24 +827,26 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
         )}
       </section>
 
-      <div className="flex items-center justify-between">
-        {gymId ? (
-          <Link
-            href={gymUrl(gym)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"
+      {!isAdmin && (
+        <div className="flex items-center justify-between">
+          {gymId ? (
+            <Link
+              href={gymUrl(gym)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-brand-orange hover:text-brand-orange-dark font-medium flex items-center gap-1"
+            >
+              View Page →
+            </Link>
+          ) : <span />}
+          <button
+            type="submit"
+            className="px-8 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors"
           >
-            View Page →
-          </Link>
-        ) : <span />}
-        <button
-          type="submit"
-          className="px-8 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors"
-        >
-          Save Changes
-        </button>
-      </div>
+            Save Changes
+          </button>
+        </div>
+      )}
     </form>
   );
 }

@@ -57,6 +57,7 @@ export default function SuburbPage({ postcode, suburbName, slug, gymCount }: Pro
   }, [postcode]);
 
   useEffect(() => { fetchGyms(); }, [fetchGyms]);
+  useEffect(() => { try { sessionStorage.setItem("lastSearchUrl", `/gyms/${slug}`); } catch {} }, [slug]);
 
   function handleSearch(pc: string) {
     const meta = POSTCODE_META[pc];

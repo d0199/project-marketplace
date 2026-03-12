@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
@@ -1081,9 +1081,13 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [panel, setPanel] = useState<{ gym: Gym; isNew: boolean } | null>(null);
+  const drafts = useRef<Record<string, Gym>>({});
+  const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmUnclaim, setConfirmUnclaim] = useState<string | null>(null);
+  const [affiliatedPts, setAffiliatedPts] = useState<{ id: string; name: string }[]>([]);
+  const [newPtId, setNewPtId] = useState("");
   const [scrapedSuggestions, setScrapedSuggestions] = useState<ScrapedFields | null>(null);
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1115,6 +1119,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [pageSize, setPageSize] = useState(25);
+  const [reviewFilter, setReviewFilter] = useState<"all" | "reviewed" | "unreviewed">("all");
   const [sortCol, setSortCol] = useState<string>("ID");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dynamicAmenities, setDynamicAmenities] = useState<string[]>([...ALL_AMENITIES]);
@@ -1130,6 +1135,59 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       .then((data) => { if (data?.entries?.length) setDynamicSpecialties(data.entries); })
       .catch(() => {});
   }, []);
+
+  // Load affiliated PTs when gym panel opens
+  useEffect(() => {
+    if (!panel || panel.isNew) { setAffiliatedPts([]); return; }
+    const gymId = panel.gym.id;
+    adminFetch("/api/admin/pts")
+      .then((r) => r.json())
+      .then((pts: { id: string; name: string; gymIds: string[] }[]) => {
+        setAffiliatedPts(
+          pts.filter((p) => (p.gymIds ?? []).includes(gymId)).map((p) => ({ id: p.id, name: p.name }))
+        );
+      })
+      .catch(() => {});
+  }, [panel?.gym.id, panel?.isNew]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function addPtAffiliation() {
+    const ptId = newPtId.trim();
+    if (!ptId || !panel) return;
+    try {
+      const r = await adminFetch(`/api/admin/pt/${ptId}`);
+      if (!r.ok) throw new Error("PT not found");
+      const pt = await r.json();
+      const gymIds = [...new Set([...(pt.gymIds ?? []), panel.gym.id])];
+      const r2 = await adminFetch(`/api/admin/pt/${ptId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pt, gymIds }),
+      });
+      if (!r2.ok) throw new Error("Update failed");
+      setAffiliatedPts((prev) => [...prev, { id: pt.id, name: pt.name }]);
+      setNewPtId("");
+    } catch {
+      showToast("Failed to add PT — check the ID exists.");
+    }
+  }
+
+  async function removePtAffiliation(ptId: string) {
+    if (!panel) return;
+    try {
+      const r = await adminFetch(`/api/admin/pt/${ptId}`);
+      if (!r.ok) throw new Error("PT not found");
+      const pt = await r.json();
+      const gymIds = (pt.gymIds ?? []).filter((id: string) => id !== panel.gym.id);
+      await adminFetch(`/api/admin/pt/${ptId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...pt, gymIds }),
+      });
+      setAffiliatedPts((prev) => prev.filter((p) => p.id !== ptId));
+    } catch {
+      showToast("Failed to remove PT affiliation.");
+    }
+  }
 
   function handleSort(col: string) {
     if (sortCol === col) {
@@ -1149,6 +1207,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     if (planFilter === "featured" && !g.isFeatured) return false;
     if (planFilter === "paid" && (!g.isPaid || g.isFeatured)) return false;
     if (planFilter === "free" && (g.isPaid || g.isFeatured)) return false;
+    if (reviewFilter === "reviewed" && !g.adminEdited) return false;
+    if (reviewFilter === "unreviewed" && g.adminEdited) return false;
     return true;
   });
 
@@ -1160,6 +1220,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       case "Owner": av = a.ownerId; bv = b.ownerId; break;
       case "Suburb": av = a.address.suburb.toLowerCase(); bv = b.address.suburb.toLowerCase(); break;
       case "Active": av = a.isActive !== false ? "1" : "0"; bv = b.isActive !== false ? "1" : "0"; break;
+      case "Reviewed": av = a.adminEdited ? "1" : "0"; bv = b.adminEdited ? "1" : "0"; break;
       case "Flags": {
         const flags = (g: Gym) => `${g.isFeatured ? "1" : "0"}${g.isTest ? "1" : "0"}${g.isPaid ? "1" : "0"}`;
         av = flags(a); bv = flags(b); break;
@@ -1364,6 +1425,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false }),
       });
       if (r.ok) {
+        delete drafts.current[updated.id]; setDraftIds((s) => { const n = new Set(s); n.delete(updated.id); return n; });
         showToast("Gym updated.");
         setPanel(null);
         search(q);
@@ -1376,6 +1438,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   async function handleDelete(id: string) {
     const r = await adminFetch(`/api/admin/gym/${id}`, { method: "DELETE" });
     if (r.ok) {
+      delete drafts.current[id]; setDraftIds((s) => { const n = new Set(s); n.delete(id); return n; });
       showToast("Gym deleted.");
       setConfirmDelete(null);
       search(q);
@@ -1486,14 +1549,19 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           <option value="paid">Paid</option>
           <option value="free">Free</option>
         </select>
+        <select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value as typeof reviewFilter)} className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange">
+          <option value="all">All review status</option>
+          <option value="reviewed">Admin reviewed</option>
+          <option value="unreviewed">Not reviewed</option>
+        </select>
         <button
-          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); }}
+          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Clear
         </button>
         <button
-          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
+          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Reset
@@ -1765,7 +1833,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                     className="w-4 h-4 accent-brand-orange"
                   />
                 </th>
-                {["ID", "Name", "Owner", "Suburb", "Active", "Flags", "Actions"].map((h) => (
+                {["ID", "Name", "Owner", "Suburb", "Active", "Reviewed", "Flags", "Actions"].map((h) => (
                   <th
                     key={h}
                     className={`px-4 py-3 text-left font-medium ${h !== "Actions" ? "cursor-pointer select-none hover:text-gray-700" : ""}`}
@@ -1802,6 +1870,16 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                       {g.isActive !== false ? "Active" : "Inactive"}
                     </button>
                   </td>
+                  <td className="px-4 py-3 text-xs">
+                    {g.adminEdited ? (
+                      <span className="text-green-700 font-medium">
+                        Yes
+                        <span className="block text-gray-400 text-[10px]">{g.adminEditedAt ? new Date(g.adminEditedAt).toLocaleDateString() : ""}</span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">No</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       {g.isFeatured && (
@@ -1822,11 +1900,12 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                       View
                     </a>
                     <button
-                      onClick={() => setPanel({ gym: g, isNew: false })}
+                      onClick={() => setPanel({ gym: drafts.current[g.id] ?? g, isNew: false })}
                       className="text-brand-orange hover:underline text-sm font-medium ml-3"
                     >
                       Edit
                     </button>
+                    {draftIds.has(g.id) && <span className="ml-2 text-xs text-amber-600 font-medium">Unsaved edits</span>}
                     {g.ownerId !== "unclaimed" && g.ownerId !== "owner-3" && (
                       <button
                         onClick={() => setConfirmUnclaim(g.id)}
@@ -1874,112 +1953,140 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         <div className="fixed inset-0 z-40 flex">
           <div
             className="flex-1 bg-black/40"
-            onClick={() => setPanel(null)}
+            onClick={() => {
+              if (!panel.isNew) { drafts.current[panel.gym.id] = { ...panel.gym }; setDraftIds((s) => new Set(s).add(panel.gym.id)); }
+              setPanel(null);
+            }}
           />
           <div className="w-full max-w-2xl bg-white shadow-xl overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-base font-semibold">
+            <div className="sticky top-0 bg-white border-b px-6 py-3 z-10">
+              <h2 className="text-lg font-bold text-gray-900 mb-2">
                 {panel.isNew ? "New Gym" : `Edit: ${panel.gym.name}`}
               </h2>
-              <button
-                onClick={() => setPanel(null)}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              {panel.isNew && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Owner ID <span className="text-gray-400 font-normal">(leave blank to create as unclaimed listing)</span>
-                  </label>
-                  <input
-                    value={panel.gym.ownerId}
-                    onChange={(e) =>
-                      setPanel((p) =>
-                        p ? { ...p, gym: { ...p.gym, ownerId: e.target.value } } : p
-                      )
-                    }
-                    placeholder="Leave blank for unclaimed listing"
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                  />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {!panel.isNew && panel.gym.adminEdited && (
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700 border border-green-200">
+                      Admin Reviewed {panel.gym.adminEditedAt ? new Date(panel.gym.adminEditedAt).toLocaleDateString() : ""}
+                    </span>
+                  )}
+                  {!panel.isNew && draftIds.has(panel.gym.id) && (
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Unsaved edits</span>
+                  )}
                 </div>
-              )}
-              <div className="mb-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={panel.gym.isTest ?? false}
-                    onChange={(e) =>
-                      setPanel((p) =>
-                        p ? { ...p, gym: { ...p.gym, isTest: e.target.checked } } : p
-                      )
-                    }
-                    className="w-4 h-4 accent-brand-orange"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Test listing <span className="text-gray-400 font-normal">(hidden from public — visible only to @mynextgym.com.au users)</span>
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={panel.gym.isFeatured ?? false}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setPanel((p) =>
-                        p ? { ...p, gym: { ...p.gym, isFeatured: checked } } : p
-                      );
-                    }}
-                    className="w-4 h-4 accent-brand-orange"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Featured listing <span className="text-gray-400 font-normal">(pinned to top of results — max 3 per postcode, rotates every 15 min)</span>
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={panel.gym.isActive !== false}
-                    onChange={(e) =>
-                      setPanel((p) =>
-                        p ? { ...p, gym: { ...p.gym, isActive: e.target.checked } } : p
-                      )
-                    }
-                    className="w-4 h-4 accent-brand-orange"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Active <span className="text-gray-400 font-normal">(uncheck to hide from public search results)</span>
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={panel.gym.isPaid ?? false}
-                    onChange={(e) => {
+                <div className="flex gap-2">
+                  {!panel.isNew && panel.gym.suburbSlug && panel.gym.slug && (
+                    <a
+                      href={gymUrl(panel.gym)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-[5px] text-brand-orange border border-brand-orange-light rounded-lg text-sm hover:bg-orange-50 font-medium"
+                    >
+                      View
+                    </a>
+                  )}
+                  {!panel.isNew && (
+                    <button onClick={() => setConfirmDelete(panel.gym.id)} className="px-3 py-[5px] text-red-600 border border-red-200 rounded-lg text-sm hover:bg-red-50">Delete</button>
+                  )}
+                  <button onClick={() => {
+                    if (!panel.isNew) { delete drafts.current[panel.gym.id]; setDraftIds((s) => { const n = new Set(s); n.delete(panel.gym.id); return n; }); }
+                    setPanel(null);
+                  }} className="px-3 py-[5px] text-gray-500 border rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+                  <button type="submit" form="gym-edit-form" className="px-4 py-[5px] bg-brand-orange text-white rounded-lg text-sm font-medium">Save</button>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* ============================================================= */}
+              {/* ADMIN-ONLY SECTION                                             */}
+              {/* ============================================================= */}
+
+              {/* Flags + Owner + Stripe */}
+              <section className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Admin Controls</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={panel.gym.isActive !== false} onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, isActive: e.target.checked } } : p)} className="w-4 h-4 accent-brand-orange" />
+                    <span className="text-sm">Active</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={panel.gym.isTest ?? false} onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, isTest: e.target.checked } } : p)} className="w-4 h-4 accent-brand-orange" />
+                    <span className="text-sm">Test</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={panel.gym.isPaid ?? false} onChange={(e) => {
                       const isPaid = e.target.checked;
                       setPanel((p) => {
                         if (!p) return p;
                         const gym = { ...p.gym, isPaid };
-                        if (!isPaid) {
-                          gym.memberOffers = [];
-                          gym.memberOffersScroll = false;
-                          delete gym.memberOffersNotes;
-                          delete gym.memberOffersTnC;
-                        }
+                        if (!isPaid) { gym.memberOffers = []; gym.memberOffersScroll = false; delete gym.memberOffersNotes; delete gym.memberOffersTnC; }
                         return { ...p, gym };
                       });
-                    }}
-                    className="w-4 h-4 accent-brand-orange"
+                    }} className="w-4 h-4 accent-brand-orange" />
+                    <span className="text-sm">Paid</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={panel.gym.isFeatured ?? false} onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, isFeatured: e.target.checked } } : p)} className="w-4 h-4 accent-brand-orange" />
+                    <span className="text-sm">Featured</span>
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Owner ID</label>
+                    <input
+                      value={panel.gym.ownerId}
+                      onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, ownerId: e.target.value } } : p)}
+                      placeholder={panel.isNew ? "Leave blank for unclaimed" : ""}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stripe Plan <span className="text-gray-400 font-normal">(billing tier — flag manually override)</span></label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                      value={panel.gym.stripePlan ?? ""}
+                      onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, stripePlan: (e.target.value || undefined) as Gym["stripePlan"] } } : p)}
+                    >
+                      <option value="">None</option>
+                      <option value="paid">Paid</option>
+                      <option value="featured">Featured</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              {/* Affiliated PTs */}
+              <section className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Affiliated PTs</h3>
+                {affiliatedPts.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {affiliatedPts.map((pt) => (
+                      <span key={pt.id} className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full px-3 py-1 text-sm">
+                        {pt.name || pt.id}
+                        <button onClick={() => removePtAffiliation(pt.id)} className="text-gray-400 hover:text-red-500 ml-1">&times;</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {affiliatedPts.length === 0 && !panel.isNew && (
+                  <p className="text-xs text-gray-400 mb-2">No affiliated PTs</p>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                    value={newPtId}
+                    onChange={(e) => setNewPtId(e.target.value)}
+                    placeholder="PT ID (e.g. pt-001)"
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addPtAffiliation(); } }}
                   />
-                  <span className="text-sm font-medium text-gray-700">
-                    Paid listing <span className="text-gray-400 font-normal">(unlocks contact form, email, social links, member offers, hours note)</span>
-                  </span>
-                </label>
-              </div>
+                  <button onClick={addPtAffiliation} className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-100 shrink-0">Add</button>
+                </div>
+              </section>
+
+              <hr className="border-gray-300" />
+
               <ScanButton websiteUrl={panel.gym.website || ""} type="gym" onResults={handleScrapeResults} />
-              <OwnerGymForm gym={panel.gym} onSave={handleSave} isAdmin suggestions={activeSuggestions} onDismissSuggestion={handleDismissSuggestion} />
+              <OwnerGymForm gym={panel.gym} onSave={handleSave} isAdmin suggestions={activeSuggestions} onDismissSuggestion={handleDismissSuggestion} onFormChange={(updated) => setPanel((p) => p ? { ...p, gym: { ...p.gym, ...updated } } : p)} />
             </div>
           </div>
         </div>

@@ -127,6 +127,9 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
   const [showClaim, setShowClaim] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
+  const [searchBackUrl, setSearchBackUrl] = useState<string | null>(null);
+
+  useEffect(() => { try { setSearchBackUrl(sessionStorage.getItem("lastSearchUrl")); } catch {} }, []);
 
   useEffect(() => {
     getCurrentUser()
@@ -255,6 +258,11 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
             )}
           </div>
         </nav>
+        {searchBackUrl && (
+          <Link href={searchBackUrl} className="inline-flex items-center gap-1 text-sm text-brand-orange hover:text-brand-orange-dark font-medium mb-3">
+            ← Back to Search Results
+          </Link>
+        )}
 
         {/* Banner */}
         <div className="relative rounded-2xl h-72 sm:h-80 bg-brand-black mb-6">

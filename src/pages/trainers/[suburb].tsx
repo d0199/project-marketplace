@@ -47,6 +47,7 @@ export default function TrainerSuburbPage({ postcode, suburbName, slug, ptCount 
   }, [postcode]);
 
   useEffect(() => { fetchPTs(); }, [fetchPTs]);
+  useEffect(() => { try { sessionStorage.setItem("lastSearchUrl", `/trainers/${slug}`); } catch {} }, [slug]);
 
   function handleSearch(pc: string) {
     const meta = POSTCODE_META[pc];

@@ -15,6 +15,11 @@ export interface OpeningHours {
   sunday?: string | null;
 }
 
+export interface AdminEditEntry {
+  by: string;   // admin email
+  at: string;   // ISO timestamp
+}
+
 export interface Gym {
   id: string;
   slug: string;
@@ -55,6 +60,11 @@ export interface Gym {
   specialties?: string[];
   images: string[];
   imageFocalPoints?: number[];
+  // Admin edit tracking
+  adminEdited?: boolean;
+  adminEditedAt?: string;
+  adminEditedBy?: string;
+  adminEditHistory?: AdminEditEntry[];
 }
 
 export interface PersonalTrainer {
@@ -102,6 +112,11 @@ export interface PersonalTrainer {
   gender?: string;
   languages?: string[];
   customLeadFields?: CustomLeadField[];
+  // Admin edit tracking
+  adminEdited?: boolean;
+  adminEditedAt?: string;
+  adminEditedBy?: string;
+  adminEditHistory?: AdminEditEntry[];
 }
 
 export interface CustomLeadField {

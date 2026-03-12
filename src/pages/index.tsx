@@ -184,6 +184,9 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
     setHasSearched(true);
     setPageSize(25);
     setPage(1);
+    // Persist to URL so browser back button restores search results
+    router.replace({ pathname: "/", query: { postcode: pc } }, undefined, { shallow: true });
+    try { sessionStorage.setItem("lastSearchUrl", `/?postcode=${pc}`); } catch {}
     trackEvent("view_search_results", { search_term: label || pc, search_mode: searchMode });
   }
 

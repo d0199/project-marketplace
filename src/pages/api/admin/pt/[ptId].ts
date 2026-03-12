@@ -18,7 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "PUT") {
     const pt = await ptStore.getById(ptId);
     if (!pt) return res.status(404).json({ error: "Not found" });
-    const updated = { ...pt, ...req.body, id: ptId };
+    const now = new Date().toISOString();
+    const updated = {
+      ...pt, ...req.body, id: ptId,
+      adminEdited: true,
+      adminEditedAt: now,
+      adminEditedBy: adminEmail,
+      adminEditHistory: [...(pt.adminEditHistory ?? []), { by: adminEmail, at: now }],
+    };
     await ptStore.update(updated);
     try { await res.revalidate(`/pt/${updated.suburbSlug}/${updated.slug}`); } catch { /* ignore */ }
     logAdminAction({ adminEmail, action: "pt.update", entityType: "pt", entityId: ptId, entityName: updated.name });

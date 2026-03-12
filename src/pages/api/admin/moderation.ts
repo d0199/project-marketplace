@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/auditLog";
 import type { Gym, PersonalTrainer } from "@/types";
 import { gymUrl, ptUrl } from "@/lib/slugify";
+import { geocodeAddressServer } from "@/lib/geocodeServer";
 
 async function listAllEdits() {
   const results: Record<string, unknown>[] = [];
@@ -123,10 +124,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           try { await res.revalidate(ptUrl(updatedPT)); } catch { /* ignore */ }
         } else if (editType === "pt") {
           const proposed = JSON.parse(edit.proposedChanges as string) as PersonalTrainer;
+          // Geocode if address present but lat/lng missing or default
+          if (proposed.address?.street && (!proposed.lat || proposed.lat === -31.9505)) {
+            const geo = await geocodeAddressServer(proposed.address);
+            if (geo) { proposed.lat = geo.lat; proposed.lng = geo.lng; }
+          }
           await ptStore.update(proposed);
           try { await res.revalidate(ptUrl(proposed)); } catch { /* ignore */ }
         } else {
           const proposed = JSON.parse(edit.proposedChanges as string) as Gym;
+          // Geocode if address present but lat/lng missing or default
+          if (proposed.address?.street && (!proposed.lat || proposed.lat === -31.9505)) {
+            const geo = await geocodeAddressServer(proposed.address);
+            if (geo) { proposed.lat = geo.lat; proposed.lng = geo.lng; }
+          }
           await ownerStore.update(proposed);
           try { await res.revalidate(gymUrl(proposed)); } catch { /* ignore */ }
         }

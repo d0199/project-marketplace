@@ -4,6 +4,7 @@ import type { PersonalTrainer, Address } from "@/types";
 import { POSTCODE_COORDS } from "@/lib/utils";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 import { adminFetch } from "@/lib/adminFetch";
+import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
 
 function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, ""); }
 
@@ -342,6 +343,16 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
       <section>
         <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Address</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Search Address</label>
+            <AddressAutocomplete
+              inputClassName={inputCls}
+              onSelect={(r) => {
+                const addr = { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode };
+                update({ address: addr, ...(r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : {}) });
+              }}
+            />
+          </div>
           <div className="sm:col-span-2">
             <label className={labelCls}>Street</label>
             <input className={inputCls} value={form.address.street} onChange={(e) => updateAddress({ street: e.target.value })} />

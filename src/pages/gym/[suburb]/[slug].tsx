@@ -166,8 +166,11 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
   const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [showFeedback, setShowFeedback] = useState(false);
   const [showClaim, setShowClaim] = useState(false);
+  const [searchBackUrl, setSearchBackUrl] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
+
+  useEffect(() => { try { setSearchBackUrl(sessionStorage.getItem("lastSearchUrl")); } catch {} }, []);
 
   const effectivePaid = !!gym.isPaid;
 
@@ -290,6 +293,11 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
             )}
           </div>
         </nav>
+        {searchBackUrl && (
+          <Link href={searchBackUrl} className="inline-flex items-center gap-1 text-sm text-brand-orange hover:text-brand-orange-dark font-medium mb-3">
+            ← Back to Search Results
+          </Link>
+        )}
 
         {/* Banner */}
         {(() => {

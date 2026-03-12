@@ -4,9 +4,11 @@ import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
 import { POSTCODE_COORDS } from "@/lib/utils";
 import { ptUrl } from "@/lib/slugify";
+import { geocodeAddress } from "@/lib/geocode";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 import { ScanButton, FieldSuggestion } from "@/components/admin/WebsiteScraper";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
+import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
 
 interface Props {
   adminEmail?: string;
@@ -38,12 +40,16 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [panel, setPanel] = useState<{ pt: PersonalTrainer; isNew: boolean } | null>(null);
+  const [originalPt, setOriginalPt] = useState<PersonalTrainer | null>(null);
+  const drafts = useRef<Record<string, PersonalTrainer>>({});
+  const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("owned");
   const [stateFilter, setStateFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
+  const [reviewFilter, setReviewFilter] = useState<"all" | "reviewed" | "unreviewed">("all");
   const [editOwnerFor, setEditOwnerFor] = useState<string | null>(null);
   const [editOwnerVal, setEditOwnerVal] = useState("");
   const [confirmUnclaim, setConfirmUnclaim] = useState<string | null>(null);
@@ -53,7 +59,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
     if (!initialPtId) return;
     adminFetch(`/api/admin/pt/${initialPtId}`)
       .then((r) => r.json())
-      .then((pt: PersonalTrainer) => { if (pt?.id) setPanel({ pt, isNew: false }); })
+      .then((pt: PersonalTrainer) => { if (pt?.id) { setOriginalPt({ ...pt }); setPanel({ pt, isNew: false }); } })
       .catch(() => {});
   }, [initialPtId]);
 
@@ -83,6 +89,8 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
     if (planFilter === "featured" && !pt.isFeatured) return false;
     if (planFilter === "paid" && (!pt.isPaid || pt.isFeatured)) return false;
     if (planFilter === "free" && (pt.isPaid || pt.isFeatured)) return false;
+    if (reviewFilter === "reviewed" && !pt.adminEdited) return false;
+    if (reviewFilter === "unreviewed" && pt.adminEdited) return false;
     if (q) {
       const search = q.toLowerCase();
       if (
@@ -116,6 +124,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
         });
         if (!r.ok) throw new Error("Update failed");
       }
+      if (!isNew) { delete drafts.current[pt.id]; setDraftIds((s) => { const n = new Set(s); n.delete(pt.id); return n; }); }
       setPanel(null);
       showToast(isNew ? "PT created" : "PT updated");
       load();
@@ -127,6 +136,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   async function handleDelete(id: string) {
     try {
       await adminFetch(`/api/admin/pt/${id}`, { method: "DELETE" });
+      delete drafts.current[id]; setDraftIds((s) => { const n = new Set(s); n.delete(id); return n; });
       setConfirmDelete(null);
       setPanel(null);
       showToast("PT deleted");
@@ -288,14 +298,19 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
           <option value="paid">Paid</option>
           <option value="free">Free</option>
         </select>
+        <select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value as typeof reviewFilter)} className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange">
+          <option value="all">All review status</option>
+          <option value="reviewed">Admin reviewed</option>
+          <option value="unreviewed">Not reviewed</option>
+        </select>
         <button
-          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); }}
+          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Clear
         </button>
         <button
-          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); }}
+          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Reset
@@ -319,6 +334,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
                 <th className="px-4 py-3 font-medium">Owner</th>
                 <th className="px-4 py-3 font-medium">Gyms</th>
                 <th className="px-4 py-3 font-medium">Specialties</th>
+                <th className="px-4 py-3 font-medium">Reviewed</th>
                 <th className="px-4 py-3 font-medium">Flags</th>
                 <th className="px-4 py-3 font-medium">Active</th>
                 <th className="px-4 py-3 font-medium"></th>
@@ -358,6 +374,16 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
                   </td>
                   <td className="px-4 py-3 text-gray-600">{pt.gymIds.length}</td>
                   <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">{pt.specialties.slice(0, 3).join(", ")}{pt.specialties.length > 3 ? "..." : ""}</td>
+                  <td className="px-4 py-3 text-xs">
+                    {pt.adminEdited ? (
+                      <span className="text-green-700 font-medium">
+                        Yes
+                        <span className="block text-gray-400 text-[10px]">{pt.adminEditedAt ? new Date(pt.adminEditedAt).toLocaleDateString() : ""}</span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">No</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="flex gap-1">
                       {pt.isFeatured && <span className="text-yellow-500" title="Featured">★</span>}
@@ -375,7 +401,8 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <a href={ptUrl(pt)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm font-medium">View</a>
-                    <button onClick={() => setPanel({ pt: { ...pt }, isNew: false })} className="text-brand-orange hover:underline text-sm font-medium ml-3">Edit</button>
+                    <button onClick={() => { setOriginalPt({ ...pt }); setPanel({ pt: drafts.current[pt.id] ?? { ...pt }, isNew: false }); }} className="text-brand-orange hover:underline text-sm font-medium ml-3">Edit</button>
+                    {draftIds.has(pt.id) && <span className="ml-2 text-xs text-amber-600 font-medium">Unsaved edits</span>}
                     {pt.ownerId !== "unclaimed" && (
                       <button onClick={() => setConfirmUnclaim(pt.id)} className="text-yellow-600 hover:underline text-sm font-medium ml-3">Unclaim</button>
                     )}
@@ -395,6 +422,16 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
           setPanel={setPanel}
           onSave={handleSave}
           onDelete={(id) => setConfirmDelete(id)}
+          onDismiss={() => {
+            if (!panel.isNew) { drafts.current[panel.pt.id] = { ...panel.pt }; setDraftIds((s) => new Set(s).add(panel.pt.id)); }
+            setPanel(null);
+          }}
+          onCancel={() => {
+            if (!panel.isNew) { delete drafts.current[panel.pt.id]; setDraftIds((s) => { const n = new Set(s); n.delete(panel.pt.id); return n; }); }
+            setPanel(null);
+          }}
+          hasDraft={!panel.isNew && draftIds.has(panel.pt.id)}
+          original={originalPt}
         />
       )}
     </div>
@@ -411,13 +448,33 @@ function PTEditPanel({
   setPanel,
   onSave,
   onDelete,
+  onDismiss,
+  onCancel,
+  hasDraft,
+  original,
 }: {
   panel: { pt: PersonalTrainer; isNew: boolean };
   setPanel: (p: { pt: PersonalTrainer; isNew: boolean } | null) => void;
   onSave: () => void;
   onDelete: (id: string) => void;
+  onDismiss: () => void;
+  onCancel: () => void;
+  hasDraft: boolean;
+  original: PersonalTrainer | null;
 }) {
   const { pt, isNew } = panel;
+
+  function isChanged(field: string): boolean {
+    if (!original || isNew) return false;
+    const a = JSON.stringify((original as unknown as Record<string, unknown>)[field] ?? "");
+    const b = JSON.stringify((pt as unknown as Record<string, unknown>)[field] ?? "");
+    return a !== b;
+  }
+  /** Return a yellow asterisk span if the field has been edited */
+  function edited(field: string) {
+    return isChanged(field) ? <span className="text-amber-500 font-bold ml-0.5">*</span> : null;
+  }
+
   const [newImageUrl, setNewImageUrl] = useState("");
   const dragIndex = useRef<number | null>(null);
   const [newGymId, setNewGymId] = useState("");
@@ -528,14 +585,28 @@ function PTEditPanel({
     setPanel({ pt: { ...pt, ...patch }, isNew });
   }
 
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+
   function updateAddress(patch: Partial<Address>) {
     const addr = { ...pt.address, ...patch };
+    // Immediate postcode fallback
     if (patch.postcode && POSTCODE_COORDS[patch.postcode]) {
       const [lat, lng] = POSTCODE_COORDS[patch.postcode];
       update({ address: addr, lat, lng });
     } else {
       update({ address: addr });
     }
+    // Debounced precise geocode
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+    geocodeTimer.current = setTimeout(async () => {
+      setGeocoding(true);
+      const result = await geocodeAddress(addr);
+      if (result) {
+        update({ lat: result.lat, lng: result.lng });
+      }
+      setGeocoding(false);
+    }, 1500);
   }
 
   function onDragStart(idx: number) {
@@ -615,18 +686,40 @@ function PTEditPanel({
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 flex justify-end" onClick={() => setPanel(null)}>
+    <div className="fixed inset-0 z-40 bg-black/40 flex justify-end" onClick={onDismiss}>
       <div className="w-full max-w-2xl bg-white h-full overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold text-gray-900">
+        <div className="sticky top-0 bg-white border-b px-6 py-3 z-10">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">
             {isNew ? "New Personal Trainer" : `Edit: ${pt.name || "Unnamed"}`}
           </h2>
-          <div className="flex gap-2">
-            {!isNew && (
-              <button onClick={() => onDelete(pt.id)} className="px-3 py-1.5 text-red-600 border border-red-200 rounded-lg text-sm hover:bg-red-50">Delete</button>
-            )}
-            <button onClick={() => setPanel(null)} className="px-3 py-1.5 text-gray-500 border rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-            <button onClick={onSave} className="px-4 py-1.5 bg-brand-orange text-white rounded-lg text-sm font-medium">Save</button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {!isNew && pt.adminEdited && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700 border border-green-200">
+                  Admin Reviewed {pt.adminEditedAt ? new Date(pt.adminEditedAt).toLocaleDateString() : ""}
+                </span>
+              )}
+              {hasDraft && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 border border-amber-200">Unsaved edits</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {!isNew && pt.slug && pt.suburbSlug && (
+                <a
+                  href={ptUrl(pt)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-[5px] text-brand-orange border border-brand-orange-light rounded-lg text-sm hover:bg-orange-50 font-medium"
+                >
+                  View
+                </a>
+              )}
+              {!isNew && (
+                <button onClick={() => onDelete(pt.id)} className="px-3 py-[5px] text-red-600 border border-red-200 rounded-lg text-sm hover:bg-red-50">Delete</button>
+              )}
+              <button onClick={onCancel} className="px-3 py-[5px] text-gray-500 border rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+              <button onClick={onSave} className="px-4 py-[5px] bg-brand-orange text-white rounded-lg text-sm font-medium">Save</button>
+            </div>
           </div>
         </div>
 
@@ -662,7 +755,7 @@ function PTEditPanel({
                 <input className={inputCls} value={pt.ownerId} onChange={(e) => update({ ownerId: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>Stripe Plan</label>
+                <label className={labelCls}>Stripe Plan <span className="text-gray-400 font-normal">(billing tier — flag manually override)</span></label>
                 <select className={inputCls} value={pt.stripePlan ?? ""} onChange={(e) => update({ stripePlan: (e.target.value || undefined) as PersonalTrainer["stripePlan"] })}>
                   <option value="">None</option>
                   <option value="paid">Paid</option>
@@ -757,12 +850,12 @@ function PTEditPanel({
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Basic Info</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className={labelCls}>Name *</label>
+                <label className={labelCls}>Name *{edited("name")}</label>
                 <input className={inputCls} value={pt.name} onChange={(e) => update({ name: e.target.value })} />
               </div>
               <div className="col-span-2">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <label className="block text-sm font-medium text-gray-700">Description{edited("description")}</label>
                   <button
                     type="button"
                     onClick={generateDescription}
@@ -816,7 +909,7 @@ function PTEditPanel({
                 )}
               </div>
               <div>
-                <label className={labelCls}>Gender</label>
+                <label className={labelCls}>Gender{edited("gender")}</label>
                 <select className={inputCls} value={pt.gender ?? ""} onChange={(e) => update({ gender: e.target.value || undefined })}>
                   <option value="">Not specified</option>
                   <option value="male">Male</option>
@@ -825,7 +918,7 @@ function PTEditPanel({
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Experience (years)</label>
+                <label className={labelCls}>Experience (years){edited("experienceYears")}</label>
                 <input type="number" className={inputCls} value={pt.experienceYears ?? ""} onChange={(e) => update({ experienceYears: e.target.value ? parseInt(e.target.value) : undefined })} />
                 {ptSuggestion("experienceYears", (v) => `${v} years`)}
               </div>
@@ -837,36 +930,36 @@ function PTEditPanel({
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Contact</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Email</label>
+                <label className={labelCls}>Email{edited("email")}</label>
                 <input type="email" className={inputCls} value={pt.email} onChange={(e) => update({ email: e.target.value })} />
                 {ptSuggestion("email")}
               </div>
               <div>
-                <label className={labelCls}>Phone</label>
+                <label className={labelCls}>Phone{edited("phone")}</label>
                 <input className={inputCls} value={pt.phone} onChange={(e) => update({ phone: e.target.value })} />
                 {ptSuggestion("phone")}
               </div>
               <div>
-                <label className={labelCls}>Website</label>
+                <label className={labelCls}>Website{edited("website")}</label>
                 <input className={inputCls} value={pt.website} onChange={(e) => update({ website: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>Booking URL</label>
+                <label className={labelCls}>Booking URL{edited("bookingUrl")}</label>
                 <input className={inputCls} value={pt.bookingUrl ?? ""} onChange={(e) => update({ bookingUrl: e.target.value || undefined })} />
                 {ptSuggestion("bookingUrl")}
               </div>
               <div>
-                <label className={labelCls}>Instagram</label>
+                <label className={labelCls}>Instagram{edited("instagram")}</label>
                 <input className={inputCls} value={pt.instagram ?? ""} onChange={(e) => update({ instagram: e.target.value || undefined })} placeholder="https://instagram.com/..." />
                 {ptSuggestion("instagram")}
               </div>
               <div>
-                <label className={labelCls}>Facebook</label>
+                <label className={labelCls}>Facebook{edited("facebook")}</label>
                 <input className={inputCls} value={pt.facebook ?? ""} onChange={(e) => update({ facebook: e.target.value || undefined })} placeholder="https://facebook.com/..." />
                 {ptSuggestion("facebook")}
               </div>
               <div>
-                <label className={labelCls}>TikTok</label>
+                <label className={labelCls}>TikTok{edited("tiktok")}</label>
                 <input className={inputCls} value={pt.tiktok ?? ""} onChange={(e) => update({ tiktok: e.target.value || undefined })} placeholder="https://tiktok.com/@..." />
                 {ptSuggestion("tiktok")}
               </div>
@@ -878,24 +971,36 @@ function PTEditPanel({
             <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Address</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className={labelCls}>Street</label>
+                <label className={labelCls}>Search Address</label>
+                <AddressAutocomplete
+                  inputClassName={inputCls}
+                  onSelect={(r) => {
+                    const addr = { street: r.street, suburb: r.suburb, state: r.state, postcode: r.postcode };
+                    const latLng: Partial<PersonalTrainer> = { address: addr };
+                    if (r.lat != null && r.lng != null) { latLng.lat = r.lat; latLng.lng = r.lng; }
+                    update({ ...latLng, address: addr });
+                  }}
+                />
+              </div>
+              <div className="col-span-2">
+                <label className={labelCls}>Street{edited("address")}</label>
                 <input className={inputCls} value={pt.address.street} onChange={(e) => updateAddress({ street: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>Suburb</label>
+                <label className={labelCls}>Suburb{edited("address")}</label>
                 <input className={inputCls} value={pt.address.suburb} onChange={(e) => updateAddress({ suburb: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>Postcode</label>
+                <label className={labelCls}>Postcode{edited("address")}</label>
                 <input className={inputCls} value={pt.address.postcode} onChange={(e) => updateAddress({ postcode: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>State</label>
+                <label className={labelCls}>State{edited("address")}</label>
                 <input className={inputCls} value={pt.address.state} onChange={(e) => updateAddress({ state: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className={labelCls}>Lat</label>
+                  <label className={labelCls}>Lat {geocoding && <span className="text-xs text-gray-400">geocoding…</span>}</label>
                   <input type="number" step="any" className={inputCls} value={pt.lat} onChange={(e) => update({ lat: parseFloat(e.target.value) || 0 })} />
                 </div>
                 <div>
