@@ -224,6 +224,8 @@ const schema = a.schema({
       ptMemberOffers: a.boolean(),
       chatbot: a.boolean(),
       chatbotSchedule: a.string(),   // "HH:MM-HH:MM" AEST or "" for always-on
+      claudeApi: a.boolean(),        // Kill-switch for Anthropic API usage
+      googleApi: a.boolean(),        // Kill-switch for Google Places/Geocoding API usage
       // Legacy — kept for backwards compat with existing records
       heroSpecialties: a.boolean(),
       heroAmenities: a.boolean(),

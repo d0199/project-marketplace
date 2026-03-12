@@ -1081,6 +1081,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [panel, setPanel] = useState<{ gym: Gym; isNew: boolean } | null>(null);
+  const [originalGym, setOriginalGym] = useState<Gym | null>(null);
   const drafts = useRef<Record<string, Gym>>({});
   const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
@@ -1366,7 +1367,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     if (!initialGymId) return;
     adminFetch(`/api/admin/gym/${initialGymId}`)
       .then((r) => r.json())
-      .then((gym: Gym) => { if (gym?.id) setPanel({ gym, isNew: false }); })
+      .then((gym: Gym) => { if (gym?.id) { setOriginalGym({ ...gym }); setPanel({ gym, isNew: false }); } })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1900,7 +1901,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                       View
                     </a>
                     <button
-                      onClick={() => setPanel({ gym: drafts.current[g.id] ?? g, isNew: false })}
+                      onClick={() => { setOriginalGym({ ...g }); setPanel({ gym: drafts.current[g.id] ?? g, isNew: false }); }}
                       className="text-brand-orange hover:underline text-sm font-medium ml-3"
                     >
                       Edit
@@ -2086,7 +2087,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
               <hr className="border-gray-300" />
 
               <ScanButton websiteUrl={panel.gym.website || ""} type="gym" onResults={handleScrapeResults} />
-              <OwnerGymForm gym={panel.gym} onSave={handleSave} isAdmin suggestions={activeSuggestions} onDismissSuggestion={handleDismissSuggestion} onFormChange={(updated) => setPanel((p) => p ? { ...p, gym: { ...p.gym, ...updated } } : p)} />
+              <OwnerGymForm gym={panel.gym} original={originalGym ?? undefined} onSave={handleSave} isAdmin suggestions={activeSuggestions} onDismissSuggestion={handleDismissSuggestion} onFormChange={(updated) => setPanel((p) => p ? { ...p, gym: { ...p.gym, ...updated } } : p)} />
             </div>
           </div>
         </div>

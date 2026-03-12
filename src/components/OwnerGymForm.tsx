@@ -16,6 +16,7 @@ interface Props {
   gymId?: string;
   isAdmin?: boolean;
   ownerEmail?: string;
+  original?: Gym;
   suggestions?: ScrapedFields | null;
   onDismissSuggestion?: (field: string) => void;
   onSave: (updated: Gym) => Promise<string | undefined | void> | string | undefined | void;
@@ -32,14 +33,14 @@ const DAYS: (keyof OpeningHours)[] = [
   "sunday",
 ];
 
-export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggestions, onDismissSuggestion, onSave, onFormChange }: Props) {
+export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original, suggestions, onDismissSuggestion, onSave, onFormChange }: Props) {
   const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
   const [form, setForm] = useState<Gym>({ ...gym });
   const formRef = useRef(form);
   formRef.current = form;
-  const originalRef = useRef(gym);
+  const originalRef = useRef(original ?? gym);
   const onFormChangeRef = useRef(onFormChange);
   onFormChangeRef.current = onFormChange;
   useEffect(() => { onFormChangeRef.current?.(form); }, [form]);
@@ -498,6 +499,18 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, suggesti
               className={inputCls}
             />
           </div>
+          {isAdmin && (
+            <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Lat{edited("lat")}</label>
+                <input type="number" step="any" value={form.lat} onChange={(e) => setForm((f) => ({ ...f, lat: parseFloat(e.target.value) || 0 }))} className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Lng{edited("lng")}</label>
+                <input type="number" step="any" value={form.lng} onChange={(e) => setForm((f) => ({ ...f, lng: parseFloat(e.target.value) || 0 }))} className={inputCls} />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
