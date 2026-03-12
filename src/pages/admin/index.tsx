@@ -1894,6 +1894,9 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                       {g.isFeatured && (
                         <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">★ Featured</span>
                       )}
+                      {g.isFreeTrial && (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">Trial{g.trialExpiresAt ? ` → ${g.trialExpiresAt}` : ""}</span>
+                      )}
                       {g.isTest && (
                         <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Test</span>
                       )}
@@ -2062,34 +2065,71 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                     </select>
                   </div>
                 </div>
-                {/* Trial expiry date */}
-                <div className="mt-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Trial Expires <span className="text-gray-400 font-normal">(auto-clears Paid &amp; Featured on this date)</span></label>
-                  <div className="flex gap-2 items-center">
+                {/* Free Trial */}
+                <div className="mt-3 p-3 border border-dashed border-orange-300 rounded-lg bg-orange-50/50">
+                  <label className="flex items-center gap-2">
                     <input
-                      type="date"
-                      value={panel.gym.trialExpiresAt ? panel.gym.trialExpiresAt.slice(0, 10) : ""}
-                      onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, trialExpiresAt: e.target.value || undefined } } : p)}
-                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const d = new Date();
-                        d.setDate(d.getDate() + 30);
-                        setPanel((p) => p ? { ...p, gym: { ...p.gym, trialExpiresAt: d.toISOString().slice(0, 10) } } : p);
+                      type="checkbox"
+                      checked={panel.gym.isFreeTrial ?? false}
+                      onChange={(e) => {
+                        const isFreeTrial = e.target.checked;
+                        setPanel((p) => {
+                          if (!p) return p;
+                          const gym = { ...p.gym, isFreeTrial };
+                          if (isFreeTrial && !gym.trialExpiresAt) {
+                            // Auto-set +30 days when enabling trial
+                            const d = new Date();
+                            d.setDate(d.getDate() + 30);
+                            gym.trialExpiresAt = d.toISOString().slice(0, 10);
+                          }
+                          if (!isFreeTrial) {
+                            // Turning off trial → clear Paid & Featured
+                            gym.isPaid = false;
+                            gym.isFeatured = false;
+                            gym.memberOffers = [];
+                            gym.memberOffersScroll = false;
+                            delete gym.memberOffersNotes;
+                            delete gym.memberOffersTnC;
+                          }
+                          return { ...p, gym };
+                        });
                       }}
-                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm whitespace-nowrap"
-                    >+30 days</button>
-                    {panel.gym.trialExpiresAt && (
+                      className="w-4 h-4 accent-brand-orange"
+                    />
+                    <span className="text-sm font-semibold text-orange-700">Free Trial</span>
+                    {panel.gym.isFreeTrial && panel.gym.trialExpiresAt && (
+                      <span className="text-xs text-orange-500 ml-1">
+                        (expires {panel.gym.trialExpiresAt})
+                      </span>
+                    )}
+                  </label>
+                  {panel.gym.isFreeTrial && (
+                    <div className="mt-2 flex gap-2 items-center">
+                      <input
+                        type="date"
+                        value={panel.gym.trialExpiresAt ? panel.gym.trialExpiresAt.slice(0, 10) : ""}
+                        onChange={(e) => setPanel((p) => p ? { ...p, gym: { ...p.gym, trialExpiresAt: e.target.value || undefined } } : p)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                      />
                       <button
                         type="button"
-                        onClick={() => setPanel((p) => p ? { ...p, gym: { ...p.gym, trialExpiresAt: undefined } } : p)}
-                        className="px-2 py-2 text-gray-400 hover:text-red-500 text-sm"
-                        title="Clear trial date"
-                      >&times;</button>
-                    )}
-                  </div>
+                        onClick={() => {
+                          const d = new Date();
+                          d.setDate(d.getDate() + 30);
+                          setPanel((p) => p ? { ...p, gym: { ...p.gym, trialExpiresAt: d.toISOString().slice(0, 10) } } : p);
+                        }}
+                        className="px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm whitespace-nowrap"
+                      >+30 days</button>
+                      {panel.gym.trialExpiresAt && (
+                        <button
+                          type="button"
+                          onClick={() => setPanel((p) => p ? { ...p, gym: { ...p.gym, trialExpiresAt: undefined } } : p)}
+                          className="px-2 py-2 text-gray-400 hover:text-red-500 text-sm"
+                          title="Clear trial date"
+                        >&times;</button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </section>
 

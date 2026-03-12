@@ -30,6 +30,7 @@ export interface Gym {
   isFeatured?: boolean;
   priceVerified?: boolean;
   isPaid?: boolean;
+  isFreeTrial?: boolean;
   trialExpiresAt?: string;
   stripeSubscriptionId?: string;
   stripePlan?: "paid" | "featured";
@@ -77,6 +78,7 @@ export interface PersonalTrainer {
   isTest?: boolean;
   isFeatured?: boolean;
   isPaid?: boolean;
+  isFreeTrial?: boolean;
   trialExpiresAt?: string;
   stripeSubscriptionId?: string;
   stripePlan?: "paid" | "featured";
