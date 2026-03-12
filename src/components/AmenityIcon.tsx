@@ -158,6 +158,14 @@ const MEMBER_OFFER_SVG_ICONS: Record<string, () => React.ReactElement> = {
       <path d="M11 18h2" />
     </svg>
   ),
+  "casual classes": () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M8 4v6M16 4v6" />
+      <path d="M9 15l2 2 4-4" />
+    </svg>
+  ),
 };
 
 export function MemberOfferIcon({ offer, className = "w-4 h-4" }: { offer: string; className?: string }) {

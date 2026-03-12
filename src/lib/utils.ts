@@ -186,6 +186,7 @@ export const ALL_MEMBER_OFFERS = [
   "referral scheme",
   "multiple location access",
   "gym or community app",
+  "casual classes",
 ] as const;
 
 export type MemberOffer = (typeof ALL_MEMBER_OFFERS)[number];
@@ -197,6 +198,7 @@ export const MEMBER_OFFER_ICONS: Record<string, string> = {
   "referral scheme": "🤝",
   "multiple location access": "📍",
   "gym or community app": "📱",
+  "casual classes": "📅",
 };
 
 export const ALL_SPECIALTIES = [
