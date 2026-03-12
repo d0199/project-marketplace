@@ -46,8 +46,8 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
   const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
-  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("owned");
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
   const [stateFilter, setStateFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [reviewFilter, setReviewFilter] = useState<"all" | "reviewed" | "unreviewed">("all");
@@ -305,7 +305,7 @@ export default function PTsTab({ adminEmail, initialPtId }: Props) {
           Clear
         </button>
         <button
-          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
+          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Reset

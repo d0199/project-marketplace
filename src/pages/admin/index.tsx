@@ -1115,8 +1115,8 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     const words = ["CONFIRM", "ERASE", "CLEAR", "PROCEED", "WIPE", "RESET", "APPLY", "DELETE"];
     return words[Math.floor(Math.random() * words.length)];
   });
-  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
-  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("owned");
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<"all" | "free" | "paid" | "featured">("all");
   const [pageSize, setPageSize] = useState(25);
@@ -1556,7 +1556,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           Clear
         </button>
         <button
-          onClick={() => { setActiveFilter("active"); setOwnerFilter("owned"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
+          onClick={() => { setActiveFilter("all"); setOwnerFilter("all"); setStateFilter("all"); setPlanFilter("all"); setReviewFilter("all"); }}
           className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap"
         >
           Reset
