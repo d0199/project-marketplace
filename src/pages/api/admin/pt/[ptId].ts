@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       adminEdited: true,
       adminEditedAt: now,
       adminEditedBy: adminEmail,
-      adminEditHistory: [...(pt.adminEditHistory ?? []), { by: adminEmail, at: now }],
+      adminEditHistory: [...(pt.adminEditHistory ?? []), { by: adminEmail, at: now }].slice(-20),
     };
     await ptStore.update(updated);
     try { await res.revalidate(`/pt/${updated.suburbSlug}/${updated.slug}`); } catch { /* ignore */ }

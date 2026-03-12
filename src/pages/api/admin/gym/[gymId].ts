@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     gym.adminEdited = true;
     gym.adminEditedAt = now;
     gym.adminEditedBy = adminEmail;
-    gym.adminEditHistory = [...(existing?.adminEditHistory ?? []), { by: adminEmail, at: now }];
+    gym.adminEditHistory = [...(existing?.adminEditHistory ?? []), { by: adminEmail, at: now }].slice(-20);
     await ownerStore.update(gym);
     try { await res.revalidate(`/gym/${gym.suburbSlug}/${gym.slug}`); } catch { /* ignore */ }
     logAdminAction({ adminEmail, action: "gym.update", entityType: "gym", entityId: gymId, entityName: gym.name });
