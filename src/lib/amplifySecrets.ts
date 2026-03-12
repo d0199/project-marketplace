@@ -50,7 +50,11 @@ export async function loadStripeSecrets(): Promise<void> {
 
     // Fallback: process.env for any keys not found in SSM
     for (const key of STRIPE_KEYS) {
-      if (!cache[key]) cache[key] = process.env[key] ?? "";
+      if (!cache[key]) {
+        const envVal = process.env[key];
+        console.log(`[amplifySecrets] ${key}: SSM miss, env=${envVal ? "found" : "missing"}`);
+        cache[key] = envVal ?? "";
+      }
     }
   })();
   return loadPromise;

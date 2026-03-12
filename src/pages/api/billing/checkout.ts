@@ -67,8 +67,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? existing.data[0]
       : await stripe.customers.create({ email });
 
-    const priceId = getPTPriceMap()[plan]?.[interval];
+    const ptPrices = getPTPriceMap();
+    const priceId = ptPrices[plan]?.[interval];
     if (!priceId) {
+      console.error("[billing/checkout] PT price missing:", { plan, interval, ptPrices });
       return res.status(400).json({ error: "Invalid plan or interval" });
     }
 
