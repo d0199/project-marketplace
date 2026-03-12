@@ -18,6 +18,7 @@ import ShareButton from "@/components/ShareButton";
 import { trackEvent } from "@/lib/gtag";
 import { BASE_URL } from "@/lib/siteUrl";
 import { gymUrl, ptUrl } from "@/lib/slugify";
+import { datasetStore } from "@/lib/datasetStore";
 
 const DAYS = [
   "monday",
@@ -43,6 +44,7 @@ interface PTSummary {
 interface Props {
   gym: Gym;
   personalTrainers: PTSummary[];
+  dynamicIcons?: { amenities?: Record<string, string>; memberOffers?: Record<string, string> };
 }
 
 const SCHEMA_DAY_MAP: Record<string, string> = {
@@ -156,7 +158,7 @@ interface ContactForm {
   message: string;
 }
 
-export default function GymProfilePage({ gym, personalTrainers }: Props) {
+export default function GymProfilePage({ gym, personalTrainers, dynamicIcons }: Props) {
   const router = useRouter();
   const [isOwner, setIsOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -353,7 +355,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {gym.amenities.map((a) => (
-                    <AmenityBadge key={a} amenity={a} />
+                    <AmenityBadge key={a} amenity={a} dynamicIcons={dynamicIcons?.amenities} />
                   ))}
                 </div>
                 {(gym.amenitiesNotes || gym.amenitiesVerified) && (
@@ -395,7 +397,7 @@ export default function GymProfilePage({ gym, personalTrainers }: Props) {
                   <div className="flex flex-wrap gap-2 mb-3">
                     {gym.memberOffers.map((offer) => (
                       <span key={offer} className="inline-flex items-center gap-1.5 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
-                        <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0" />
+                        <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0" dynamicIcons={dynamicIcons?.memberOffers} />
                         <span className="capitalize">{offer}</span>
                       </span>
                     ))}
@@ -744,5 +746,15 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
       sessionDuration: pt.sessionDuration,
     }));
 
-  return { props: { gym, personalTrainers }, revalidate: 60 };
+  // Fetch dynamic icons for amenities and member offers
+  const [amenityDs, memberOfferDs] = await Promise.all([
+    datasetStore.getByName("amenities"),
+    datasetStore.getByName("member-offers"),
+  ]);
+  const dynamicIcons = {
+    ...(amenityDs?.icons ? { amenities: amenityDs.icons } : {}),
+    ...(memberOfferDs?.icons ? { memberOffers: memberOfferDs.icons } : {}),
+  };
+
+  return { props: { gym, personalTrainers, dynamicIcons }, revalidate: 60 };
 };

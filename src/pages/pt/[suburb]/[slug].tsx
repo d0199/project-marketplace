@@ -17,6 +17,7 @@ import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
 import { BASE_URL } from "@/lib/siteUrl";
 import { POSTCODE_META } from "@/lib/utils";
+import { datasetStore } from "@/lib/datasetStore";
 import { gymUrl, ptUrl } from "@/lib/slugify";
 
 interface AffiliatedGym {
@@ -32,6 +33,7 @@ interface Props {
   pt: PersonalTrainer;
   affiliatedGyms: AffiliatedGym[];
   flags: FeatureFlags;
+  dynamicIcons?: { memberOffers?: Record<string, string> };
 }
 
 function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
@@ -114,7 +116,7 @@ function track(ptId: string, event: string) {
   }).catch(() => {});
 }
 
-export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
+export default function PTProfilePage({ pt, affiliatedGyms, dynamicIcons }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -338,7 +340,7 @@ export default function PTProfilePage({ pt, affiliatedGyms }: Props) {
                   <div className="flex flex-wrap gap-2 mb-3">
                     {pt.memberOffers.map((offer) => (
                       <span key={offer} className="inline-flex items-center gap-1.5 bg-orange-50 text-brand-orange border border-orange-200 rounded-full px-3 py-1 text-sm font-medium">
-                        <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0" />
+                        <MemberOfferIcon offer={offer} className="w-4 h-4 shrink-0" dynamicIcons={dynamicIcons?.memberOffers} />
                         <span className="capitalize">{offer}</span>
                       </span>
                     ))}
@@ -809,5 +811,9 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
     }
   }
 
-  return { props: { pt, affiliatedGyms, flags }, revalidate: 60 };
+  // Fetch dynamic icons for member offers
+  const memberOfferDs = await datasetStore.getByName("pt-member-offers");
+  const dynamicIcons = memberOfferDs?.icons ? { memberOffers: memberOfferDs.icons } : {};
+
+  return { props: { pt, affiliatedGyms, flags, dynamicIcons }, revalidate: 60 };
 };

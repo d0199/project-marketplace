@@ -2,6 +2,7 @@ import type { AppProps } from "next/app";
 import Script from "next/script";
 import { Amplify } from "aws-amplify";
 import "@/styles/globals.css";
+import { DynamicIconProvider } from "@/lib/DynamicIconContext";
 
 const GA_MEASUREMENT_ID = "G-PE18WDRRB4";
 const IS_PRODUCTION =
@@ -36,7 +37,9 @@ export default function App({ Component, pageProps }: AppProps) {
           </Script>
         </>
       )}
-      <Component {...pageProps} />
+      <DynamicIconProvider>
+        <Component {...pageProps} />
+      </DynamicIconProvider>
     </>
   );
 }
