@@ -60,6 +60,11 @@ const schema = a.schema({
       amenitiesVerified: a.boolean(),
       amenitiesNotes: a.string(),
       specialties: a.string().array(),
+      // admin review tracking
+      adminEdited: a.boolean(),
+      adminEditedAt: a.string(),
+      adminEditedBy: a.string(),
+      adminEditHistory: a.string(), // JSON-encoded array of { by, at }
     })
     // GSIs: ownerId for owner portal, addressPostcode for suburb page lookups
     .secondaryIndexes((index) => [index("ownerId"), index("addressPostcode")])
@@ -178,6 +183,11 @@ const schema = a.schema({
       gender: a.string(),
       languages: a.string().array(),
       customLeadFields: a.string(), // JSON-encoded CustomLeadField[]
+      // admin review tracking
+      adminEdited: a.boolean(),
+      adminEditedAt: a.string(),
+      adminEditedBy: a.string(),
+      adminEditHistory: a.string(), // JSON-encoded array of { by, at }
     })
     // GSIs: ownerId for owner portal, addressPostcode for suburb page lookups
     .secondaryIndexes((index) => [index("ownerId"), index("addressPostcode")])

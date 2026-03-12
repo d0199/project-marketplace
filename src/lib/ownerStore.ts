@@ -74,6 +74,12 @@ function toGym(r: GymRecord): Gym {
     specialties: (r.specialties?.filter(Boolean) ?? []) as string[],
     images: (r.images?.filter(Boolean) ?? []) as string[],
     ...(r.imageFocalPoints != null && { imageFocalPoints: (r.imageFocalPoints.filter((v) => v != null) as number[]) }),
+    ...(r.adminEdited != null && { adminEdited: r.adminEdited }),
+    ...(r.adminEditedAt != null && { adminEditedAt: r.adminEditedAt }),
+    ...(r.adminEditedBy != null && { adminEditedBy: r.adminEditedBy }),
+    ...((r as Record<string, unknown>).adminEditHistory != null && {
+      adminEditHistory: JSON.parse((r as Record<string, unknown>).adminEditHistory as string),
+    }),
   };
 }
 
@@ -125,6 +131,10 @@ function fromGym(gym: Gym) {
     specialties: gym.specialties,
     images: gym.images,
     imageFocalPoints: gym.imageFocalPoints,
+    adminEdited: gym.adminEdited,
+    adminEditedAt: gym.adminEditedAt,
+    adminEditedBy: gym.adminEditedBy,
+    adminEditHistory: gym.adminEditHistory ? JSON.stringify(gym.adminEditHistory) : undefined,
   };
 }
 

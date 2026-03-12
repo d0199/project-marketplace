@@ -84,6 +84,12 @@ function toPT(r: PTRecord): PersonalTrainer {
     ...((r as Record<string, unknown>).customLeadFields != null && {
       customLeadFields: JSON.parse((r as Record<string, unknown>).customLeadFields as string),
     }),
+    ...(r.adminEdited != null && { adminEdited: r.adminEdited }),
+    ...(r.adminEditedAt != null && { adminEditedAt: r.adminEditedAt }),
+    ...(r.adminEditedBy != null && { adminEditedBy: r.adminEditedBy }),
+    ...((r as Record<string, unknown>).adminEditHistory != null && {
+      adminEditHistory: JSON.parse((r as Record<string, unknown>).adminEditHistory as string),
+    }),
   };
 }
 
@@ -134,6 +140,10 @@ function fromPT(pt: PersonalTrainer) {
     gender: pt.gender,
     languages: pt.languages,
     customLeadFields: pt.customLeadFields ? JSON.stringify(pt.customLeadFields) : undefined,
+    adminEdited: pt.adminEdited,
+    adminEditedAt: pt.adminEditedAt,
+    adminEditedBy: pt.adminEditedBy,
+    adminEditHistory: pt.adminEditHistory ? JSON.stringify(pt.adminEditHistory) : undefined,
   };
 }
 
