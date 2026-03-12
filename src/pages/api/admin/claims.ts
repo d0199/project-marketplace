@@ -146,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             specialties: [],
             qualifications: [],
             languages: ["English"],
-            isActive: false, // admin activates once profile is complete
+            isActive: true,
           });
 
           await dataClient.models.Claim.update({
@@ -165,7 +165,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const pt = await ptStore.getById(claim.gymId ?? "");
           if (!pt) return res.status(404).json({ error: `PT not found: ${claim.gymId}` });
 
-          await ptStore.update({ ...pt, ownerId });
+          await ptStore.update({ ...pt, ownerId, isActive: true });
           await dataClient.models.Claim.update({
             id,
             status: "approved",
@@ -202,7 +202,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             images: [],
             hours: {},
             pricePerWeek: 0,
-            isActive: false, // admin activates once profile is complete
+            isActive: true,
           });
 
           await dataClient.models.Claim.update({
@@ -224,6 +224,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           await ownerStore.update({
             ...gym,
             ownerId,
+            isActive: true,
             priceVerified: false,
             pricingNotes: "",
             amenitiesVerified: false,
