@@ -180,7 +180,9 @@ export default function AdminPage() {
       {/* Header */}
       <div className="bg-brand-black text-white px-6 py-4 flex items-center justify-between">
         <h1 className="text-lg font-bold tracking-tight">
-          <span className="text-brand-orange">mynextgym</span> Admin
+          <a href="/" className="hover:opacity-80 transition-opacity">
+            <span className="text-brand-orange">mynextgym</span> Admin
+          </a>
         </h1>
         <button
           onClick={handleSignOut}
