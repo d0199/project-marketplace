@@ -68,6 +68,10 @@ export default function AddressAutocomplete({ onSelect, inputClassName }: Props)
     try {
       const r = await adminFetch(`/api/places/detail?placeId=${encodeURIComponent(prediction.placeId)}`);
       const data = await r.json();
+      if (data.error) {
+        console.error("[AddressAutocomplete] API error:", data.error);
+        return;
+      }
       onSelect({
         street: data.street ?? "",
         suburb: data.suburb ?? "",
@@ -77,8 +81,8 @@ export default function AddressAutocomplete({ onSelect, inputClassName }: Props)
         lng: data.lng ?? null,
       });
       setQuery("");
-    } catch {
-      // silent fail
+    } catch (err) {
+      console.error("[AddressAutocomplete] selectPlace error:", err);
     }
   }
 
