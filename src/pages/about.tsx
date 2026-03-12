@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import { BASE_URL } from "@/lib/siteUrl";
+import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 
 const FAQS = [
   {
@@ -54,7 +56,58 @@ const FAQS = [
   },
 ];
 
+const CATEGORIES = [
+  { value: "general", label: "General enquiry" },
+  { value: "billing", label: "Billing & subscriptions" },
+  { value: "listing", label: "My listing" },
+  { value: "bug", label: "Report a bug" },
+  { value: "other", label: "Other" },
+];
+
 export default function AboutPage() {
+  const [userEmail, setUserEmail] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", message: "", category: "general" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getCurrentUser()
+      .then(() => fetchUserAttributes())
+      .then((attrs) => {
+        if (attrs.email) {
+          setUserEmail(attrs.email);
+          setForm((f) => ({ ...f, email: attrs.email! }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          userEmail: userEmail || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to submit");
+      setSubmitted(true);
+      setForm({ name: "", email: userEmail, message: "", category: "general" });
+    } catch {
+      setError("Something went wrong. Please try again or email us at admin@mynextgym.com.au.");
+    }
+    setSubmitting(false);
+  }
+
+  const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange";
+
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -234,7 +287,7 @@ export default function AboutPage() {
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="max-w-3xl mx-auto scroll-mt-20">
+        <section id="faq" className="max-w-3xl mx-auto scroll-mt-20 mb-16">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">
             Frequently Asked Questions
           </h2>
@@ -263,6 +316,93 @@ export default function AboutPage() {
               </details>
             ))}
           </div>
+        </section>
+
+        {/* Support Form */}
+        <section id="support" className="max-w-3xl mx-auto scroll-mt-20">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Contact Support
+          </h2>
+          <p className="text-gray-600 text-sm mb-8">
+            Have a question or need help? Fill out the form below and our team will get back to you.
+          </p>
+
+          {submitted ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-green-800 mb-1">Message sent</h3>
+              <p className="text-sm text-green-700">
+                Thanks for reaching out. We&apos;ll get back to you as soon as possible.
+              </p>
+              <button
+                onClick={() => setSubmitted(false)}
+                className="mt-4 text-sm text-brand-orange hover:underline font-medium"
+              >
+                Send another message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className={inputCls}
+                    placeholder="Your name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className={inputCls}
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className={inputCls}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  required
+                  rows={5}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  className={inputCls}
+                  placeholder="How can we help?"
+                />
+              </div>
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full sm:w-auto px-6 py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {submitting ? "Sending..." : "Send message"}
+              </button>
+            </form>
+          )}
         </section>
       </Layout>
     </>

@@ -294,6 +294,22 @@ const schema = a.schema({
       submittedAt: a.string(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
+
+  // Support / contact form submissions from the About page.
+  SupportRequest: a
+    .model({
+      name: a.string().required(),
+      email: a.string().required(),
+      message: a.string().required(),
+      category: a.string(),              // "general" | "billing" | "listing" | "bug" | "other"
+      userEmail: a.string(),             // Cognito email if logged in
+      entityType: a.string(),            // "gym" | "pt" | null
+      entityId: a.string(),              // gym/PT id if applicable
+      entityName: a.string(),            // gym/PT name if applicable
+      submittedAt: a.string().required(),
+      status: a.string(),                // "new" | "read" | "resolved"
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

@@ -13,9 +13,12 @@ const WEBHOOKS: Record<string, string> = {
   moderation:
     process.env.SLACK_WEBHOOK_MODERATION ??
     "https://hooks.slack.com/triggers/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",
+  support:
+    process.env.SLACK_WEBHOOK_SUPPORT ??
+    "https://hooks.slack.com/triggers/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",
 };
 
-export type SlackChannel = "feedback" | "claim" | "moderation";
+export type SlackChannel = "feedback" | "claim" | "moderation" | "support";
 
 /** Current timestamp formatted in AWST (UTC+8) */
 export function nowAWST(): string {
