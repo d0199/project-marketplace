@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
@@ -180,9 +181,9 @@ export default function AdminPage() {
       {/* Header */}
       <div className="bg-brand-black text-white px-6 py-4 flex items-center justify-between">
         <h1 className="text-lg font-bold tracking-tight">
-          <a href="/" className="hover:opacity-80 transition-opacity">
+          <Link href="/" className="hover:opacity-80 transition-opacity">
             <span className="text-brand-orange">mynextgym</span> Admin
-          </a>
+          </Link>
         </h1>
         <button
           onClick={handleSignOut}
