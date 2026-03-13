@@ -1483,8 +1483,6 @@ export default function BillingPage() {
         {showBulkModal && session && (
           <BulkEditModal
             gyms={bulkSelectedGyms}
-            ownerEmail={session.email}
-            ownerId={session.ownerId}
             onClose={() => setShowBulkModal(false)}
             onSubmitted={handleBulkSubmitted}
           />

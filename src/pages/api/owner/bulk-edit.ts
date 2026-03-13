@@ -4,6 +4,7 @@ import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import { BASE_URL } from "@/lib/siteUrl";
+import { requireUser } from "@/lib/userAuth";
 import type { Gym, OpeningHours } from "@/types";
 
 /** Apply a single field change to a gym object */
@@ -32,20 +33,26 @@ function applyField(gym: Gym, field: string, value: unknown): Gym {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { gymIds, field, value, ownerEmail, ownerId } = req.body as {
+  // Authenticate — require valid Cognito token
+  const user = await requireUser(req, res);
+  if (!user) return;
+
+  const { gymIds, field, value } = req.body as {
     gymIds: string[];
     field: string;
     value: unknown;
-    ownerEmail: string;
-    ownerId: string;
   };
+  const ownerEmail = user.email;
+  const ownerId = user.ownerId;
 
   if (!gymIds?.length || !field || !ownerId) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // Validate all gyms belong to this owner
-  const ownerGyms = await ownerStore.getByOwner(ownerId);
+  // Validate all gyms belong to this owner (unless admin)
+  const ownerGyms = user.isAdmin
+    ? await Promise.all(gymIds.map((id) => ownerStore.getById(id))).then((g) => g.filter(Boolean) as Gym[])
+    : await ownerStore.getByOwner(ownerId);
   const ownerGymIds = new Set(ownerGyms.map((g) => g.id));
   const invalidIds = gymIds.filter((id) => !ownerGymIds.has(id));
   if (invalidIds.length > 0) {
@@ -54,9 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const affectedGyms = ownerGyms.filter((g) => gymIds.includes(g.id));
 
-  const isInternal =
-    typeof ownerEmail === "string" &&
-    ownerEmail.toLowerCase().endsWith("@mynextgym.com.au");
+  const isInternal = user.isAdmin || ownerEmail.toLowerCase().endsWith("@mynextgym.com.au");
 
   // Internal staff or dev mode → apply immediately
   if (isInternal || !isAmplifyConfigured()) {

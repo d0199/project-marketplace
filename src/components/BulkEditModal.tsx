@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ownerFetch } from "@/lib/ownerFetch";
 import type { Gym, OpeningHours } from "@/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,13 +45,11 @@ const DAYS: (keyof OpeningHours)[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 interface Props {
   gyms: Gym[];
-  ownerEmail: string;
-  ownerId: string;
   onClose: () => void;
   onSubmitted: () => void;
 }
 
-export default function BulkEditModal({ gyms, ownerEmail, ownerId, onClose, onSubmitted }: Props) {
+export default function BulkEditModal({ gyms, onClose, onSubmitted }: Props) {
   const [step, setStep] = useState<"field" | "value">("field");
   const [selectedField, setSelectedField] = useState<FieldDef | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -103,15 +102,13 @@ export default function BulkEditModal({ gyms, ownerEmail, ownerId, onClose, onSu
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/owner/bulk-edit", {
+      const res = await ownerFetch("/api/owner/bulk-edit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gymIds: gyms.map((g) => g.id),
           field: selectedField.key,
           value: fieldValue,
-          ownerEmail,
-          ownerId,
         }),
       });
       const data = await res.json();

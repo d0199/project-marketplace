@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import OwnerGymForm from "@/components/OwnerGymForm";
+import { ownerFetch } from "@/lib/ownerFetch";
 import type { OwnerSession, Gym } from "@/types";
 import { gymUrl } from "@/lib/slugify";
 
@@ -107,10 +108,10 @@ export default function EditGymPage() {
   }, [gymId, session, router.query.billing]);
 
   async function handleSave(updated: Gym): Promise<string | undefined> {
-    const r = await fetch(`/api/owner/gym/${gymId}`, {
+    const r = await ownerFetch(`/api/owner/gym/${gymId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...updated, ownerEmail: session?.email }),
+      body: JSON.stringify(updated),
     });
     const body = await r.json().catch(() => ({}));
     if (body?.queued) {

@@ -6,6 +6,7 @@ import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import OwnerPTForm from "@/components/OwnerPTForm";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
+import { ownerFetch } from "@/lib/ownerFetch";
 import type { OwnerSession, PersonalTrainer } from "@/types";
 import { ptUrl } from "@/lib/slugify";
 
@@ -102,10 +103,10 @@ export default function EditPTPage() {
   }, [ptId, session]);
 
   async function handleSave(updated: PersonalTrainer): Promise<string | undefined> {
-    const r = await fetch(`/api/owner/pt/${ptId}`, {
+    const r = await ownerFetch(`/api/owner/pt/${ptId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...updated, ownerEmail: session?.email }),
+      body: JSON.stringify(updated),
     });
     const body = await r.json().catch(() => ({}));
     if (body?.queued) {

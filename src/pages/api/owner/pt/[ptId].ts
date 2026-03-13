@@ -5,6 +5,7 @@ import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
 import { BASE_URL } from "@/lib/siteUrl";
 import { ptUrl } from "@/lib/slugify";
+import { requireUser } from "@/lib/userAuth";
 import type { PersonalTrainer } from "@/types";
 
 export default async function handler(
@@ -21,15 +22,28 @@ export default async function handler(
   }
 
   if (req.method === "PUT") {
-    const { ownerEmail, ...updated } = req.body as PersonalTrainer & { ownerEmail?: string };
+    // Authenticate — require valid Cognito token
+    const user = await requireUser(req, res);
+    if (!user) return;
+
+    // Strip client-supplied ownerEmail; use verified email from token instead
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { ownerEmail: _clientEmail, ...updated } = req.body as PersonalTrainer & { ownerEmail?: string };
+    const ownerEmail = user.email;
     console.log("[owner/pt PUT]", id, "ownerEmail:", ownerEmail, "name:", updated?.name, "ip:", req.headers["x-forwarded-for"] || req.socket?.remoteAddress);
     if (!updated || updated.id !== id) {
       return res.status(400).json({ error: "Invalid body" });
     }
 
-    const isInternal =
-      typeof ownerEmail === "string" &&
-      ownerEmail.toLowerCase().endsWith("@mynextgym.com.au");
+    // Verify ownership: user must own this PT or be admin
+    if (!user.isAdmin) {
+      const pt = await ptStore.getById(id);
+      if (!pt || pt.ownerId !== user.ownerId) {
+        return res.status(403).json({ error: "You do not own this PT profile" });
+      }
+    }
+
+    const isInternal = user.isAdmin || ownerEmail.toLowerCase().endsWith("@mynextgym.com.au");
 
     // Internal staff or dev mode → apply immediately
     if (isInternal || !isAmplifyConfigured()) {
