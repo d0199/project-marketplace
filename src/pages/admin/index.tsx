@@ -1433,7 +1433,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       const r = await adminFetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(slimGym({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false })),
+        body: JSON.stringify(slimGym({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false, isFreeTrial: panel?.gym.isFreeTrial ?? false, trialExpiresAt: panel?.gym.trialExpiresAt })),
       });
       if (r.ok) {
         delete drafts.current[updated.id]; setDraftIds((s) => { const n = new Set(s); n.delete(updated.id); return n; });
