@@ -154,6 +154,19 @@ export interface OwnerSession {
   name: string;
 }
 
+export interface SubscriptionEvent {
+  id: string;
+  entityId: string;
+  entityType: "gym" | "pt";
+  entityName?: string;
+  eventType: "trial_started" | "trial_expired" | "trial_extended" | "subscription_created" | "plan_changed" | "subscription_cancelled" | "admin_override";
+  source: "stripe" | "admin" | "cron";
+  adminEmail?: string;
+  details?: string; // JSON: { before, after }
+  occurredAt: string;
+  createdAt?: string;
+}
+
 export interface GymEdit {
   id: string;
   gymId: string;

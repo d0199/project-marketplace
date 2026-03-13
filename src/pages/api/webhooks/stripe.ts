@@ -5,6 +5,7 @@ import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import type Stripe from "stripe";
+import { logSubscriptionEvent } from "@/lib/subscriptionLog";
 
 export const config = { api: { bodyParser: false } };
 
@@ -76,6 +77,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isPaid: true,
         isFeatured: plan === "featured",
       });
+      logSubscriptionEvent({
+        entityId: gymId,
+        entityType: (entityType as "gym" | "pt") ?? "gym",
+        eventType: "subscription_created",
+        source: "stripe",
+        after: { isPaid: true, isFeatured: plan === "featured", stripePlan: plan as string, stripeSubscriptionId: subscriptionId },
+      });
       break;
     }
 
@@ -90,6 +98,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!gymId) break;
 
       await updateEntityBilling(gymId, meta?.entityType, { isPaid: false, isFeatured: false });
+      logSubscriptionEvent({
+        entityId: gymId,
+        entityType: (meta?.entityType as "gym" | "pt") ?? "gym",
+        eventType: "subscription_cancelled",
+        source: "stripe",
+        before: { isPaid: true, stripeSubscriptionId: sub.id },
+        after: { isPaid: false, isFeatured: false },
+      });
       break;
     }
 
@@ -109,6 +125,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await updateEntityBilling(gymId, meta?.entityType, {
         isPaid: true,
         isFeatured: newPlan === "featured",
+      });
+      logSubscriptionEvent({
+        entityId: gymId,
+        entityType: (meta?.entityType as "gym" | "pt") ?? "gym",
+        eventType: "plan_changed",
+        source: "stripe",
+        after: { isPaid: true, isFeatured: newPlan === "featured", stripePlan: newPlan },
       });
       break;
     }

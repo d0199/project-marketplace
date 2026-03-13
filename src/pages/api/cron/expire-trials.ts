@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
+import { logSubscriptionEvent } from "@/lib/subscriptionLog";
 
 /**
  * Cron endpoint: checks all gyms/PTs with isFreeTrial=true.
@@ -32,6 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!gym.trialExpiresAt) continue;
       if (new Date(gym.trialExpiresAt) > now) continue;
 
+      // Snapshot before clearing
+      const beforeGym = { isFreeTrial: true, isPaid: gym.isPaid, isFeatured: gym.isFeatured, trialExpiresAt: gym.trialExpiresAt };
       // Trial has expired — clear flags
       gym.isFreeTrial = false;
       gym.isPaid = false;
@@ -42,6 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       delete gym.memberOffersNotes;
       delete gym.memberOffersTnC;
       await ownerStore.update(gym);
+      logSubscriptionEvent({
+        entityId: gym.id, entityType: "gym", entityName: gym.name,
+        eventType: "trial_expired", source: "cron",
+        before: beforeGym, after: { isFreeTrial: false, isPaid: false, isFeatured: false },
+      });
       expired.push({ type: "gym", id: gym.id, name: gym.name });
     }
   } catch (err) {
@@ -56,6 +64,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!pt.trialExpiresAt) continue;
       if (new Date(pt.trialExpiresAt) > now) continue;
 
+      // Snapshot before clearing
+      const beforePt = { isFreeTrial: true, isPaid: pt.isPaid, isFeatured: pt.isFeatured, trialExpiresAt: pt.trialExpiresAt };
       // Trial has expired — clear flags
       pt.isFreeTrial = false;
       pt.isPaid = false;
@@ -64,6 +74,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       delete pt.memberOffersNotes;
       delete pt.memberOffersTnC;
       await ptStore.update(pt);
+      logSubscriptionEvent({
+        entityId: pt.id, entityType: "pt", entityName: pt.name,
+        eventType: "trial_expired", source: "cron",
+        before: beforePt, after: { isFreeTrial: false, isPaid: false, isFeatured: false },
+      });
       expired.push({ type: "pt", id: pt.id, name: pt.name });
     }
   } catch (err) {

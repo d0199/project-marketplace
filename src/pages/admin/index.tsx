@@ -15,6 +15,7 @@ import { adminFetch } from "@/lib/adminFetch";
 import { gymUrl } from "@/lib/slugify";
 import { ScanButton } from "@/components/admin/WebsiteScraper";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
+import SubscriptionHistory from "@/components/admin/SubscriptionHistory";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -2138,6 +2139,9 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                     </div>
                   )}
                 </div>
+
+                {/* Subscription History */}
+                <SubscriptionHistory entityId={panel.gym.id} entityType="gym" />
               </section>
 
               {/* Affiliated PTs */}

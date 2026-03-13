@@ -8,6 +8,7 @@ import { geocodeAddress } from "@/lib/geocode";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
 import { ScanButton, FieldSuggestion } from "@/components/admin/WebsiteScraper";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
+import SubscriptionHistory from "@/components/admin/SubscriptionHistory";
 import AddressAutocomplete from "@/components/admin/AddressAutocomplete";
 import { useApiFlags } from "@/lib/useApiFlags";
 
@@ -826,6 +827,9 @@ function PTEditPanel({
                 </div>
               )}
             </div>
+
+            {/* Subscription History */}
+            <SubscriptionHistory entityId={pt.id} entityType="pt" />
           </section>
 
           {/* Affiliated Gyms (admin-only) */}

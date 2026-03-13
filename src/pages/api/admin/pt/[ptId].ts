@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/auditLog";
+import { logSubscriptionEvent, billingSnapshot, detectBillingChange } from "@/lib/subscriptionLog";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const adminEmail = await requireAdmin(req, res);
@@ -18,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "PUT") {
     const pt = await ptStore.getById(ptId);
     if (!pt) return res.status(404).json({ error: "Not found" });
+    const beforeBilling = billingSnapshot(pt as unknown as Record<string, unknown>);
     const now = new Date().toISOString();
     const updated = {
       ...pt, ...req.body, id: ptId,
@@ -27,6 +29,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       adminEditHistory: [...(pt.adminEditHistory ?? []), { by: adminEmail, at: now }].slice(-20),
     };
     await ptStore.update(updated);
+    const afterBilling = billingSnapshot(updated as unknown as Record<string, unknown>);
+    const changeType = detectBillingChange(beforeBilling, afterBilling);
+    if (changeType) {
+      logSubscriptionEvent({
+        entityId: ptId, entityType: "pt", entityName: updated.name,
+        eventType: changeType, source: "admin", adminEmail,
+        before: beforeBilling, after: afterBilling,
+      });
+    }
     try { await res.revalidate(`/pt/${updated.suburbSlug}/${updated.slug}`); } catch { /* ignore */ }
     logAdminAction({ adminEmail, action: "pt.update", entityType: "pt", entityId: ptId, entityName: updated.name });
     return res.json({ ok: true });

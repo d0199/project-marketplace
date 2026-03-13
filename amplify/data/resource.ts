@@ -315,6 +315,21 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
+  // Subscription / billing event history for gyms and PTs.
+  SubscriptionEvent: a
+    .model({
+      entityId: a.string().required(),     // gymId or ptId
+      entityType: a.string().required(),   // "gym" | "pt"
+      entityName: a.string(),              // denormalized for display
+      eventType: a.string().required(),    // trial_started, trial_expired, trial_extended, subscription_created, plan_changed, subscription_cancelled, admin_override
+      source: a.string().required(),       // "stripe" | "admin" | "cron"
+      adminEmail: a.string(),              // populated when source="admin"
+      details: a.string(),                 // JSON: { before, after } billing snapshots
+      occurredAt: a.string().required(),   // ISO timestamp
+    })
+    .secondaryIndexes((index) => [index("entityId")])
+    .authorization((allow) => [allow.publicApiKey()]),
+
   // Support / contact form submissions from the About page.
   SupportRequest: a
     .model({
