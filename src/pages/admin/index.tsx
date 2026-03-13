@@ -102,7 +102,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const [tab, setTab] = useState<"claims" | "moderation" | "gyms" | "pts" | "users" | "leads" | "datasets" | "blog" | "flags" | "chats">("claims");
+  const [tab, setTab] = useState<"gyms" | "pts" | "claims" | "moderation" | "users" | "blog" | "datasets" | "flags" | "leads" | "chats">("gyms");
   const [adminEmail, setAdminEmail] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({});
@@ -197,7 +197,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="border-b bg-white px-6">
         <nav className="flex gap-6">
-          {(["claims", "moderation", "gyms", "pts", "users", "leads", "datasets", "blog", "chats", "flags"] as const).map((t) => (
+          {(["gyms", "pts", "claims", "moderation", "users", "blog", "datasets", "flags", "leads", "chats"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
