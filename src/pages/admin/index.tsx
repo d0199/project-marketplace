@@ -1903,7 +1903,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                         <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">★ Featured</span>
                       )}
                       {g.isFreeTrial && (
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">Trial{g.trialExpiresAt ? ` → ${g.trialExpiresAt}` : ""}</span>
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">Trial{g.trialExpiresAt ? ` ${g.trialExpiresAt.slice(2).replace(/-/g, "")}` : ""}</span>
                       )}
                       {g.isTest && (
                         <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Test</span>
