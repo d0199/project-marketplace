@@ -1,8 +1,34 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { logSubscriptionEvent } from "@/lib/subscriptionLog";
+
+let cronSecret: string | null = null;
+
+async function getCronSecret(): Promise<string> {
+  if (cronSecret) return cronSecret;
+  // Try SSM first
+  try {
+    const appId = process.env.AMPLIFY_APP_ID ?? "d36uz2q25gygnh";
+    const region = process.env.AWS_REGION ?? "ap-southeast-2";
+    const client = new SSMClient({ region });
+    const result = await client.send(
+      new GetParametersCommand({
+        Names: [`/amplify/shared/${appId}/CRON_SECRET`],
+        WithDecryption: true,
+      })
+    );
+    const val = result.Parameters?.[0]?.Value;
+    if (val) { cronSecret = val; return val; }
+  } catch (err) {
+    console.warn("[expire-trials] SSM fetch failed, falling back to env:", err);
+  }
+  // Fallback to env var
+  cronSecret = process.env.CRON_SECRET ?? "";
+  return cronSecret;
+}
 
 /**
  * Cron endpoint: checks gyms/PTs with isFreeTrial=true.
@@ -18,8 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Auth: check secret from header or query
-  const secret = process.env.CRON_SECRET;
+  // Auth: check secret from SSM or env
+  const secret = await getCronSecret();
   const provided = req.headers.authorization?.replace("Bearer ", "") ?? req.query.secret;
   if (secret && provided !== secret) {
     return res.status(401).json({ error: "Unauthorized" });
