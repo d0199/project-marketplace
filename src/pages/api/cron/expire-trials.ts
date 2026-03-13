@@ -85,15 +85,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Snapshot before clearing
       const before = { isFreeTrial: true, isPaid: gym.isPaid, isFeatured: gym.isFeatured, trialExpiresAt: gym.trialExpiresAt };
 
-      // Trial has expired — clear flags
-      gym.isFreeTrial = false;
-      gym.isPaid = false;
-      gym.isFeatured = false;
-      gym.memberOffers = [];
-      gym.memberOffersScroll = false;
-      delete gym.memberOffersNotes;
-      delete gym.memberOffersTnC;
-      await ownerStore.update(gym);
+      // Trial has expired — targeted update (only the fields we're clearing)
+      const { errors: gymErrors } = await dataClient.models.Gym.update({
+        id,
+        isFreeTrial: false,
+        isPaid: false,
+        isFeatured: false,
+        memberOffers: [],
+        memberOffersScroll: false,
+        memberOffersNotes: null,
+        memberOffersTnC: null,
+      });
+      if (gymErrors?.length) {
+        console.error(`[expire-trials] Gym update errors for ${id}:`, JSON.stringify(gymErrors));
+        continue;
+      }
 
       logSubscriptionEvent({
         entityId: id, entityType: "gym", entityName: name,
@@ -133,14 +139,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Snapshot before clearing
       const before = { isFreeTrial: true, isPaid: pt.isPaid, isFeatured: pt.isFeatured, trialExpiresAt: pt.trialExpiresAt };
 
-      // Trial has expired — clear flags
-      pt.isFreeTrial = false;
-      pt.isPaid = false;
-      pt.isFeatured = false;
-      pt.memberOffers = [];
-      delete pt.memberOffersNotes;
-      delete pt.memberOffersTnC;
-      await ptStore.update(pt);
+      // Trial has expired — targeted update (only the fields we're clearing)
+      const { errors: ptErrors } = await dataClient.models.PersonalTrainer.update({
+        id,
+        isFreeTrial: false,
+        isPaid: false,
+        isFeatured: false,
+        memberOffers: [],
+        memberOffersNotes: null,
+        memberOffersTnC: null,
+      });
+      if (ptErrors?.length) {
+        console.error(`[expire-trials] PT update errors for ${id}:`, JSON.stringify(ptErrors));
+        continue;
+      }
 
       logSubscriptionEvent({
         entityId: id, entityType: "pt", entityName: name,
