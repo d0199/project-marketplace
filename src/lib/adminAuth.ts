@@ -46,6 +46,7 @@ export async function requireAdmin(
     );
 
     if (attrs["custom:isAdmin"] !== "true") {
+      console.warn("[adminAuth] 403 — user:", username, "isAdmin:", attrs["custom:isAdmin"], "email:", attrs.email);
       res.status(403).json({ error: "Forbidden" });
       return null;
     }

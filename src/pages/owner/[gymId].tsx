@@ -114,6 +114,9 @@ export default function EditGymPage() {
       body: JSON.stringify(updated),
     });
     const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      throw new Error(body?.error || "Failed to save changes");
+    }
     if (body?.queued) {
       return "Changes submitted for review — a team member will approve shortly.";
     }

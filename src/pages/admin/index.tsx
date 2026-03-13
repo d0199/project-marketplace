@@ -1079,6 +1079,13 @@ function ModerationTab({ onPendingCount, adminEmail }: { onPendingCount?: (n: nu
 // ---------------------------------------------------------------------------
 // Gyms tab
 // ---------------------------------------------------------------------------
+/** Strip heavy read-only fields the server rebuilds, keeping PUT payloads small */
+function slimGym(gym: Gym): Omit<Gym, "adminEditHistory"> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { adminEditHistory, ...slim } = gym;
+  return slim;
+}
+
 function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEmail?: string }) {
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [q, setQ] = useState("");
@@ -1323,7 +1330,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         return adminFetch(`/api/admin/gym/${g.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
+          body: JSON.stringify(slimGym(updated)),
         });
       })
     );
@@ -1343,7 +1350,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         adminFetch(`/api/admin/gym/${g.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...g, amenities: [] }),
+          body: JSON.stringify(slimGym({ ...g, amenities: [] })),
         })
       )
     );
@@ -1426,7 +1433,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
       const r = await adminFetch(`/api/admin/gym/${updated.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false }),
+        body: JSON.stringify(slimGym({ ...updated, isTest: panel?.gym.isTest ?? false, isFeatured: panel?.gym.isFeatured ?? false, isActive: panel?.gym.isActive !== false, isPaid: panel?.gym.isPaid ?? false })),
       });
       if (r.ok) {
         delete drafts.current[updated.id]; setDraftIds((s) => { const n = new Set(s); n.delete(updated.id); return n; });
@@ -1457,7 +1464,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     const r = await adminFetch(`/api/admin/gym/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...gym, ownerId: "unclaimed" }),
+      body: JSON.stringify(slimGym({ ...gym, ownerId: "unclaimed" })),
     });
     if (r.ok) {
       showToast("Gym reverted to unclaimed.");
@@ -1473,7 +1480,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     const r = await adminFetch(`/api/admin/gym/${g.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
+      body: JSON.stringify(slimGym(updated)),
     });
     if (r.ok) {
       setGyms((prev) => prev.map((gym) => gym.id === g.id ? updated : gym));

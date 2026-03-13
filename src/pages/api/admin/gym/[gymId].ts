@@ -17,18 +17,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "PUT") {
-    const gym = req.body as Gym;
-    if (gym.id !== gymId) return res.status(400).json({ error: "ID mismatch" });
-    const existing = await ownerStore.getById(gymId);
-    const now = new Date().toISOString();
-    gym.adminEdited = true;
-    gym.adminEditedAt = now;
-    gym.adminEditedBy = adminEmail;
-    gym.adminEditHistory = [...(existing?.adminEditHistory ?? []), { by: adminEmail, at: now }].slice(-20);
-    await ownerStore.update(gym);
-    try { await res.revalidate(`/gym/${gym.suburbSlug}/${gym.slug}`); } catch { /* ignore */ }
-    logAdminAction({ adminEmail, action: "gym.update", entityType: "gym", entityId: gymId, entityName: gym.name });
-    return res.status(200).json({ ok: true });
+    try {
+      const gym = req.body as Gym;
+      if (gym.id !== gymId) return res.status(400).json({ error: "ID mismatch" });
+      const existing = await ownerStore.getById(gymId);
+      const now = new Date().toISOString();
+      gym.adminEdited = true;
+      gym.adminEditedAt = now;
+      gym.adminEditedBy = adminEmail;
+      gym.adminEditHistory = [...(existing?.adminEditHistory ?? []), { by: adminEmail, at: now }].slice(-20);
+      await ownerStore.update(gym);
+      try { await res.revalidate(`/gym/${gym.suburbSlug}/${gym.slug}`); } catch { /* ignore */ }
+      logAdminAction({ adminEmail, action: "gym.update", entityType: "gym", entityId: gymId, entityName: gym.name });
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      console.error("[admin/gym PUT] error:", gymId, err);
+      return res.status(500).json({ error: String(err) });
+    }
   }
 
   if (req.method === "DELETE") {
