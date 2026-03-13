@@ -35,12 +35,20 @@ export async function sendSlackNotification(
   payload: Record<string, string>,
 ): Promise<void> {
   const url = WEBHOOKS[channel];
+  const hasBlankValues = Object.entries(payload).some(
+    ([, v]) => v === "" || v === undefined || v === null
+  );
+  console.log(`[slackNotify] ${channel} — payload:`, JSON.stringify(payload));
+  if (hasBlankValues) {
+    console.warn(`[slackNotify] ${channel} — WARNING: payload contains blank/empty values`);
+  }
   try {
-    await fetch(url, {
+    const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    console.log(`[slackNotify] ${channel} — response status: ${resp.status}`);
   } catch (err) {
     console.error(`[slackNotify] ${channel} webhook error:`, err);
   }

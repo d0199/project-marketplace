@@ -22,6 +22,7 @@ export default async function handler(
 
   if (req.method === "PUT") {
     const { ownerEmail, ...updated } = req.body as PersonalTrainer & { ownerEmail?: string };
+    console.log("[owner/pt PUT]", id, "ownerEmail:", ownerEmail, "name:", updated?.name, "ip:", req.headers["x-forwarded-for"] || req.socket?.remoteAddress);
     if (!updated || updated.id !== id) {
       return res.status(400).json({ error: "Invalid body" });
     }

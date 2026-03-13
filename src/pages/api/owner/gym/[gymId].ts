@@ -23,6 +23,7 @@ export default async function handler(
   if (req.method === "PUT") {
     // Strip ownerEmail from the body before treating the rest as a Gym
     const { ownerEmail, ...updated } = req.body as Gym & { ownerEmail?: string };
+    console.log("[owner/gym PUT]", id, "ownerEmail:", ownerEmail, "name:", updated?.name, "ip:", req.headers["x-forwarded-for"] || req.socket?.remoteAddress);
     if (!updated || updated.id !== id) {
       return res.status(400).json({ error: "Invalid body" });
     }

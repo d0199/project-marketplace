@@ -9,6 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") return res.status(405).end();
 
   const { name, email, message, category, userEmail, entityType, entityId, entityName } = req.body;
+  console.log("[support] incoming request body:", JSON.stringify({
+    name, email, message: message?.slice?.(0, 200), category, userEmail, entityType, entityId, entityName,
+    ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress,
+    userAgent: req.headers["user-agent"]?.slice(0, 150),
+  }));
   if (!name || !email || !message) {
     return res.status(400).json({ error: "name, email, and message are required" });
   }
