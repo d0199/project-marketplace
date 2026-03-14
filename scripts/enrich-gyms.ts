@@ -1,341 +1,476 @@
-#!/usr/bin/env npx tsx
-/**
- * Gym amenities enrichment script.
- *
- * Reads data/gyms_dynamo.csv, calls Claude + web tools per gym,
- * extracts amenities / pricing / member offers, writes to data/gyms_enriched.csv.
- *
- * Usage:
- *   npx tsx scripts/enrich-gyms.ts
- *   npx tsx scripts/enrich-gyms.ts --state WA --limit 20
- *   npx tsx scripts/enrich-gyms.ts --delay 1.5
- *
- * Resume: re-running skips already-processed gym IDs automatically.
- */
+// Enrich gym profiles by scraping their websites and extracting data via Claude Haiku.
+//
+// Usage:
+//   npx tsx scripts/enrich-gyms.ts                     # dry-run (preview only)
+//   npx tsx scripts/enrich-gyms.ts --apply             # actually write to DynamoDB
+//   npx tsx scripts/enrich-gyms.ts --apply --limit 5   # limit to first 5 gyms
+//   npx tsx scripts/enrich-gyms.ts --skip-copy         # skip delete/copy, just enrich
+//   npx tsx scripts/enrich-gyms.ts --state WA          # only enrich gyms in a specific state
+//
+// Steps:
+//   1. Delete all gyms in staging table
+//   2. Copy all gyms from prod table
+//   3. For each gym with a website (where adminEdited is null/false):
+//      - Fetch website HTML, convert to text
+//      - Send to Claude Haiku for extraction
+//      - Update DynamoDB with extracted fields
 
-import Anthropic from "@anthropic-ai/sdk";
-import fs from "fs";
-import path from "path";
-import { createRequire } from "module";
-import { parse } from "csv-parse/sync";
-import { stringify } from "csv-stringify/sync";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  ScanCommand,
+  BatchWriteCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 
-// ── Load .env.local ───────────────────────────────────────────────────────────
-const envFile = path.resolve(process.cwd(), ".env.local");
-if (fs.existsSync(envFile)) {
-  for (const line of fs.readFileSync(envFile, "utf8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
-    const [key, ...rest] = trimmed.split("=");
-    const val = rest.join("=").replace(/^['"]|['"]$/g, "");
-    if (!process.env[key.trim()]) process.env[key.trim()] = val;
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
+const STAGING_TABLE = "Gym-qanzfeewlfeklctnhoskryahti-NONE";
+const PROD_TABLE = "Gym-xofowsmrxvebxmdjijmijtz5bq-NONE";
+const REGION = "ap-southeast-2";
+const APP_ID = "d36uz2q25gygnh";
+
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: REGION }));
+const args = process.argv.slice(2);
+const APPLY = args.includes("--apply");
+const SKIP_COPY = args.includes("--skip-copy");
+const limitIdx = args.indexOf("--limit");
+const LIMIT = limitIdx >= 0 ? parseInt(args[limitIdx + 1]) : Infinity;
+const stateIdx = args.indexOf("--state");
+const STATE_FILTER = stateIdx >= 0 ? args[stateIdx + 1]?.toUpperCase() : "";
+
+// ---------------------------------------------------------------------------
+// SSM -> Anthropic API key
+// ---------------------------------------------------------------------------
+let anthropicKey = "";
+
+async function getAnthropicKey(): Promise<string> {
+  if (anthropicKey) return anthropicKey;
+  if (process.env.ANTHROPIC_API_KEY) {
+    anthropicKey = process.env.ANTHROPIC_API_KEY;
+    return anthropicKey;
+  }
+  const client = new SSMClient({ region: REGION });
+  const result = await client.send(
+    new GetParametersCommand({
+      Names: [
+        `/amplify/shared/${APP_ID}/ANTHROPIC_API_KEY`,
+        `/amplify/${APP_ID}/staging/ANTHROPIC_API_KEY`,
+      ],
+      WithDecryption: true,
+    })
+  );
+  for (const param of result.Parameters ?? []) {
+    if (param.Value) { anthropicKey = param.Value; break; }
+  }
+  if (!anthropicKey) throw new Error("Could not retrieve ANTHROPIC_API_KEY from SSM or env");
+  return anthropicKey;
+}
+
+// ---------------------------------------------------------------------------
+// HTML -> text
+// ---------------------------------------------------------------------------
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, "$2 ($1)")
+    .replace(/<\/(p|div|h[1-6]|li|tr|br\s*\/?)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n/g, "\n")
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Step 1: Delete all staging gyms
+// ---------------------------------------------------------------------------
+async function deleteAllStaging() {
+  console.log("\n=== Step 1: Deleting all staging gyms ===");
+  const items: Record<string, unknown>[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await ddb.send(new ScanCommand({
+      TableName: STAGING_TABLE,
+      ProjectionExpression: "id",
+      ExclusiveStartKey: lastKey,
+    }));
+    items.push(...(res.Items ?? []));
+    lastKey = res.LastEvaluatedKey;
+  } while (lastKey);
+
+  console.log(`  Found ${items.length} staging gyms to delete`);
+  if (!APPLY) { console.log("  [DRY RUN] Skipping delete"); return; }
+
+  const BATCH = 25;
+  for (let i = 0; i < items.length; i += BATCH) {
+    const batch = items.slice(i, i + BATCH);
+    await ddb.send(new BatchWriteCommand({
+      RequestItems: {
+        [STAGING_TABLE]: batch.map((item) => ({
+          DeleteRequest: { Key: { id: item.id } },
+        })),
+      },
+    }));
+  }
+  console.log(`  Deleted ${items.length} staging gyms`);
+}
+
+// ---------------------------------------------------------------------------
+// Step 2: Copy prod -> staging
+// ---------------------------------------------------------------------------
+async function copyProdToStaging(): Promise<Record<string, unknown>[]> {
+  console.log("\n=== Step 2: Copying prod gyms to staging ===");
+  const items: Record<string, unknown>[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await ddb.send(new ScanCommand({
+      TableName: PROD_TABLE,
+      ExclusiveStartKey: lastKey,
+    }));
+    items.push(...(res.Items ?? []));
+    lastKey = res.LastEvaluatedKey;
+  } while (lastKey);
+
+  // Fix empty GSI key fields — DynamoDB rejects empty strings on GSI keys
+  let fixed = 0;
+  for (const item of items) {
+    if (item.addressPostcode === "") { delete item.addressPostcode; fixed++; }
+    if (item.ownerId === "") { delete item.ownerId; fixed++; }
+  }
+  console.log(`  Found ${items.length} prod gyms${fixed > 0 ? ` (fixed ${fixed} empty GSI keys)` : ""}`);
+  if (!APPLY) { console.log("  [DRY RUN] Skipping copy"); return items; }
+
+  const BATCH = 25;
+  let written = 0;
+  for (let i = 0; i < items.length; i += BATCH) {
+    const batch = items.slice(i, i + BATCH);
+    await ddb.send(new BatchWriteCommand({
+      RequestItems: {
+        [STAGING_TABLE]: batch.map((item) => ({
+          PutRequest: { Item: item },
+        })),
+      },
+    }));
+    written += batch.length;
+    if (written % 500 === 0) console.log(`  ${written} / ${items.length} copied...`);
+  }
+  console.log(`  Copied ${written} gyms to staging`);
+  return items;
+}
+
+// ---------------------------------------------------------------------------
+// Step 3: Enrich gyms
+// ---------------------------------------------------------------------------
+const SYSTEM_PROMPT = `You are analyzing a gym/fitness centre website. Extract as much useful profile information as possible from the page content.
+
+Return a JSON object with ONLY the fields you can confidently extract. Omit any field you cannot find or are unsure about. Do NOT guess or make up data.
+
+Fields to look for:
+- "phone": phone number (Australian format preferred)
+- "email": email address
+- "instagram": Instagram profile URL (full URL)
+- "facebook": Facebook page URL (full URL)
+- "bookingUrl": online booking URL (Mindbody, Glofox, etc.)
+- "amenities": array of amenities from this list ONLY: ["pool", "spa", "sauna", "free weights", "cardio", "group classes", "boxing/mma", "yoga/pilates", "parking", "showers", "lockers", "childcare", "cafe", "24/7 access", "personal training"]
+- "specialties": array of specialties/programs (e.g. "Hyrox", "F45", "Olympic Lifting", "Powerlifting", "Rehab", "Seniors Fitness", "CrossFit", "HIIT", "Reformer Pilates", "Spin/Cycle", "Martial Arts", "Muay Thai", "Boxing", "Kickboxing", "Strength & Conditioning", "Functional Training", "Circuit Training")
+- "description": write a compelling, SEO-optimized description for this gym listing on mynextgym.com.au. 100-200 words, plain text only (no HTML, no markdown, no headings). Use Australian English spelling. Emphasise the gym's amenities, location, and what makes it stand out. Naturally include the suburb name for local SEO. The tone should be professional but approachable - as if the gym owner is talking to a potential member. Do NOT include the gym name at the start (it's already shown as the page title). Do NOT use bullet points or lists. Write flowing paragraphs only. Do NOT copy text verbatim from the website - rewrite it in your own words
+- "pricePerWeek": weekly membership price as a number (calculate from weekly/fortnightly/monthly if needed)
+- "hours": object with keys monday-sunday, values as opening hours strings (e.g. "5:00am - 9:00pm"). Only include days where hours are clearly stated on the website.
+- "memberOffers": array of member offer tags from this list ONLY: ["no contract", "contract", "new member trial", "referral scheme", "multiple location access", "gym or community app", "casual classes"]
+
+Return ONLY valid JSON. No markdown, no explanation, no code blocks.`;
+
+async function fetchWebsite(url: string): Promise<string | null> {
+  try {
+    const parsedUrl = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(parsedUrl.toString(), {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; mynextgym.com.au bot; +https://www.mynextgym.com.au)",
+        Accept: "text/html,application/xhtml+xml",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) return null;
+    const html = await response.text();
+    let text = htmlToText(html);
+    if (text.length > 8000) text = text.slice(0, 8000);
+    if (text.length < 50) return null;
+    return text;
+  } catch {
+    return null;
   }
 }
 
-// ── Config ────────────────────────────────────────────────────────────────────
-const INPUT_CSV  = path.resolve("data/gyms_dynamo.csv");
-const MODEL      = "claude-sonnet-4-6";
-const DEFAULT_OUTPUT = `data/gyms_enriched_${new Date().toISOString().slice(0,10)}_${MODEL.replace(/[^a-z0-9]/g,"-")}.csv`;
-const MAX_RETRIES        = 3;
-const MAX_CONTINUATIONS  = 6;
-const DEFAULT_DELAY_S    = 0.5;
-
-const OUTPUT_FIELDS = [
-  "id", "name", "addressState", "website",
-  "status",
-  "min_weekly_price_aud",
-  "amenities",
-  "member_offers",
-  "confidence",
-  "error",
-];
-
-const SYSTEM_PROMPT = `\
-You are a gym data enrichment assistant. Research gym websites and extract structured membership info.
-
-Use web_fetch on the provided URL (follow links to pricing/membership pages if needed).
-Use web_search only if web_fetch fails or yields no useful content.
-
-Your FINAL response must be ONLY valid JSON — no preamble, no explanation, no markdown fences.
-Use exactly this schema (all fields required, use null if unknown):
-
-IMPORTANT for min_weekly_price_aud:
-- Find the LOWEST available weekly membership price (the cheapest entry-level option)
-- If prices are shown monthly, divide by 4.33 to convert to weekly
-- If prices are shown fortnightly, divide by 2
-- Ignore casual/day passes — only recurring membership prices
-- Use the cheapest base membership (ignore premium/VIP tiers)
-
-{
-  "min_weekly_price_aud": <number or null>,
-  "confidence": "high" | "medium" | "low" | "no_data",
-  "amenities": {
-    "pool": bool, "spa": bool, "sauna": bool, "free_weights": bool,
-    "cardio": bool, "group_classes": bool, "boxing_mma": bool,
-    "yoga_pilates": bool, "parking": bool, "showers": bool,
-    "lockers": bool, "childcare": bool, "cafe": bool,
-    "access_247": bool, "personal_training": bool
-  },
-  "member_offers": {
-    "no_contract": bool, "contract": bool, "new_member_trial": bool,
-    "referral_scheme": bool, "multi_location_access": bool, "app": bool
-  }
-}
-
-confidence levels:
-- "high"    = price and most amenities found clearly on the website
-- "medium"  = some data found but pricing missing or ambiguous
-- "low"     = very little data, mostly inferred from gym type
-- "no_data" = website unreachable or no relevant content found`;
-
-// web_search_20250305: search snippets only (no full page downloads = faster + cheaper)
-const TOOLS = [
-  { type: "web_search_20250305", name: "web_search" },
-] as any[];
-
-const DEFAULT_AMENITIES = {
-  pool: false, spa: false, sauna: false, free_weights: false,
-  cardio: false, group_classes: false, boxing_mma: false,
-  yoga_pilates: false, parking: false, showers: false,
-  lockers: false, childcare: false, cafe: false,
-  access_247: false, personal_training: false,
-};
-
-const DEFAULT_OFFERS = {
-  no_contract: false, contract: false, new_member_trial: false,
-  referral_scheme: false, multi_location_access: false, app: false,
-};
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const get = (flag: string) => {
-    const i = args.indexOf(flag);
-    return i !== -1 ? args[i + 1] : undefined;
-  };
-  return {
-    state: get("--state")?.toUpperCase(),
-    limit: get("--limit") ? parseInt(get("--limit")!) : undefined,
-    delay: get("--delay") ? parseFloat(get("--delay")!) : DEFAULT_DELAY_S,
-    output: get("--output"),
-  };
-}
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function loadProcessedIds(outputCsv: string): Set<string> {
-  if (!fs.existsSync(outputCsv)) return new Set();
-  const rows = parse(fs.readFileSync(outputCsv, "utf8"), { columns: true });
-  return new Set(rows.map((r: any) => r.id));
-}
-
-function appendRow(outputCsv: string, row: Record<string, string>) {
-  const isNew = !fs.existsSync(outputCsv);
-  const line = stringify([row], { header: isNew, columns: OUTPUT_FIELDS });
-  fs.appendFileSync(outputCsv, line, "utf8");
-}
-
-function buildPrompt(gym: Record<string, string>): string {
-  const parts = [`Gym name: ${gym.name}`];
-  if (gym.website)       parts.push(`Website: ${gym.website}`);
-  if (gym.addressSuburb) parts.push(`Location: ${gym.addressSuburb}, ${gym.addressState || ""}`);
-  if (gym.description)   parts.push(`Description: ${gym.description.slice(0, 400)}`);
-  return parts.join("\n");
-}
-
-function extractJson(text: string): Record<string, any> | null {
-  let t = text.trim();
-  // Strip markdown fences
-  if (t.startsWith("```")) {
-    const lines = t.split("\n");
-    t = lines.slice(1, lines.at(-1)?.trim() === "```" ? -1 : undefined).join("\n");
-  }
-  try { return JSON.parse(t); } catch {}
-  // Try to find embedded JSON object
-  const start = t.indexOf("{");
-  const end   = t.lastIndexOf("}") + 1;
-  if (start !== -1 && end > start) {
-    try { return JSON.parse(t.slice(start, end)); } catch {}
-  }
-  return null;
-}
-
-async function callClaude(
-  client: Anthropic,
-  gym: Record<string, string>,
-): Promise<{ status: "success" | "parse_error"; result: any; error?: string }> {
-  const messages: Anthropic.MessageParam[] = [
-    { role: "user", content: buildPrompt(gym) },
-  ];
-
-  let lastText = "";
-
-  for (let i = 0; i < MAX_CONTINUATIONS; i++) {
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }] as any,
-      tools: TOOLS as any,
-      messages,
+async function extractWithHaiku(
+  apiKey: string,
+  websiteUrl: string,
+  pageText: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 2048,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: `Website URL: ${websiteUrl}\n\nPage content:\n${pageText}` }],
+      }),
     });
 
-    for (const block of response.content) {
-      if (block.type === "text") lastText = block.text;
+    if (!response.ok) {
+      const err = await response.text();
+      console.error(`    Haiku error ${response.status}: ${err.slice(0, 200)}`);
+      return null;
     }
 
-    if (response.stop_reason === "end_turn") break;
-
-    if (response.stop_reason === "pause_turn") {
-      messages.splice(0, messages.length,
-        { role: "user",      content: buildPrompt(gym) },
-        { role: "assistant", content: response.content },
-      );
-      continue;
-    }
-
-    break;
+    const data = await response.json();
+    const raw = data.content?.[0]?.text ?? "{}";
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    return JSON.parse(cleaned);
+  } catch (err) {
+    console.error(`    Haiku parse error:`, err);
+    return null;
   }
-
-  if (!lastText) {
-    return { status: "parse_error", result: null, error: "No text in response" };
-  }
-
-  const parsed = extractJson(lastText);
-  if (!parsed) {
-    return { status: "parse_error", result: null, error: `JSON parse failed: ${lastText.slice(0, 150)}` };
-  }
-
-  const result = {
-    min_weekly_price_aud: parsed.min_weekly_price_aud ?? null,
-    confidence: parsed.confidence ?? "no_data",
-    amenities:    { ...DEFAULT_AMENITIES,  ...(parsed.amenities    ?? {}) },
-    member_offers: { ...DEFAULT_OFFERS,    ...(parsed.member_offers ?? {}) },
-  };
-
-  return { status: "success", result };
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+async function enrichGyms(gyms: Record<string, unknown>[]) {
+  console.log("\n=== Step 3: Enriching gyms ===");
 
-async function main() {
-  const opts = parseArgs();
-  const OUTPUT_CSV = path.resolve(opts.output ?? DEFAULT_OUTPUT);
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error("Error: ANTHROPIC_API_KEY not found in environment or .env.local");
-    process.exit(1);
-  }
-
-  const client = new Anthropic({ apiKey });
-
-  // Load input
-  const allGyms: Record<string, string>[] = parse(
-    fs.readFileSync(INPUT_CSV, "utf8"),
-    { columns: true, skip_empty_lines: true },
+  // Filter: has website, adminEdited is null/false, optional state filter
+  const candidates = gyms.filter(
+    (g) =>
+      g.website &&
+      String(g.website).length > 5 &&
+      !g.adminEdited &&
+      (!STATE_FILTER || String(g.addressState || "").toUpperCase() === STATE_FILTER)
   );
-  console.log(`Loaded ${allGyms.length.toLocaleString()} gyms from ${INPUT_CSV}`);
 
-  // Filter
-  let gyms = opts.state
-    ? allGyms.filter(g => (g.addressState || "").toUpperCase() === opts.state)
-    : allGyms;
-  if (opts.state) console.log(`Filtered to ${gyms.length.toLocaleString()} gyms in ${opts.state}`);
+  const toProcess = candidates.slice(0, LIMIT);
+  const stateLabel = STATE_FILTER ? ` [${STATE_FILTER} only]` : "";
+  console.log(`  ${candidates.length} candidates${stateLabel} (adminEdited=null/false with website), processing ${toProcess.length}\n`);
 
-  // Skip processed
-  const processed = loadProcessedIds(OUTPUT_CSV);
-  gyms = gyms.filter(g => !processed.has(g.id));
-  console.log(`Already processed: ${processed.size.toLocaleString()}  |  Remaining: ${gyms.length.toLocaleString()}`);
-
-  // Limit
-  if (opts.limit) {
-    gyms = gyms.slice(0, opts.limit);
-    console.log(`Processing first ${gyms.length} (--limit ${opts.limit})`);
+  if (!APPLY) {
+    console.log("DRY-RUN — skipping API calls. Run with --apply to enrich.\n");
+    return;
   }
 
-  if (!gyms.length) { console.log("Nothing to do."); return; }
+  const apiKey = await getAnthropicKey();
+  console.log("  API key retrieved");
 
-  const counts = { success: 0, parse_error: 0, no_website: 0, failed: 0 };
-  const pad = gyms.length.toString().length;
+  let updated = 0;
+  let skipped = 0;
+  let failed = 0;
 
-  for (let i = 0; i < gyms.length; i++) {
-    const gym   = gyms[i];
-    const label = `[${String(i + 1).padStart(pad)}/${gyms.length}] ${gym.name.slice(0, 55).padEnd(55)} (${gym.addressState || "?"})`;
-    process.stdout.write(`${label} ... `);
+  for (let i = 0; i < toProcess.length; i++) {
+    const gym = toProcess[i];
+    const name = String(gym.name ?? "");
+    const website = String(gym.website ?? "");
+    const id = String(gym.id);
 
-    const SOCIAL_DOMAINS = ["facebook.com", "instagram.com", "twitter.com", "x.com", "tiktok.com", "youtube.com", "linkedin.com", "yelp.com", "tripadvisor.com", "yellowpages.com.au", "truelocal.com.au", "localsearch.com.au"];
-    const isSocial = (url: string) => SOCIAL_DOMAINS.some(d => url.toLowerCase().includes(d));
+    console.log(`  [${i + 1}/${toProcess.length}] ${name} -- ${website}`);
 
-    // No website or social/directory link
-    if (!gym.website?.trim() || isSocial(gym.website)) {
-      const reason = !gym.website?.trim() ? "no_website" : "social_link";
-      appendRow(OUTPUT_CSV, { id: gym.id, name: gym.name, addressState: gym.addressState || "",
-        website: gym.website || "", status: reason, min_weekly_price_aud: "",
-        amenities: "", member_offers: "", confidence: "", error: "" });
-      counts.no_website++;
-      console.log(`SKIP (${reason})`);
+    // Fetch website
+    const pageText = await fetchWebsite(website);
+    if (!pageText) {
+      console.log("    ! Could not fetch website, skipping");
+      skipped++;
       continue;
     }
 
-    // Retry loop
-    let status = "failed";
-    let result: any = null;
-    let error: string | undefined;
+    // Extract via Haiku
+    const extracted = await extractWithHaiku(apiKey, website, pageText);
+    if (!extracted) {
+      console.log("    ! Extraction failed, skipping");
+      failed++;
+      continue;
+    }
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        ({ status, result, error } = await callClaude(client, gym));
-        break;
-      } catch (e: any) {
-        if (e instanceof Anthropic.RateLimitError) {
-          const wait = 30 * attempt;
-          process.stdout.write(`rate-limited, waiting ${wait}s ... `);
-          await sleep(wait * 1000);
-          error = "rate_limit";
-        } else {
-          error = String(e).slice(0, 120);
-          if (attempt < MAX_RETRIES) await sleep(5000 * attempt);
+    // Build update expression
+    const setExprs: string[] = ["updatedAt = :now"];
+    const values: Record<string, unknown> = { ":now": new Date().toISOString() };
+    const updatedFields: string[] = [];
+
+    // Description
+    if (extracted.description && typeof extracted.description === "string") {
+      setExprs.push("description = :desc");
+      values[":desc"] = extracted.description;
+      updatedFields.push("description");
+    }
+
+    // Price + pricing notes
+    if (extracted.pricePerWeek && typeof extracted.pricePerWeek === "number") {
+      setExprs.push("pricePerWeek = :price");
+      values[":price"] = extracted.pricePerWeek;
+      setExprs.push("pricingNotes = :pnotes");
+      values[":pnotes"] = "Verified by AI";
+      updatedFields.push("pricePerWeek");
+    }
+
+    // Phone
+    if (extracted.phone && typeof extracted.phone === "string") {
+      setExprs.push("phone = :phone");
+      values[":phone"] = extracted.phone;
+      updatedFields.push("phone");
+    }
+
+    // Email
+    if (extracted.email && typeof extracted.email === "string") {
+      setExprs.push("email = :email");
+      values[":email"] = extracted.email;
+      updatedFields.push("email");
+    }
+
+    // Instagram
+    if (extracted.instagram && typeof extracted.instagram === "string") {
+      setExprs.push("instagram = :ig");
+      values[":ig"] = extracted.instagram;
+      updatedFields.push("instagram");
+    }
+
+    // Facebook
+    if (extracted.facebook && typeof extracted.facebook === "string") {
+      setExprs.push("facebook = :fb");
+      values[":fb"] = extracted.facebook;
+      updatedFields.push("facebook");
+    }
+
+    // Booking URL
+    if (extracted.bookingUrl && typeof extracted.bookingUrl === "string") {
+      setExprs.push("bookingUrl = :booking");
+      values[":booking"] = extracted.bookingUrl;
+      updatedFields.push("bookingUrl");
+    }
+
+    // Amenities + notes
+    if (Array.isArray(extracted.amenities) && extracted.amenities.length > 0) {
+      setExprs.push("amenities = :amenities");
+      values[":amenities"] = extracted.amenities;
+      setExprs.push("amenitiesNotes = :anotes");
+      values[":anotes"] = "Verified by AI";
+      updatedFields.push(`amenities(${extracted.amenities.length})`);
+    }
+
+    // Specialties
+    if (Array.isArray(extracted.specialties) && extracted.specialties.length > 0) {
+      setExprs.push("specialties = :specs");
+      values[":specs"] = extracted.specialties;
+      updatedFields.push(`specialties(${extracted.specialties.length})`);
+    }
+
+    // Member offers
+    if (Array.isArray(extracted.memberOffers) && extracted.memberOffers.length > 0) {
+      setExprs.push("memberOffers = :offers");
+      values[":offers"] = extracted.memberOffers;
+      updatedFields.push(`memberOffers(${extracted.memberOffers.length})`);
+    }
+
+    // Hours -- only include days with real values
+    const hours = extracted.hours as Record<string, string> | undefined;
+    if (hours && typeof hours === "object") {
+      const dayMap: Record<string, string> = {
+        monday: "hoursMonday", tuesday: "hoursTuesday", wednesday: "hoursWednesday",
+        thursday: "hoursThursday", friday: "hoursFriday", saturday: "hoursSaturday",
+        sunday: "hoursSunday",
+      };
+      let hoursCount = 0;
+      for (const [day, attr] of Object.entries(dayMap)) {
+        const val = hours[day];
+        if (val && typeof val === "string" && val.length > 2 &&
+            !val.toLowerCase().includes("unavailable") &&
+            !val.toLowerCase().includes("unknown") &&
+            !val.toLowerCase().includes("closed") &&
+            !val.toLowerCase().includes("n/a")) {
+          const placeholder = `:h${day.slice(0, 3)}`;
+          setExprs.push(`${attr} = ${placeholder}`);
+          values[placeholder] = val;
+          hoursCount++;
         }
       }
+      if (hoursCount > 0) updatedFields.push(`hours(${hoursCount} days)`);
     }
 
-    if (status === "success" || status === "parse_error") {
-      counts[status as keyof typeof counts]++;
+    if (updatedFields.length === 0) {
+      console.log("    ! No fields extracted, skipping");
+      skipped++;
+      continue;
+    }
+
+    console.log(`    > Extracted: ${updatedFields.join(", ")}`);
+
+    if (APPLY) {
+      await ddb.send(new UpdateCommand({
+        TableName: STAGING_TABLE,
+        Key: { id },
+        UpdateExpression: `SET ${setExprs.join(", ")}`,
+        ExpressionAttributeValues: values,
+      }));
+      console.log("    > Written to DynamoDB");
     } else {
-      counts.failed++;
+      console.log("    [DRY RUN] Would update DynamoDB");
     }
 
-    appendRow(OUTPUT_CSV, {
-      id:                   gym.id,
-      name:                 gym.name,
-      addressState:         gym.addressState || "",
-      website:              gym.website || "",
-      status,
-      min_weekly_price_aud: result?.min_weekly_price_aud != null ? String(result.min_weekly_price_aud) : "",
-      amenities:            result ? JSON.stringify(result.amenities) : "",
-      member_offers:        result ? JSON.stringify(result.member_offers) : "",
-      confidence:           result?.confidence || "",
-      error:                error || "",
-    });
+    updated++;
 
-    const price = result?.min_weekly_price_aud != null ? `$${result.min_weekly_price_aud}/wk` : "price=?";
-    const conf  = result?.confidence || "?";
-    const tag   = status === "success" ? "OK" : status.toUpperCase();
-    console.log(`${tag}  ${price}  conf=${conf}`);
-
-    if (i < gyms.length - 1) await sleep(opts.delay * 1000);
+    // Small delay to avoid rate limits
+    await new Promise((r) => setTimeout(r, 500));
   }
 
-  // Summary
-  console.log(`\n── Done ──`);
-  console.log(`  success    : ${counts.success}`);
-  console.log(`  parse_error: ${counts.parse_error}`);
-  console.log(`  no_website : ${counts.no_website}`);
-  console.log(`  failed     : ${counts.failed}`);
-  console.log(`\nOutput: ${OUTPUT_CSV}`);
+  console.log(`\n=== Summary ===`);
+  console.log(`  Updated: ${updated}`);
+  console.log(`  Skipped: ${skipped}`);
+  console.log(`  Failed: ${failed}`);
+  console.log(`  Mode: ${APPLY ? "APPLIED" : "DRY RUN"}`);
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+async function main() {
+  console.log(`Mode: ${APPLY ? "APPLY (writing to DynamoDB)" : "DRY RUN (preview only)"}`);
+  console.log(`Limit: ${LIMIT === Infinity ? "all" : LIMIT}`);
+
+  if (!SKIP_COPY) {
+    await deleteAllStaging();
+    await copyProdToStaging();
+  }
+
+  // Scan staging table for enrichment
+  const gyms: Record<string, unknown>[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const res = await ddb.send(new ScanCommand({
+      TableName: SKIP_COPY ? STAGING_TABLE : STAGING_TABLE,
+      ExclusiveStartKey: lastKey,
+    }));
+    gyms.push(...(res.Items ?? []));
+    lastKey = res.LastEvaluatedKey;
+  } while (lastKey);
+
+  await enrichGyms(gyms);
+}
+
+main().catch((err) => {
+  console.error("Script failed:", err);
+  process.exit(1);
+});
