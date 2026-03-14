@@ -46,6 +46,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
   const [selectedMemberOffers, setSelectedMemberOffers] = useState<string[]>([]);
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [selectedPTSpecialties, setSelectedPTSpecialties] = useState<string[]>([]);
+  const [includeOnlinePTs, setIncludeOnlinePTs] = useState(true);
   const [hasSearched, setHasSearched] = useState(false);
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS);
   const [sortBy, setSortBy] = useState<SortOption | null>(null);
@@ -161,6 +162,9 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
   const ptResults = useMemo<PTWithDistance[]>(() => {
     if (searchMode !== "trainers" || !hasSearched || ptCache.length === 0) return [];
     let filtered = ptCache.filter((p) => (p.distanceKm ?? Infinity) <= radiusKm);
+    if (!includeOnlinePTs) {
+      filtered = filtered.filter((p) => !p.isNational);
+    }
     if (selectedPTSpecialties.length > 0) {
       filtered = filtered.filter((p) => selectedPTSpecialties.every((s) => p.specialties.includes(s)));
     }
@@ -171,12 +175,12 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
     else if (sortBy === "price-asc") sorted.sort((a, b) => (a.pricePerSession ?? Infinity) - (b.pricePerSession ?? Infinity));
     else if (sortBy === "price-desc") sorted.sort((a, b) => (b.pricePerSession ?? 0) - (a.pricePerSession ?? 0));
     return sorted;
-  }, [ptCache, hasSearched, searchMode, radiusKm, selectedPTSpecialties, sortBy]);
+  }, [ptCache, hasSearched, searchMode, radiusKm, includeOnlinePTs, selectedPTSpecialties, sortBy]);
 
   const results = searchMode === "gyms" ? gymResults : ptResults;
   const resultLabel = searchMode === "gyms" ? "gym" : "trainer";
 
-  useEffect(() => { setPage(1); }, [selectedAmenities, selectedMemberOffers, selectedSpecialties, selectedPTSpecialties, radiusKm, sortBy, searchMode]);
+  useEffect(() => { setPage(1); }, [selectedAmenities, selectedMemberOffers, selectedSpecialties, selectedPTSpecialties, includeOnlinePTs, radiusKm, sortBy, searchMode]);
 
   function handleSearch(pc: string, label?: string) {
     setPostcode(pc);
@@ -363,7 +367,17 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
 
   // PT sidebar filters
   const PTSidebarFilters = () => (
-    <aside className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+    <aside className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-4">
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={includeOnlinePTs}
+          onChange={(e) => setIncludeOnlinePTs(e.target.checked)}
+          className="w-4 h-4 rounded accent-brand-orange"
+        />
+        <span className="text-sm font-medium text-gray-700">Include Online PTs</span>
+      </label>
+      <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide">Specialties</h3>
         {selectedPTSpecialties.length > 0 && (
@@ -390,6 +404,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
           );
         })}
       </ul>
+      </div>
     </aside>
   );
 
