@@ -24,14 +24,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const inServiceArea = p.serviceAreas?.includes(postcode) ?? false;
       const withinRadius = actualDistanceKm <= radiusKm;
 
-      // Classify match type:
-      // "local"   — PT's profile suburb is within search radius
-      // "service" — PT is outside radius but has this postcode in their service areas
-      // "online"  — PT is a national/online PT, not local and not in service area
+      // Classify match type (priority order matters):
+      // "local"   — PT's profile suburb is nearby (within 10 km)
+      // "service" — PT has this postcode in their service areas (regardless of distance)
+      // "online"  — PT is national/online, not local and not in service area
       let matchType: "local" | "service" | "online";
       let distanceKm: number;
 
-      if (withinRadius) {
+      // Use a fixed local threshold (10 km) — not the request radius which may be
+      // inflated (e.g. 50 km) for client-side slider filtering.
+      const LOCAL_THRESHOLD_KM = 10;
+      const isLocal = actualDistanceKm <= LOCAL_THRESHOLD_KM;
+
+      if (isLocal) {
         matchType = "local";
         distanceKm = actualDistanceKm;
       } else if (inServiceArea) {
@@ -40,6 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else if (isNational) {
         matchType = "online";
         distanceKm = 5; // Sort after service-area PTs
+      } else if (withinRadius) {
+        // Beyond local threshold but within requested radius — still show with actual distance
+        matchType = "local";
+        distanceKm = actualDistanceKm;
       } else {
         return null; // Not a match
       }
