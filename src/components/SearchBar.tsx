@@ -71,15 +71,12 @@ export default function SearchBar({
       const q = normalize(query);
       let matches: SuburbSuggestion[];
       if (isPostcodeInput) {
-        // Postcode prefix — deduplicate by postcode
-        const seen = new Set<string>();
+        // Postcode prefix — show all suburbs for matching postcodes
         matches = [];
         for (const s of suburbIndex) {
           if (!s.postcode.startsWith(query)) continue;
-          if (seen.has(s.postcode)) continue;
-          seen.add(s.postcode);
           matches.push(s);
-          if (matches.length >= 5) break;
+          if (matches.length >= 8) break;
         }
       } else {
         matches = suburbIndex

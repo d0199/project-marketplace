@@ -19,15 +19,12 @@ export default async function handler(
   let matches: SuburbSuggestion[];
 
   if (isDigits) {
-    // Postcode prefix search — deduplicate by postcode (first suburb per postcode)
-    const seen = new Set<string>();
+    // Postcode prefix search — show all suburbs for matching postcodes
     matches = [];
     for (const s of suburbIndex) {
       if (!s.postcode.startsWith(q)) continue;
-      if (seen.has(s.postcode)) continue;
-      seen.add(s.postcode);
       matches.push(s);
-      if (matches.length >= 8) break;
+      if (matches.length >= 12) break;
     }
   } else {
     // Suburb name search
