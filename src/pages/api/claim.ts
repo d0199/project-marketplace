@@ -49,7 +49,10 @@ export default async function handler(
 
   const isPT = claimType === "pt";
   const entityLabel = isPT ? "PT profile" : "gym";
-  const alertSubject = isNewListing ? "New gym listing request" : `New ${entityLabel} claim submitted`;
+  const dateStr = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric", timeZone: "Australia/Perth" });
+  const alertSubject = isNewListing
+    ? `New listing: ${gymName || "Unknown"} — ${dateStr}`
+    : `Claim: ${gymName || gymId} — ${dateStr}`;
   const alertBody = isNewListing
     ? `A new gym listing has been submitted and is awaiting review.\n\nGym: ${gymName}\nSuburb: ${gymSuburb} ${gymPostcode}\nWebsite: ${gymWebsite || "—"}\n\nContact: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nDescription: ${message}` : ""}\n\nReview at: ${BASE_URL}/admin`
     : `A new ${entityLabel} claim has been submitted and is awaiting review.\n\n${isPT ? "PT" : "Gym"}: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: ${BASE_URL}/admin`;

@@ -68,7 +68,7 @@ export default async function handler(
 
     await Promise.allSettled([
       sendAdminAlert(
-        "Gym profile edit pending review",
+        `Gym edit: ${currentGym.name} — ${new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric", timeZone: "Australia/Perth" })}`,
         `A gym owner has submitted profile changes that require moderation.\n\nGym: ${currentGym.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`
       ),
       sendSlackNotification("moderation", {
