@@ -170,11 +170,8 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
       p.inServiceArea || p.isNational || (p.distanceKm ?? Infinity) <= radiusKm
     );
     if (!includeOnlinePTs) {
-      // Remove PTs that are only showing because they're national/online
-      // (keep them if they're also within radius or in the service area)
-      filtered = filtered.filter((p) =>
-        !p.isNational || p.inServiceArea || (p.distanceKm ?? Infinity) <= radiusKm
-      );
+      // Remove PTs that matched purely as online (not local or service-area)
+      filtered = filtered.filter((p) => p.matchType !== "online");
     }
     if (selectedPTSpecialties.length > 0) {
       filtered = filtered.filter((p) => selectedPTSpecialties.every((s) => p.specialties.includes(s)));
