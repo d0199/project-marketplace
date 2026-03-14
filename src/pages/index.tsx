@@ -440,7 +440,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
             </h1>
             <p className="text-white/75 text-lg mb-5">
               {isGymMode
-                ? "Discover thousands of premium gyms across Australia"
+                ? "Discover thousands of premium gyms, studios and clubs across Australia"
                 : "Connect with certified personal trainers near you"}
             </p>
 

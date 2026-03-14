@@ -253,7 +253,7 @@ export default function TestHeroPage() {
             </h1>
             <p className="text-white/75 text-lg mb-5">
               {searchMode === "gyms"
-                ? "Discover thousands of premium gyms across Australia"
+                ? "Discover thousands of premium gyms, studios and clubs across Australia"
                 : "Connect with certified personal trainers near you"}
             </p>
 
