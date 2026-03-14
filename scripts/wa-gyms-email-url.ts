@@ -1,5 +1,6 @@
 // Extract WA gyms with email addresses from prod DynamoDB.
 // Output: CSV with Email, Business Name, Gym Category, is_enterprise, URL
+// URLs are generated using the same deduplicateSlugs logic as the app.
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
@@ -30,8 +31,29 @@ const ENTERPRISE_PATTERNS = [
   /\bshemoves\b/i, /\bflow space\b/i, /\bstrong pilates\b/i, /\bclub pilates\b/i,
 ];
 
+// ── Replicate app's slug logic exactly ──
 function slugify(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function generateNameSlug(name: string): string {
+  return slugify(name);
+}
+
+function generateSuburbSlug(suburb: string, postcode: string): string {
+  return slugify(`${suburb}-${postcode}`);
+}
+
+// Same deduplication as src/lib/slugify.ts deduplicateSlugs
+function deduplicateSlugs<T extends { slug: string }>(items: T[]): T[] {
+  const seen = new Map<string, number>();
+  return items.map((item) => {
+    const base = item.slug;
+    const count = (seen.get(base) ?? 0) + 1;
+    seen.set(base, count);
+    if (count === 1) return item;
+    return { ...item, slug: `${base}-${count}` };
+  });
 }
 
 function escapeCSV(val: string): string {
@@ -42,6 +64,7 @@ function escapeCSV(val: string): string {
 }
 
 async function main() {
+  // Load ALL gyms (same as ownerStore.getAll)
   const items: Record<string, unknown>[] = [];
   let lastKey: Record<string, unknown> | undefined;
   do {
@@ -52,8 +75,24 @@ async function main() {
     lastKey = res.LastEvaluatedKey;
   } while (lastKey);
 
+  console.log(`Total prod gyms: ${items.length}`);
+
+  // Build slug + suburbSlug for every gym, then deduplicate (mirrors ownerStore.getAll)
+  const allWithSlugs = items.map((g) => ({
+    ...g,
+    slug: generateNameSlug(String(g.name || "")),
+    suburbSlug: generateSuburbSlug(String(g.addressSuburb || ""), String(g.addressPostcode || "")),
+  }));
+  const deduped = deduplicateSlugs(allWithSlugs);
+
+  // Index by id for fast lookup
+  const slugById = new Map<string, { slug: string; suburbSlug: string }>();
+  for (const g of deduped) {
+    slugById.set(String(g.id), { slug: g.slug, suburbSlug: g.suburbSlug });
+  }
+
   // Filter: WA + has email
-  const waWithEmail = items.filter(
+  const waWithEmail = deduped.filter(
     (g) =>
       String(g.addressState || "").toUpperCase() === "WA" &&
       g.email &&
@@ -61,10 +100,9 @@ async function main() {
       String(g.email).includes("@")
   );
 
-  console.log(`Total prod gyms: ${items.length}`);
   console.log(`WA gyms with email: ${waWithEmail.length}`);
 
-  // Enterprise detection maps
+  // Enterprise detection
   const emailCount = new Map<string, number>();
   const domainCount = new Map<string, number>();
   for (const g of waWithEmail) {
@@ -110,27 +148,14 @@ async function main() {
   // Sort by name
   waWithEmail.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
 
-  // Build CSV with URL
+  // Build CSV
   const header = "Email,Business Name,Gym Category,is_enterprise,URL";
   const rows = waWithEmail.map((g) => {
     const email = String(g.email || "").trim();
     const name = String(g.name || "");
     const specialties = ((g.specialties as string[]) || []).join("; ");
     const enterprise = isEnterprise(g) ? "Yes" : "No";
-
-    // Build URL from slug and suburbSlug fields, or derive from name/suburb/postcode
-    let url = "";
-    const suburbSlug = g.suburbSlug as string | undefined;
-    const nameSlug = g.slug as string | undefined;
-    if (suburbSlug && nameSlug) {
-      url = `${BASE_URL}/gym/${suburbSlug}/${nameSlug}`;
-    } else {
-      const suburb = String(g.addressSuburb || "");
-      const postcode = String(g.addressPostcode || "");
-      if (suburb && postcode) {
-        url = `${BASE_URL}/gym/${slugify(`${suburb}-${postcode}`)}/${slugify(name)}`;
-      }
-    }
+    const url = `${BASE_URL}/gym/${g.suburbSlug}/${g.slug}`;
 
     return [escapeCSV(email), escapeCSV(name), escapeCSV(specialties), enterprise, escapeCSV(url)].join(",");
   });
@@ -142,6 +167,13 @@ async function main() {
   const enterpriseCount = waWithEmail.filter(isEnterprise).length;
   console.log(`  Enterprise/franchise: ${enterpriseCount}`);
   console.log(`  Independent: ${waWithEmail.length - enterpriseCount}`);
+
+  // Report any duplicated slugs in WA
+  const dupes = waWithEmail.filter((g) => g.slug.match(/-\d+$/));
+  if (dupes.length) {
+    console.log(`\n  Deduplicated slugs (${dupes.length}):`);
+    for (const g of dupes) console.log(`    ${g.slug} — ${g.name}`);
+  }
 }
 
 main().catch(console.error);
