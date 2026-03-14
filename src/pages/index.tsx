@@ -161,12 +161,20 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
   // PT results
   const ptResults = useMemo<PTWithDistance[]>(() => {
     if (searchMode !== "trainers" || !hasSearched || ptCache.length === 0) return [];
-    // Local PTs: apply user's radius slider. Service/online PTs: always included (filtered by toggle).
+    // Local PTs: apply user's radius slider.
+    // Service area PTs: always shown (they explicitly cover this postcode).
+    // Online/national PTs: always shown (toggled by includeOnlinePTs).
+    // Note: API fetches with max radius so a nearby national PT may have matchType="local" —
+    // we use the boolean flags (inServiceArea, isNational) not matchType for filtering.
     let filtered = ptCache.filter((p) =>
-      p.matchType === "service" || p.matchType === "online" || (p.distanceKm ?? Infinity) <= radiusKm
+      p.inServiceArea || p.isNational || (p.distanceKm ?? Infinity) <= radiusKm
     );
     if (!includeOnlinePTs) {
-      filtered = filtered.filter((p) => p.matchType !== "online");
+      // Remove PTs that are only showing because they're national/online
+      // (keep them if they're also within radius or in the service area)
+      filtered = filtered.filter((p) =>
+        !p.isNational || p.inServiceArea || (p.distanceKm ?? Infinity) <= radiusKm
+      );
     }
     if (selectedPTSpecialties.length > 0) {
       filtered = filtered.filter((p) => selectedPTSpecialties.every((s) => p.specialties.includes(s)));
