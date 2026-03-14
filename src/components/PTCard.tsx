@@ -58,11 +58,11 @@ export default function PTCard({ pt }: Props) {
             ★ Featured
           </span>
         )}
-        {pt.isNational ? (
+        {pt.matchType === "online" ? (
           <span className="absolute top-2 right-2 bg-indigo-600/90 text-white text-xs font-semibold px-2 py-1 rounded-full">
             Online PT
           </span>
-        ) : pt.inServiceArea ? (
+        ) : pt.matchType === "service" ? (
           <span className="absolute top-2 right-2 bg-indigo-600/90 text-white text-xs font-semibold px-2 py-1 rounded-full">
             Services this area
           </span>
