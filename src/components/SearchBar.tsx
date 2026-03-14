@@ -348,7 +348,7 @@ export default function SearchBar({
               </div>
               {suburbMatches.map((s, i) => (
                 <button
-                  key={s.postcode}
+                  key={`${s.postcode}-${s.name}`}
                   type="button"
                   onMouseDown={() => pickSuburb(s)}
                   onMouseEnter={() => setActiveIdx(i)}
