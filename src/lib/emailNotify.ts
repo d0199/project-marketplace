@@ -39,3 +39,33 @@ export async function sendAdminAlert(subject: string, body: string, recipientOve
     console.error("[emailNotify] SES error:", err);
   }
 }
+
+/** Send a branded HTML email via SES. Plain-text fallback is optional. */
+export async function sendBrandedEmail(
+  recipient: string,
+  subject: string,
+  html: string,
+  textFallback?: string
+): Promise<void> {
+  console.log("[emailNotify] branded email — to:", recipient, "subject:", subject);
+
+  try {
+    const client = new SESClient({ region: REGION });
+    await client.send(
+      new SendEmailCommand({
+        Source: SENDER,
+        Destination: { ToAddresses: [recipient] },
+        Message: {
+          Subject: { Data: subject, Charset: "UTF-8" },
+          Body: {
+            Html: { Data: html, Charset: "UTF-8" },
+            ...(textFallback ? { Text: { Data: textFallback, Charset: "UTF-8" } } : {}),
+          },
+        },
+      })
+    );
+    console.log("[emailNotify] branded email sent ok — subject:", subject);
+  } catch (err) {
+    console.error("[emailNotify] SES error:", err);
+  }
+}
