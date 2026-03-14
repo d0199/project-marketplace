@@ -155,7 +155,7 @@ async function main() {
     const name = String(g.name || "");
     const specialties = ((g.specialties as string[]) || []).join("; ");
     const enterprise = isEnterprise(g) ? "Yes" : "No";
-    const url = `${BASE_URL}/gym/${g.suburbSlug}/${g.slug}?claim=true`;
+    const url = `${BASE_URL}/gym/${g.suburbSlug}/${g.slug}`;
 
     return [escapeCSV(email), escapeCSV(name), escapeCSV(specialties), enterprise, escapeCSV(url)].join(",");
   });

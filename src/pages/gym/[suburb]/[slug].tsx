@@ -174,11 +174,6 @@ export default function GymProfilePage({ gym, personalTrainers, dynamicIcons }: 
 
   useEffect(() => { try { setSearchBackUrl(sessionStorage.getItem("lastSearchUrl")); } catch {} }, []);
 
-  // Auto-open claim modal via ?claim=true query param (e.g. from EDM links)
-  useEffect(() => {
-    if (router.query.claim === "true") setShowClaim(true);
-  }, [router.query.claim]);
-
   const effectivePaid = !!gym.isPaid;
 
   useEffect(() => {
