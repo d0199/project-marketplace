@@ -259,9 +259,10 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={labelCls}>
-              Gym Name{edited("name")}
+              Gym Name <span className="text-red-500">*</span>{edited("name")}
             </label>
             <input
+              required
               value={form.name}
               onChange={(e) => setField("name", e.target.value)}
               className={inputCls}
@@ -499,12 +500,15 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
           </div>
           <div>
             <label className={labelCls}>
-              Postcode{edited("address")}
+              Postcode <span className="text-red-500">*</span>{edited("address")}
             </label>
             <input
+              required
               value={form.address.postcode}
               onChange={(e) => setAddressField("postcode", e.target.value)}
               maxLength={4}
+              pattern="\d{4}"
+              title="Enter a 4-digit Australian postcode"
               className={inputCls}
             />
           </div>
