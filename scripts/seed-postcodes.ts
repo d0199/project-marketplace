@@ -7,7 +7,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { readFileSync } from "fs";
 
-const TABLE = "Postcode-2u3r4h7htvbn3i4iqj4dismzeu-NONE";
+const TABLE = "Postcode-qanzfeewlfeklctnhoskryahti-NONE";
 const REGION = "ap-southeast-2";
 const CSV_PATH = "c:/Users/david/Downloads/australian-postcodes - australian-postcodes.csv.csv";
 
