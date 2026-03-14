@@ -16,7 +16,7 @@ import { MemberOfferIcon } from "@/components/AmenityIcon";
 import FeedbackModal from "@/components/FeedbackModal";
 import PTClaimModal from "@/components/PTClaimModal";
 import { BASE_URL } from "@/lib/siteUrl";
-import { POSTCODE_META } from "@/lib/utils";
+import { postcodeStore } from "@/lib/postcodeStore";
 import { datasetStore } from "@/lib/datasetStore";
 import { gymUrl, ptUrl } from "@/lib/slugify";
 
@@ -34,6 +34,7 @@ interface Props {
   affiliatedGyms: AffiliatedGym[];
   flags: FeatureFlags;
   dynamicIcons?: { memberOffers?: Record<string, string> };
+  serviceAreaNames?: Record<string, string>;
 }
 
 function buildJsonLd(pt: PersonalTrainer, affiliatedGyms: AffiliatedGym[]) {
@@ -116,7 +117,7 @@ function track(ptId: string, event: string) {
   }).catch(() => {});
 }
 
-export default function PTProfilePage({ pt, affiliatedGyms, dynamicIcons }: Props) {
+export default function PTProfilePage({ pt, affiliatedGyms, dynamicIcons, serviceAreaNames }: Props) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -646,14 +647,11 @@ export default function PTProfilePage({ pt, affiliatedGyms, dynamicIcons }: Prop
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <h3 className="font-semibold text-gray-900 mb-2">Service Areas</h3>
                 <div className="flex flex-wrap gap-2">
-                  {pt.serviceAreas.map((pc) => {
-                    const meta = POSTCODE_META[pc];
-                    return (
+                  {pt.serviceAreas.map((pc) => (
                       <span key={pc} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
-                        {meta ? meta.name : pc}
+                        {serviceAreaNames?.[pc] ?? pc}
                       </span>
-                    );
-                  })}
+                  ))}
                 </div>
               </div>
             )}
@@ -815,5 +813,14 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   const memberOfferDs = await datasetStore.getByName("pt-member-offers");
   const dynamicIcons = memberOfferDs?.icons ? { memberOffers: memberOfferDs.icons } : {};
 
-  return { props: { pt, affiliatedGyms, flags, dynamicIcons }, revalidate: 60 };
+  // Resolve service area postcode → suburb names from Postcode table
+  const serviceAreaNames: Record<string, string> = {};
+  if (pt.serviceAreas && pt.serviceAreas.length > 0) {
+    const suburbMap = await postcodeStore.getSuburbMap();
+    for (const pc of pt.serviceAreas) {
+      if (suburbMap[pc]) serviceAreaNames[pc] = suburbMap[pc];
+    }
+  }
+
+  return { props: { pt, affiliatedGyms, flags, dynamicIcons, serviceAreaNames }, revalidate: 60 };
 };

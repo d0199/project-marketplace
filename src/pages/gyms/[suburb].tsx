@@ -425,7 +425,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     return { notFound: true };
   }
 
-  const suburbName = POSTCODE_META[postcode]?.name ?? suburbFromSlug;
+  // Prefer curated POSTCODE_META name, then official name from Postcode table, then slug-derived
+  const suburbMap = await postcodeStore.getSuburbMap();
+  const suburbName = POSTCODE_META[postcode]?.name ?? suburbMap[postcode] ?? suburbFromSlug;
 
   // Only compute the count for SEO — gym data is fetched client-side
   const allGyms = await ownerStore.getAll();
