@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const PROD_TABLE = "Gym-xofowsmrxvebxmdjijmijtz5bq-NONE";
 const OUTPUT = path.join(__dirname, "..", "data", "wa_gyms_email_url.csv");
-const BASE_URL = "https://mynextgym.com.au";
+const BASE_URL = "https://www.mynextgym.com.au";
 
 const ddb = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: "ap-southeast-2" })
