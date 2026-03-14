@@ -14,15 +14,32 @@ export default async function handler(
   if (q.length < 2) return res.status(200).json([]);
 
   const suburbIndex = await postcodeStore.getSuburbIndex();
+  const isDigits = /^\d+$/.test(q);
 
-  const matches = suburbIndex
-    .filter((s) => normalize(s.name).includes(q))
-    .sort((a, b) => {
-      const aS = normalize(a.name).startsWith(q) ? 0 : 1;
-      const bS = normalize(b.name).startsWith(q) ? 0 : 1;
-      return aS - bS || a.name.localeCompare(b.name);
-    })
-    .slice(0, 8);
+  let matches: SuburbSuggestion[];
+
+  if (isDigits) {
+    // Postcode prefix search — deduplicate by postcode (first suburb per postcode)
+    const seen = new Set<string>();
+    matches = [];
+    for (const s of suburbIndex) {
+      if (!s.postcode.startsWith(q)) continue;
+      if (seen.has(s.postcode)) continue;
+      seen.add(s.postcode);
+      matches.push(s);
+      if (matches.length >= 8) break;
+    }
+  } else {
+    // Suburb name search
+    matches = suburbIndex
+      .filter((s) => normalize(s.name).includes(q))
+      .sort((a, b) => {
+        const aS = normalize(a.name).startsWith(q) ? 0 : 1;
+        const bS = normalize(b.name).startsWith(q) ? 0 : 1;
+        return aS - bS || a.name.localeCompare(b.name);
+      })
+      .slice(0, 8);
+  }
 
   res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=86400");
   res.status(200).json(matches);

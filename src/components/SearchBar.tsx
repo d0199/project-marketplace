@@ -59,9 +59,9 @@ export default function SearchBar({
   const query = value.trim();
   const isPostcodeInput = /^\d+$/.test(query);
 
-  // Fetch suburb suggestions from API (debounced)
+  // Fetch suburb/postcode suggestions from API (debounced)
   useEffect(() => {
-    if (query.length < 2 || isPostcodeInput) {
+    if (query.length < 2) {
       setSuburbMatches([]);
       return;
     }
@@ -69,14 +69,28 @@ export default function SearchBar({
     // If suburbIndex was passed as prop (e.g. from other pages), use it directly
     if (suburbIndex) {
       const q = normalize(query);
-      const matches = suburbIndex
-        .filter((s) => normalize(s.name).includes(q))
-        .sort((a, b) => {
-          const aS = normalize(a.name).startsWith(q) ? 0 : 1;
-          const bS = normalize(b.name).startsWith(q) ? 0 : 1;
-          return aS - bS || a.name.localeCompare(b.name);
-        })
-        .slice(0, 5);
+      let matches: SuburbSuggestion[];
+      if (isPostcodeInput) {
+        // Postcode prefix — deduplicate by postcode
+        const seen = new Set<string>();
+        matches = [];
+        for (const s of suburbIndex) {
+          if (!s.postcode.startsWith(query)) continue;
+          if (seen.has(s.postcode)) continue;
+          seen.add(s.postcode);
+          matches.push(s);
+          if (matches.length >= 5) break;
+        }
+      } else {
+        matches = suburbIndex
+          .filter((s) => normalize(s.name).includes(q))
+          .sort((a, b) => {
+            const aS = normalize(a.name).startsWith(q) ? 0 : 1;
+            const bS = normalize(b.name).startsWith(q) ? 0 : 1;
+            return aS - bS || a.name.localeCompare(b.name);
+          })
+          .slice(0, 5);
+      }
       setSuburbMatches(matches);
       return;
     }
@@ -194,22 +208,29 @@ export default function SearchBar({
     e.preventDefault();
     const t = value.trim();
     if (/^\d{4}$/.test(t)) {
-      // Validate postcode via API
+      // If we have a dropdown match for this postcode, use it (gives suburb name label)
+      const exactMatch = suburbMatches.find((s) => s.postcode === t);
+      if (exactMatch) {
+        pickSuburb(exactMatch);
+        return;
+      }
+      // Otherwise validate via API
       try {
         const res = await fetch(`/api/postcodes/validate?postcode=${t}`);
-        const data = await res.json() as { valid: boolean };
+        const data = await res.json() as { valid: boolean; suburb?: string; lat?: number; lng?: number };
         if (!data.valid) {
           setError("Sorry, we don't have coverage for that postcode yet.");
           return;
         }
+        setError("");
+        setOpen(false);
+        const label = data.suburb ? `${data.suburb}` : undefined;
+        trackEvent("search", { search_term: t, postcode: t });
+        onSearch(t, label);
       } catch {
         setError("Something went wrong. Please try again.");
-        return;
       }
-      setError("");
-      setOpen(false);
-      trackEvent("search", { search_term: t, postcode: t });
-      onSearch(t);
+      return;
     } else if (suburbMatches.length > 0) {
       pickSuburb(suburbMatches[0]);
     } else {
@@ -326,7 +347,7 @@ export default function SearchBar({
           {suburbMatches.length > 0 && (
             <>
               <div className="px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">
-                Suburbs
+                {isPostcodeInput ? "Postcodes" : "Suburbs"}
               </div>
               {suburbMatches.map((s, i) => (
                 <button
