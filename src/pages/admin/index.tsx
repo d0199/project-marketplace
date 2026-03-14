@@ -1112,20 +1112,12 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     isFeatured: "" | "true" | "false";
     isActive: "" | "true" | "false";
     isPaid: "" | "true" | "false";
-    addAmenities: Set<string>;
-    removeAmenities: Set<string>;
-    addSpecialties: Set<string>;
-    removeSpecialties: Set<string>;
+    amenities: { mode: "none" | "append" | "replace"; selected: Set<string> };
+    specialties: { mode: "none" | "append" | "replace"; selected: Set<string> };
+    memberOffers: { mode: "none" | "append" | "replace"; selected: Set<string> };
     addImages: string;
-  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addSpecialties: new Set(), removeSpecialties: new Set(), addImages: "" });
+  }>({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", amenities: { mode: "none", selected: new Set() }, specialties: { mode: "none", selected: new Set() }, memberOffers: { mode: "none", selected: new Set() }, addImages: "" });
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [clearAmenitiesOpen, setClearAmenitiesOpen] = useState(false);
-  const [clearWord, setClearWord] = useState("");
-  const [clearBusy, setClearBusy] = useState(false);
-  const [clearConfirmWord] = useState(() => {
-    const words = ["CONFIRM", "ERASE", "CLEAR", "PROCEED", "WIPE", "RESET", "APPLY", "DELETE"];
-    return words[Math.floor(Math.random() * words.length)];
-  });
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [ownerFilter, setOwnerFilter] = useState<"all" | "owned" | "unclaimed">("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
@@ -1136,6 +1128,7 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dynamicAmenities, setDynamicAmenities] = useState<string[]>([...ALL_AMENITIES]);
   const [dynamicSpecialties, setDynamicSpecialties] = useState<string[]>([...ALL_SPECIALTIES]);
+  const [dynamicMemberOffers, setDynamicMemberOffers] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/datasets/amenities")
@@ -1145,6 +1138,10 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     fetch("/api/datasets/specialties")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.entries?.length) setDynamicSpecialties(data.entries); })
+      .catch(() => {});
+    fetch("/api/datasets/member-offers")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.entries?.length) setDynamicMemberOffers(data.entries); })
       .catch(() => {});
   }, []);
 
@@ -1261,38 +1258,21 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     setSelected(selected.size === filteredGyms.length ? new Set() : new Set(filteredGyms.map((g) => g.id)));
   }
 
-  function toggleBulkAmenity(amenity: string, mode: "add" | "remove") {
+  function togglePickListItem(field: "amenities" | "specialties" | "memberOffers", item: string) {
     setBulk((b) => {
-      const addAmenities = new Set(b.addAmenities);
-      const removeAmenities = new Set(b.removeAmenities);
-      if (mode === "add") {
-        if (addAmenities.has(amenity)) { addAmenities.delete(amenity); }
-        else { addAmenities.add(amenity); removeAmenities.delete(amenity); }
-      } else {
-        if (removeAmenities.has(amenity)) { removeAmenities.delete(amenity); }
-        else { removeAmenities.add(amenity); addAmenities.delete(amenity); }
-      }
-      return { ...b, addAmenities, removeAmenities };
+      const prev = b[field];
+      const selected = new Set(prev.selected);
+      if (selected.has(item)) selected.delete(item); else selected.add(item);
+      return { ...b, [field]: { ...prev, selected } };
     });
   }
 
-  function toggleBulkSpecialty(specialty: string, mode: "add" | "remove") {
-    setBulk((b) => {
-      const addSpecialties = new Set(b.addSpecialties);
-      const removeSpecialties = new Set(b.removeSpecialties);
-      if (mode === "add") {
-        if (addSpecialties.has(specialty)) { addSpecialties.delete(specialty); }
-        else { addSpecialties.add(specialty); removeSpecialties.delete(specialty); }
-      } else {
-        if (removeSpecialties.has(specialty)) { removeSpecialties.delete(specialty); }
-        else { removeSpecialties.add(specialty); addSpecialties.delete(specialty); }
-      }
-      return { ...b, addSpecialties, removeSpecialties };
-    });
+  function setPickListMode(field: "amenities" | "specialties" | "memberOffers", mode: "none" | "append" | "replace") {
+    setBulk((b) => ({ ...b, [field]: { mode, selected: mode === "none" ? new Set<string>() : b[field].selected } }));
   }
 
   function resetBulk() {
-    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", addAmenities: new Set(), removeAmenities: new Set(), addSpecialties: new Set(), removeSpecialties: new Set(), addImages: "" });
+    setBulk({ price: "", priceVerified: "", ownerId: "", isTest: "", isFeatured: "", isActive: "", isPaid: "", amenities: { mode: "none", selected: new Set() }, specialties: { mode: "none", selected: new Set() }, memberOffers: { mode: "none", selected: new Set() }, addImages: "" });
   }
 
   async function applyBulk() {
@@ -1309,17 +1289,26 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
         if (bulk.isFeatured !== "") updated.isFeatured = bulk.isFeatured === "true";
         if (bulk.isActive !== "") updated.isActive = bulk.isActive === "true";
         if (bulk.isPaid !== "") updated.isPaid = bulk.isPaid === "true";
-        if (bulk.addAmenities.size > 0 || bulk.removeAmenities.size > 0) {
-          const amenitySet = new Set(g.amenities);
-          bulk.addAmenities.forEach((a) => amenitySet.add(a));
-          bulk.removeAmenities.forEach((a) => amenitySet.delete(a));
-          updated.amenities = Array.from(amenitySet);
+        if (bulk.amenities.mode === "replace") {
+          updated.amenities = Array.from(bulk.amenities.selected);
+        } else if (bulk.amenities.mode === "append" && bulk.amenities.selected.size > 0) {
+          const merged = new Set(g.amenities);
+          bulk.amenities.selected.forEach((a) => merged.add(a));
+          updated.amenities = Array.from(merged);
         }
-        if (bulk.addSpecialties.size > 0 || bulk.removeSpecialties.size > 0) {
-          const specSet = new Set(g.specialties ?? []);
-          bulk.addSpecialties.forEach((s) => specSet.add(s));
-          bulk.removeSpecialties.forEach((s) => specSet.delete(s));
-          updated.specialties = Array.from(specSet);
+        if (bulk.specialties.mode === "replace") {
+          updated.specialties = Array.from(bulk.specialties.selected);
+        } else if (bulk.specialties.mode === "append" && bulk.specialties.selected.size > 0) {
+          const merged = new Set(g.specialties ?? []);
+          bulk.specialties.selected.forEach((s) => merged.add(s));
+          updated.specialties = Array.from(merged);
+        }
+        if (bulk.memberOffers.mode === "replace") {
+          updated.memberOffers = Array.from(bulk.memberOffers.selected);
+        } else if (bulk.memberOffers.mode === "append" && bulk.memberOffers.selected.size > 0) {
+          const merged = new Set(g.memberOffers ?? []);
+          bulk.memberOffers.selected.forEach((m) => merged.add(m));
+          updated.memberOffers = Array.from(merged);
         }
         if (bulk.addImages.trim()) {
           const newUrls = bulk.addImages.split("\n").map((u) => u.trim()).filter((u) => u.startsWith("http"));
@@ -1343,25 +1332,6 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
     search(q);
   }
 
-  async function clearAmenities() {
-    setClearBusy(true);
-    const targets = gyms.filter((g) => selected.has(g.id));
-    await Promise.all(
-      targets.map((g) =>
-        adminFetch(`/api/admin/gym/${g.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(slimGym({ ...g, amenities: [] })),
-        })
-      )
-    );
-    setClearBusy(false);
-    setClearAmenitiesOpen(false);
-    setClearWord("");
-    setSelected(new Set());
-    showToast(`Cleared amenities for ${targets.length} gym${targets.length !== 1 ? "s" : ""}.`);
-    search(q);
-  }
 
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -1585,12 +1555,6 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
           >
             Bulk Edit
           </button>
-          <button
-            onClick={() => { setClearWord(""); setClearAmenitiesOpen(true); }}
-            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg"
-          >
-            Clear Amenities
-          </button>
           <button onClick={() => setSelected(new Set())} className="text-sm text-blue-600 hover:underline">
             Deselect
           </button>
@@ -1709,61 +1673,62 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                 <p className="text-xs text-gray-400 mt-1">Appended to each gym&apos;s existing images. Max 6 per gym total. Useful for gym chains sharing stock photos.</p>
               </div>
 
-              {/* Amenities */}
-              <div>
-                <p className="text-xs font-medium text-gray-700 mb-2">Amenities</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                  {dynamicAmenities.map((a) => {
-                    const adding = bulk.addAmenities.has(a);
-                    const removing = bulk.removeAmenities.has(a);
-                    return (
-                      <div key={a} className="flex items-center gap-2 text-sm">
-                        <span className="w-28 text-gray-700 truncate">{AMENITY_ICONS[a]} {a}</span>
-                        <button
-                          onClick={() => toggleBulkAmenity(a, "add")}
-                          className={`px-2 py-0.5 rounded text-xs font-medium border ${adding ? "bg-green-100 border-green-400 text-green-800" : "border-gray-200 text-gray-400 hover:border-green-300"}`}
-                        >
-                          + Add
-                        </button>
-                        <button
-                          onClick={() => toggleBulkAmenity(a, "remove")}
-                          className={`px-2 py-0.5 rounded text-xs font-medium border ${removing ? "bg-red-100 border-red-400 text-red-700" : "border-gray-200 text-gray-400 hover:border-red-300"}`}
-                        >
-                          − Remove
-                        </button>
+              {/* Pick Lists: Amenities, Specialties, Member Offers */}
+              {([
+                { field: "amenities" as const, label: "Amenities", items: dynamicAmenities, icons: true },
+                { field: "specialties" as const, label: "Specialties", items: dynamicSpecialties, icons: false },
+                { field: "memberOffers" as const, label: "Member Offers", items: dynamicMemberOffers, icons: false },
+              ]).map(({ field, label, items, icons }) => {
+                const pl = bulk[field];
+                return (
+                  <div key={field}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <p className="text-xs font-medium text-gray-700">{label}</p>
+                      <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+                        {(["none", "append", "replace"] as const).map((m) => (
+                          <button
+                            key={m}
+                            onClick={() => setPickListMode(field, m)}
+                            className={`px-3 py-1 font-medium transition-colors ${pl.mode === m
+                              ? m === "replace"
+                                ? "bg-amber-500 text-white"
+                                : m === "append"
+                                  ? "bg-green-600 text-white"
+                                  : "bg-gray-100 text-gray-700"
+                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
+                          >
+                            {m === "none" ? "No change" : m === "append" ? "Append" : "Replace"}
+                          </button>
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Specialties */}
-              <div>
-                <p className="text-xs font-medium text-gray-700 mb-2">Specialties</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                  {dynamicSpecialties.map((s) => {
-                    const adding = bulk.addSpecialties.has(s);
-                    const removing = bulk.removeSpecialties.has(s);
-                    return (
-                      <div key={s} className="flex items-center gap-2 text-sm">
-                        <span className="w-28 text-gray-700 truncate">{s}</span>
-                        <button
-                          onClick={() => toggleBulkSpecialty(s, "add")}
-                          className={`px-2 py-0.5 rounded text-xs font-medium border ${adding ? "bg-green-100 border-green-400 text-green-800" : "border-gray-200 text-gray-400 hover:border-green-300"}`}
-                        >
-                          + Add
-                        </button>
-                        <button
-                          onClick={() => toggleBulkSpecialty(s, "remove")}
-                          className={`px-2 py-0.5 rounded text-xs font-medium border ${removing ? "bg-red-100 border-red-400 text-red-700" : "border-gray-200 text-gray-400 hover:border-red-300"}`}
-                        >
-                          − Remove
-                        </button>
+                      {pl.mode !== "none" && pl.selected.size > 0 && (
+                        <span className="text-xs text-blue-600 font-medium">{pl.selected.size} selected</span>
+                      )}
+                    </div>
+                    {pl.mode === "replace" && (
+                      <p className="text-xs text-amber-600 mb-2">
+                        This will overwrite {label.toLowerCase()} on all {selected.size} selected gym{selected.size !== 1 ? "s" : ""}.
+                        {pl.selected.size === 0 && " Leaving empty will clear the field."}
+                      </p>
+                    )}
+                    {pl.mode !== "none" && (
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 max-h-48 overflow-y-auto border border-gray-100 rounded-lg p-2">
+                        {items.map((item) => (
+                          <label key={item} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-1 py-0.5">
+                            <input
+                              type="checkbox"
+                              checked={pl.selected.has(item)}
+                              onChange={() => togglePickListItem(field, item)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-gray-700 truncate">{icons ? `${AMENITY_ICONS[item] ?? ""} ${item}` : item}</span>
+                          </label>
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="flex gap-3 justify-end mt-6">
@@ -1779,44 +1744,6 @@ function GymsTab({ initialGymId, adminEmail }: { initialGymId?: string; adminEma
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50"
               >
                 {bulkBusy ? "Applying…" : `Apply to ${selected.size} gym${selected.size !== 1 ? "s" : ""}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Clear Amenities confirmation modal */}
-      {clearAmenitiesOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-1">Clear Amenities</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              This will remove <strong>all amenities</strong> from{" "}
-              <strong>{selected.size} gym{selected.size !== 1 ? "s" : ""}</strong>. This cannot be undone.
-            </p>
-            <p className="text-sm text-gray-700 mb-2">
-              Type <span className="font-mono font-bold text-red-600">{clearConfirmWord}</span> to confirm:
-            </p>
-            <input
-              type="text"
-              value={clearWord}
-              onChange={(e) => setClearWord(e.target.value.toUpperCase())}
-              placeholder={clearConfirmWord}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono mb-5 focus:outline-none focus:ring-2 focus:ring-red-400"
-            />
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => { setClearAmenitiesOpen(false); setClearWord(""); }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={clearAmenities}
-                disabled={clearWord !== clearConfirmWord || clearBusy}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {clearBusy ? "Clearing…" : `Clear amenities for ${selected.size} gym${selected.size !== 1 ? "s" : ""}`}
               </button>
             </div>
           </div>
