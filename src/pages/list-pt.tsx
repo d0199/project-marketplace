@@ -80,8 +80,9 @@ export default function ListPTPage() {
           email: form.contactEmail,
           phone: form.contactPhone,
           message: role === "gym-owner"
-            ? `[Submitted by gym owner — PT should be created as unclaimed]\n${form.description}`.trim()
-            : form.description.trim(),
+            ? `Submitted by gym owner — PT should be created as unclaimed`
+            : "",
+          ptDescription: form.description.trim(),
           ptListingRole: role,
         }),
       });

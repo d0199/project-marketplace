@@ -103,6 +103,8 @@ const schema = a.schema({
       gymSuburb: a.string(),
       gymPostcode: a.string(),
       claimType: a.string(),  // "gym" (default) | "pt"
+      ptListingRole: a.string(), // "pt" | "gym-owner" — who submitted the PT listing
+      ptDescription: a.string(), // actual PT description (separate from message)
       claimantNote: a.string(), // note from claimant visible to admin
     })
     .authorization((allow) => [allow.publicApiKey()]),

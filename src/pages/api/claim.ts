@@ -13,6 +13,7 @@ export default async function handler(
   const {
     gymId, gymName, gymAddress, gymWebsite, name, email, phone, message,
     isNewListing, gymPhone, gymEmail, gymSuburb, gymPostcode, claimType,
+    ptListingRole, ptDescription,
   } = req.body as Record<string, string> & { isNewListing?: boolean; claimType?: string };
 
   if (!gymId || !name || !email) {
@@ -42,6 +43,8 @@ export default async function handler(
     gymSuburb: gymSuburb ?? "",
     gymPostcode: gymPostcode ?? "",
     claimType: claimType ?? "gym",
+    ptListingRole: ptListingRole ?? "",
+    ptDescription: ptDescription ?? "",
   });
 
   const isPT = claimType === "pt";

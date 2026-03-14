@@ -119,17 +119,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const claimType = (claim as Record<string, unknown>).claimType as string | undefined;
 
+        const ptListingRole = (claim as Record<string, unknown>).ptListingRole as string | undefined;
+        const ptDescription = (claim as Record<string, unknown>).ptDescription as string | undefined;
+
         if (claimType === "pt" && claim.isNewListing) {
           // New PT listing — create a PT record from submitted details
           const postcode = claim.gymPostcode ?? "";
           const coords = await postcodeStore.getCoords(postcode);
           const [lat, lng] = coords ?? [-31.9505, 115.8605]; // Perth default
 
+          // Use ptDescription (actual description) instead of message (which may contain role prefix)
+          // Gym-owner submissions create unclaimed PTs (no ownerId assigned)
+          const isGymOwnerSubmission = ptListingRole === "gym-owner";
+
           const newPt = await ptStore.create({
-            ownerId,
+            ownerId: isGymOwnerSubmission ? "unclaimed" : ownerId,
             createdBy: email,
             name: claim.gymName ?? "",
-            description: claim.message ?? "",
+            description: ptDescription || (claim.message ?? ""),
             address: {
               street: "",
               suburb: claim.gymSuburb ?? "",
@@ -153,13 +160,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             id,
             status: "approved",
             gymId: newPt.id,
-            notes: notes ?? (isNewUser
-              ? `Approved — PT created (${newPt.id}), new Cognito user created, ownerId: ${ownerId}`
-              : `Approved — PT created (${newPt.id}), added to existing user account, ownerId: ${ownerId}`),
+            notes: notes ?? (isGymOwnerSubmission
+              ? `Approved — PT created as unclaimed (${newPt.id}), submitted by gym owner`
+              : isNewUser
+                ? `Approved — PT created (${newPt.id}), new Cognito user created, ownerId: ${ownerId}`
+                : `Approved — PT created (${newPt.id}), added to existing user account, ownerId: ${ownerId}`),
           });
 
-          logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New PT listing created: ${newPt.id}` });
-          return res.status(200).json({ ok: true, ownerId, isNewUser, ptId: newPt.id });
+          logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New PT listing created: ${newPt.id}${isGymOwnerSubmission ? " (unclaimed, gym-owner submission)" : ""}` });
+          return res.status(200).json({ ok: true, ownerId: isGymOwnerSubmission ? "unclaimed" : ownerId, isNewUser: isGymOwnerSubmission ? false : isNewUser, ptId: newPt.id });
         } else if (claimType === "pt") {
           // Existing PT profile claim — assign ownership
           const pt = await ptStore.getById(claim.gymId ?? "");
