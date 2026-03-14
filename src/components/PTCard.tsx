@@ -23,6 +23,7 @@ export interface PTWithDistance {
   isFeatured?: boolean;
   isPaid?: boolean;
   distanceKm?: number;
+  matchType?: "local" | "service" | "online";
   inServiceArea?: boolean;
   isNational?: boolean;
   gender?: string;

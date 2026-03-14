@@ -21,9 +21,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .map((p) => {
       const actualDistanceKm = haversineKm(origin[0], origin[1], p.lat, p.lng);
       const isNational = p.isNational ?? false;
-      const inServiceArea = isNational || (p.serviceAreas?.includes(postcode) ?? false);
-      // Service-area / national PTs sort at 2.5 km so they appear near the top but behind truly local results
-      const distanceKm = inServiceArea && actualDistanceKm > 10 ? 2.5 : actualDistanceKm;
+      const inServiceArea = p.serviceAreas?.includes(postcode) ?? false;
+      const withinRadius = actualDistanceKm <= radiusKm;
+
+      // Classify match type:
+      // "local"   — PT's profile suburb is within search radius
+      // "service" — PT is outside radius but has this postcode in their service areas
+      // "online"  — PT is a national/online PT, not local and not in service area
+      let matchType: "local" | "service" | "online";
+      let distanceKm: number;
+
+      if (withinRadius) {
+        matchType = "local";
+        distanceKm = actualDistanceKm;
+      } else if (inServiceArea) {
+        matchType = "service";
+        distanceKm = 2.5; // Sort near top but behind local results
+      } else if (isNational) {
+        matchType = "online";
+        distanceKm = 5; // Sort after service-area PTs
+      } else {
+        return null; // Not a match
+      }
+
       return {
         id: p.id,
         slug: p.slug,
@@ -43,11 +63,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isPaid: p.isPaid,
         gender: p.gender,
         distanceKm,
-        inServiceArea,
+        matchType,
+        inServiceArea: inServiceArea || isNational,
         isNational,
       };
     })
-    .filter((p) => (p.distanceKm ?? Infinity) <= radiusKm || p.inServiceArea)
+    .filter((p): p is NonNullable<typeof p> => p !== null)
     .sort((a, b) => {
       // Featured first, then by distance
       if (a.isFeatured && !b.isFeatured) return -1;

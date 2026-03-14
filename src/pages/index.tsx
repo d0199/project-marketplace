@@ -161,9 +161,12 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
   // PT results
   const ptResults = useMemo<PTWithDistance[]>(() => {
     if (searchMode !== "trainers" || !hasSearched || ptCache.length === 0) return [];
-    let filtered = ptCache.filter((p) => (p.distanceKm ?? Infinity) <= radiusKm);
+    // Local PTs: apply user's radius slider. Service/online PTs: always included (filtered by toggle).
+    let filtered = ptCache.filter((p) =>
+      p.matchType === "service" || p.matchType === "online" || (p.distanceKm ?? Infinity) <= radiusKm
+    );
     if (!includeOnlinePTs) {
-      filtered = filtered.filter((p) => !p.isNational);
+      filtered = filtered.filter((p) => p.matchType !== "online");
     }
     if (selectedPTSpecialties.length > 0) {
       filtered = filtered.filter((p) => selectedPTSpecialties.every((s) => p.specialties.includes(s)));
