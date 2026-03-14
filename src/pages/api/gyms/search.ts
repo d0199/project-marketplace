@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ownerStore } from "@/lib/ownerStore";
 import { filterGyms, rankGyms, type GymWithDistance } from "@/lib/utils";
+import { postcodeStore } from "@/lib/postcodeStore";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).end();
@@ -12,12 +13,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const sortBy = String(req.query.sort ?? "") as "" | "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
   const includeTest = req.query.test === "1";
 
+  const origin = postcode ? await postcodeStore.getCoords(postcode) : null;
+
   const allGyms = await ownerStore.getAll();
   const visible = allGyms
     .filter((g) => g.isActive !== false)
     .filter((g) => includeTest || !g.isTest);
 
-  const filtered = filterGyms(visible, { postcode: postcode || undefined, amenities, memberOffers, radiusKm });
+  const filtered = filterGyms(visible, { origin: origin ?? undefined, amenities, memberOffers, radiusKm });
 
   let results: GymWithDistance[];
   if (!sortBy) {

@@ -8,11 +8,11 @@ import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import PTCard, { type PTWithDistance } from "@/components/PTCard";
 import {
-  POSTCODE_COORDS,
   POSTCODE_META,
   haversineKm,
 } from "@/lib/utils";
 import { ptStore } from "@/lib/ptStore";
+import { postcodeStore } from "@/lib/postcodeStore";
 import { BASE_URL } from "@/lib/siteUrl";
 
 interface Props {
@@ -331,7 +331,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
       .map((w) => UPPER_WORDS.has(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ") ?? "";
 
-  if (!postcode || !POSTCODE_COORDS[postcode]) {
+  const origin = postcode ? await postcodeStore.getCoords(postcode) : null;
+  if (!postcode || !origin) {
     return { notFound: true };
   }
 
@@ -339,7 +340,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
   const allPTs = await ptStore.getAll();
   const activePTs = allPTs.filter((p) => p.isActive !== false && !p.isTest);
-  const origin = POSTCODE_COORDS[postcode];
   const ptCount = activePTs.filter(
     (p) => haversineKm(origin[0], origin[1], p.lat, p.lng) <= 10 || (p.serviceAreas?.includes(postcode) ?? false)
   ).length;

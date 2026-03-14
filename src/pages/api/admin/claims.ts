@@ -10,7 +10,7 @@ import { ptStore } from "@/lib/ptStore";
 import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/auditLog";
-import { POSTCODE_COORDS } from "@/lib/utils";
+import { postcodeStore } from "@/lib/postcodeStore";
 
 async function listAllClaims() {
   const results: Record<string, unknown>[] = [];
@@ -122,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (claimType === "pt" && claim.isNewListing) {
           // New PT listing — create a PT record from submitted details
           const postcode = claim.gymPostcode ?? "";
-          const coords = POSTCODE_COORDS[postcode];
+          const coords = await postcodeStore.getCoords(postcode);
           const [lat, lng] = coords ?? [-31.9505, 115.8605]; // Perth default
 
           const newPt = await ptStore.create({
@@ -179,7 +179,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else if (claim.isNewListing) {
           // New listing — create a gym record from submitted details
           const postcode = claim.gymPostcode ?? "";
-          const coords = POSTCODE_COORDS[postcode];
+          const coords = await postcodeStore.getCoords(postcode);
           const [lat, lng] = coords ?? [-31.9505, 115.8605]; // Perth default
 
           const newGym = await ownerStore.create({

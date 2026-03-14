@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
-import { haversineKm, POSTCODE_COORDS } from "@/lib/utils";
+import { haversineKm } from "@/lib/utils";
+import { postcodeStore } from "@/lib/postcodeStore";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") return res.status(405).end();
@@ -8,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const postcode = String(req.query.postcode ?? "");
   const radiusKm = Number(req.query.radius) || 10;
 
-  const origin = POSTCODE_COORDS[postcode];
+  const origin = await postcodeStore.getCoords(postcode);
   if (!origin) return res.status(200).json([]);
 
   const allPTs = await ptStore.getAll();

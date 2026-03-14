@@ -1,6 +1,4 @@
 import type { Gym } from "@/types";
-import { WA_POSTCODE_COORDS, WA_SUBURB_INDEX } from "@/data/waPostcodes";
-import { EASTERN_POSTCODE_COORDS, EASTERN_SUBURB_INDEX } from "@/data/easternPostcodes";
 
 // Haversine distance in kilometres
 export function haversineKm(
@@ -18,31 +16,6 @@ export function haversineKm(
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// All Australian postcodes → [lat, lng] (WA + NSW/VIC/QLD/SA/TAS)
-export const POSTCODE_COORDS: Record<string, [number, number]> = {
-  ...WA_POSTCODE_COORDS,
-  ...EASTERN_POSTCODE_COORDS,
-};
-
-// Title-case a locality name (e.g. "MOUNT HAWTHORN" → "Mount Hawthorn")
-function toTitleCase(s: string): string {
-  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-// Comprehensive suburb search index — all localities across WA + eastern states.
-// Names are title-cased for display. Used to power the SearchBar autocomplete.
-export const ALL_SUBURB_INDEX = [
-  ...WA_SUBURB_INDEX,
-  ...EASTERN_SUBURB_INDEX,
-].map((s) => ({ ...s, name: toTitleCase(s.name) }));
-
-// Postcode → suburb name lookup (first/most-common suburb per postcode).
-// Used by ServiceAreaPicker so PTs can choose any known Australian postcode.
-export const POSTCODE_SUBURB_MAP: Record<string, string> = {};
-for (const s of ALL_SUBURB_INDEX) {
-  if (!POSTCODE_SUBURB_MAP[s.postcode]) POSTCODE_SUBURB_MAP[s.postcode] = s.name;
 }
 
 // Derive AU state from postcode prefix
@@ -289,7 +262,7 @@ export const REPORT_ISSUE_TYPES = [
 ] as const;
 
 export interface FilterOptions {
-  postcode?: string;
+  origin?: [number, number];
   amenities: string[];
   memberOffers?: string[];
   radiusKm?: number;
@@ -305,9 +278,9 @@ export function filterGyms(
 ): GymWithDistance[] {
   let results: GymWithDistance[] = gyms.map((g) => ({ ...g }));
 
-  // Attach distance if postcode provided
-  if (options.postcode && POSTCODE_COORDS[options.postcode]) {
-    const [lat, lng] = POSTCODE_COORDS[options.postcode];
+  // Attach distance if origin coords provided
+  if (options.origin) {
+    const [lat, lng] = options.origin;
     results = results.map((g) => ({
       ...g,
       distanceKm: haversineKm(lat, lng, g.lat, g.lng),

@@ -11,12 +11,12 @@ import AmenityFilter from "@/components/AmenityFilter";
 import MemberOfferFilter from "@/components/MemberOfferFilter";
 import SpecialtyFilter from "@/components/SpecialtyFilter";
 import {
-  POSTCODE_COORDS,
   POSTCODE_META,
   type GymWithDistance,
 } from "@/lib/utils";
 import { ownerStore } from "@/lib/ownerStore";
 import { filterGyms } from "@/lib/utils";
+import { postcodeStore } from "@/lib/postcodeStore";
 import { BASE_URL } from "@/lib/siteUrl";
 
 type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
@@ -420,7 +420,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
       .map((w) => UPPER_WORDS.has(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ") ?? "";
 
-  if (!postcode || !POSTCODE_COORDS[postcode]) {
+  const origin = postcode ? await postcodeStore.getCoords(postcode) : null;
+  if (!postcode || !origin) {
     return { notFound: true };
   }
 
@@ -429,7 +430,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
   // Only compute the count for SEO — gym data is fetched client-side
   const allGyms = await ownerStore.getAll();
   const activeGyms = allGyms.filter((g) => g.isActive !== false && !g.isTest);
-  const gymCount = filterGyms(activeGyms, { postcode, amenities: [], radiusKm: 10 }).length;
+  const gymCount = filterGyms(activeGyms, { origin, amenities: [], radiusKm: 10 }).length;
 
   // Return 404 for suburbs with zero gyms to avoid soft 404 in search engines
   if (gymCount === 0) {

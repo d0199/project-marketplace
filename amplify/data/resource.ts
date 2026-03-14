@@ -331,6 +331,19 @@ const schema = a.schema({
     .authorization((allow) => [allow.publicApiKey()]),
 
   // Support / contact form submissions from the About page.
+  // Australian postcodes — ~16.5k rows, one per suburb.
+  // Composite key: postcode (PK) + suburb (SK).
+  Postcode: a
+    .model({
+      postcode: a.string().required(),
+      suburb: a.string().required(),
+      state: a.string().required(),
+      lat: a.float().required(),
+      lng: a.float().required(),
+    })
+    .identifier(["postcode", "suburb"])
+    .authorization((allow) => [allow.publicApiKey()]),
+
   SupportRequest: a
     .model({
       name: a.string().required(),

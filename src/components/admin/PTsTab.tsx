@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { PersonalTrainer, Address } from "@/types";
 import { adminFetch } from "@/lib/adminFetch";
-import { POSTCODE_COORDS, ALL_SUBURB_INDEX, POSTCODE_SUBURB_MAP } from "@/lib/utils";
+
+
 import { ptUrl } from "@/lib/slugify";
 import { geocodeAddress } from "@/lib/geocode";
 import CustomLeadFieldsEditor from "@/components/CustomLeadFieldsEditor";
@@ -599,10 +600,15 @@ function PTEditPanel({
 
   function updateAddress(patch: Partial<Address>) {
     const addr = { ...pt.address, ...patch };
-    // Immediate postcode fallback
-    if (patch.postcode && POSTCODE_COORDS[patch.postcode]) {
-      const [lat, lng] = POSTCODE_COORDS[patch.postcode];
-      update({ address: addr, lat, lng });
+    // Immediate postcode fallback via API
+    if (patch.postcode && patch.postcode.length === 4) {
+      fetch(`/api/postcodes/coords?postcode=${patch.postcode}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data: { lat: number; lng: number } | null) => {
+          if (data) update({ address: addr, lat: data.lat, lng: data.lng });
+          else update({ address: addr });
+        })
+        .catch(() => update({ address: addr }));
     } else {
       update({ address: addr });
     }
@@ -1101,15 +1107,9 @@ function PTEditPanel({
               <span className="text-xs text-gray-400">— shows in every search as &quot;Online PT&quot;</span>
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
-              {(pt.serviceAreas ?? []).map((pc) => {
-                const name = POSTCODE_SUBURB_MAP[pc];
-                return (
-                  <span key={pc} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
-                    {name ? `${name} (${pc})` : pc}
-                    <button type="button" onClick={() => update({ serviceAreas: (pt.serviceAreas ?? []).filter((s) => s !== pc) })} className="text-orange-400 hover:text-orange-700 ml-0.5">&times;</button>
-                  </span>
-                );
-              })}
+              {(pt.serviceAreas ?? []).map((pc) => (
+                <AdminServiceAreaTag key={pc} postcode={pc} onRemove={() => update({ serviceAreas: (pt.serviceAreas ?? []).filter((s) => s !== pc) })} />
+              ))}
             </div>
             <AdminServiceAreaPicker
               selected={pt.serviceAreas ?? []}
@@ -1417,21 +1417,50 @@ function LanguageEditor({ languages, onChange }: { languages: string[]; onChange
   );
 }
 
+function AdminServiceAreaTag({ postcode, onRemove }: { postcode: string; onRemove: () => void }) {
+  const [name, setName] = useState("");
+  useEffect(() => {
+    fetch(`/api/postcodes/validate?postcode=${postcode}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { suburb?: string } | null) => { if (d?.suburb) setName(d.suburb); })
+      .catch(() => {});
+  }, [postcode]);
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
+      {name ? `${name} (${postcode})` : postcode}
+      <button type="button" onClick={onRemove} className="text-orange-400 hover:text-orange-700 ml-0.5">&times;</button>
+    </span>
+  );
+}
+
 function AdminServiceAreaPicker({ selected, onChange }: { selected: string[]; onChange: (v: string[]) => void }) {
   const [search, setSearch] = useState("");
-  const q = search.toLowerCase();
-  const seen = new Set<string>(selected);
-  const options: { postcode: string; name: string }[] = [];
-  if (q.length >= 2) {
-    for (const s of ALL_SUBURB_INDEX) {
-      if (seen.has(s.postcode)) continue;
-      if (s.name.toLowerCase().includes(q) || s.postcode.includes(q)) {
-        seen.add(s.postcode);
-        options.push({ postcode: s.postcode, name: s.name });
-        if (options.length >= 8) break;
-      }
-    }
-  }
+  const [options, setOptions] = useState<{ postcode: string; name: string }[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) { setOptions([]); return; }
+    const timer = setTimeout(() => {
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      fetch(`/api/suburbs?q=${encodeURIComponent(q)}`, { signal: ctrl.signal })
+        .then((r) => r.json())
+        .then((data: { name: string; postcode: string }[]) => {
+          const seen = new Set<string>(selected);
+          const deduped: { postcode: string; name: string }[] = [];
+          for (const s of data) {
+            if (seen.has(s.postcode)) continue;
+            seen.add(s.postcode);
+            deduped.push({ postcode: s.postcode, name: s.name });
+          }
+          setOptions(deduped);
+        })
+        .catch(() => {});
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [search, selected]);
 
   return (
     <div className="relative">

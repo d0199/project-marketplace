@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Gym, OpeningHours } from "@/types";
-import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, ALL_SPECIALTIES, POSTCODE_COORDS } from "@/lib/utils";
+import { ALL_AMENITIES, AMENITY_ICONS, ALL_MEMBER_OFFERS, MEMBER_OFFER_ICONS, ALL_SPECIALTIES } from "@/lib/utils";
 import { gymUrl } from "@/lib/slugify";
 import { adminFetch } from "@/lib/adminFetch";
 import type { ScrapedFields } from "@/components/admin/WebsiteScraper";
@@ -156,10 +156,13 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
     setForm((f) => {
       const updated = { ...f, address: { ...f.address, [key]: value } };
       // Auto-fill lat/lng when a known postcode is entered
-      if (key === "postcode" && value.length === 4 && POSTCODE_COORDS[value]) {
-        const [lat, lng] = POSTCODE_COORDS[value];
-        updated.lat = lat;
-        updated.lng = lng;
+      if (key === "postcode" && value.length === 4) {
+        fetch(`/api/postcodes/coords?postcode=${value}`)
+          .then((r) => r.ok ? r.json() : null)
+          .then((data: { lat: number; lng: number } | null) => {
+            if (data) setForm((prev) => ({ ...prev, lat: data.lat, lng: data.lng }));
+          })
+          .catch(() => {});
       }
       return updated;
     });

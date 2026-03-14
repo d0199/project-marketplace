@@ -1,22 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import { POSTCODE_COORDS } from "@/lib/utils";
 import { trackEvent } from "@/lib/gtag";
 import { gymUrl } from "@/lib/slugify";
-
-/** Find the nearest postcode to a given lat/lng using Haversine distance */
-function findNearestPostcode(lat: number, lng: number): { postcode: string; distance: number } | null {
-  let best: { postcode: string; distance: number } | null = null;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  for (const [pc, [pLat, pLng]] of Object.entries(POSTCODE_COORDS)) {
-    const dLat = toRad(pLat - lat);
-    const dLng = toRad(pLng - lng);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(pLat)) * Math.sin(dLng / 2) ** 2;
-    const km = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    if (!best || km < best.distance) best = { postcode: pc, distance: km };
-  }
-  return best;
-}
 
 export interface SuburbSuggestion {
   name: string;
@@ -162,7 +147,7 @@ export default function SearchBar({
     setLocating(true);
     setError("");
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         try {
           const { latitude, longitude, accuracy } = pos.coords;
           console.log("[GeoLocate] coords:", latitude, longitude, "accuracy:", accuracy, "m");
@@ -174,7 +159,8 @@ export default function SearchBar({
             return;
           }
 
-          const nearest = findNearestPostcode(latitude, longitude);
+          const res = await fetch(`/api/postcodes/nearest?lat=${latitude}&lng=${longitude}`);
+          const nearest = res.ok ? await res.json() as { postcode: string; distance: number } : null;
           console.log("[GeoLocate] nearest:", nearest);
           setLocating(false);
           if (nearest) {
@@ -204,12 +190,20 @@ export default function SearchBar({
     );
   }, [onSearch]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const t = value.trim();
     if (/^\d{4}$/.test(t)) {
-      if (!POSTCODE_COORDS[t]) {
-        setError("Sorry, we don't have coverage for that postcode yet.");
+      // Validate postcode via API
+      try {
+        const res = await fetch(`/api/postcodes/validate?postcode=${t}`);
+        const data = await res.json() as { valid: boolean };
+        if (!data.valid) {
+          setError("Sorry, we don't have coverage for that postcode yet.");
+          return;
+        }
+      } catch {
+        setError("Something went wrong. Please try again.");
         return;
       }
       setError("");

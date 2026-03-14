@@ -1,19 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { ALL_SUBURB_INDEX } from "@/lib/utils";
+import { postcodeStore } from "@/lib/postcodeStore";
 import type { SuburbSuggestion } from "@/components/SearchBar";
 
 function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9 ]/g, "");
 }
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<SuburbSuggestion[]>
 ) {
   const q = normalize(String(req.query.q ?? ""));
   if (q.length < 2) return res.status(200).json([]);
 
-  const matches = ALL_SUBURB_INDEX
+  const suburbIndex = await postcodeStore.getSuburbIndex();
+
+  const matches = suburbIndex
     .filter((s) => normalize(s.name).includes(q))
     .sort((a, b) => {
       const aS = normalize(a.name).startsWith(q) ? 0 : 1;
