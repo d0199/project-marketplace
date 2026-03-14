@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const isNational = p.isNational ?? false;
       const inServiceArea = isNational || (p.serviceAreas?.includes(postcode) ?? false);
       // Service-area / national PTs sort at 2.5 km so they appear near the top but behind truly local results
-      const distanceKm = inServiceArea && actualDistanceKm > radiusKm ? 2.5 : actualDistanceKm;
+      const distanceKm = inServiceArea && actualDistanceKm > 10 ? 2.5 : actualDistanceKm;
       return {
         id: p.id,
         slug: p.slug,
