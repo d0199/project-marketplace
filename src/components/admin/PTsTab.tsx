@@ -1015,7 +1015,9 @@ function PTEditPanel({
                 {ptSuggestion("phone")}
               </div>
               <div>
-                <label className={labelCls}>Website{edited("website")}</label>
+                <label className={labelCls}>Website{edited("website")}{pt.website && (
+                  <a href={pt.website.startsWith("http") ? pt.website : `https://${pt.website}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title="Open website">&#x2197;</a>
+                )}</label>
                 <input className={inputCls} value={pt.website} onChange={(e) => update({ website: e.target.value })} />
               </div>
               <div>

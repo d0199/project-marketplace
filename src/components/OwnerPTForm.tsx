@@ -317,7 +317,9 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
             <input className={inputCls} value={form.phone} onChange={(e) => update({ phone: e.target.value })} />
           </div>
           <div>
-            <label className={labelCls}>Website</label>
+            <label className={labelCls}>Website{isAdmin && form.website && (
+              <a href={form.website.startsWith("http") ? form.website : `https://${form.website}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title="Open website">&#x2197;</a>
+            )}</label>
             <input className={inputCls} value={form.website} onChange={(e) => update({ website: e.target.value })} />
           </div>
           {isPaid && (

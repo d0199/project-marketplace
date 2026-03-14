@@ -358,6 +358,9 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
           <div>
             <label className={labelCls}>
               Website{edited("website")}
+              {isAdmin && form.website && (
+                <a href={form.website.startsWith("http") ? form.website : `https://${form.website}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title="Open website">&#x2197;</a>
+              )}
             </label>
             <input
               type="url"
