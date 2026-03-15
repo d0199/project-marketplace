@@ -32,8 +32,6 @@ function getPTPriceMap() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).end();
-
   // TEMP DEBUG — remove after confirming staging uses test keys
   if (req.query.debug === "stripe") {
     const { loadStripeSecrets, getSecret } = await import("@/lib/amplifySecrets");
@@ -45,6 +43,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       webhookPrefix: getSecret("STRIPE_WEBHOOK_SECRET").slice(0, 8),
     });
   }
+
+  if (req.method !== "POST") return res.status(405).end();
 
   try {
 
