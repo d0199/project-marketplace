@@ -12,16 +12,27 @@ import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
 import BulkEditModal from "@/components/BulkEditModal";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 import { gymUrl, ptUrl } from "@/lib/slugify";
-/** Authenticated fetch for billing — sends Cognito token but never impersonation header.
- *  Billing actions must always act as the real authenticated user. */
+/** Authenticated fetch for billing — sends Cognito token and impersonation
+ *  header (if admin is impersonating) so Stripe actions apply to the
+ *  correct owner. */
 async function billingFetch(url: string, init?: RequestInit): Promise<Response> {
   const session = await fetchAuthSession();
   const token = session.tokens?.accessToken?.toString();
+  const impersonateOwnerId =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("impersonateOwnerId")
+      : null;
+  const impersonateEmail =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("impersonateEmail")
+      : null;
   return fetch(url, {
     ...init,
     headers: {
       ...init?.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(impersonateOwnerId ? { "X-Impersonate-OwnerId": impersonateOwnerId } : {}),
+      ...(impersonateOwnerId && impersonateEmail ? { "X-Impersonate-Email": impersonateEmail } : {}),
     },
   });
 }

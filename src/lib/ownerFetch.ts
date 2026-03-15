@@ -9,12 +9,17 @@ export async function ownerFetch(url: string, init?: RequestInit): Promise<Respo
     typeof window !== "undefined"
       ? sessionStorage.getItem("impersonateOwnerId")
       : null;
+  const impersonateEmail =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("impersonateEmail")
+      : null;
   return fetch(url, {
     ...init,
     headers: {
       ...init?.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(impersonateOwnerId ? { "X-Impersonate-OwnerId": impersonateOwnerId } : {}),
+      ...(impersonateOwnerId && impersonateEmail ? { "X-Impersonate-Email": impersonateEmail } : {}),
     },
   });
 }

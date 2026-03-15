@@ -43,8 +43,9 @@ export async function requireUser(
     const isAdmin = attrs["custom:isAdmin"] === "true";
     let ownerId = attrs["custom:ownerId"] ?? "";
 
-    // Admin impersonation — allow admin users to act as another ownerId
+    // Admin impersonation — allow admin users to act as another ownerId/email
     const impersonate = req.headers["x-impersonate-ownerid"] as string | undefined;
+    const impersonateEmail = req.headers["x-impersonate-email"] as string | undefined;
     if (impersonate) {
       if (!isAdmin) {
         res.status(403).json({ error: "Only admins can impersonate" });
@@ -54,7 +55,7 @@ export async function requireUser(
     }
 
     return {
-      email: attrs.email ?? username,
+      email: (impersonate && impersonateEmail) ? impersonateEmail : (attrs.email ?? username),
       ownerId,
       isAdmin,
     };
