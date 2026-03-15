@@ -333,11 +333,11 @@ function GymRow({
               ) : currentPlan === "featured" ? (
                 hasBillingAccount ? (
                   <button
-                    onClick={onManage}
-                    disabled={busy === "portal"}
+                    onClick={() => onUpgrade(gym, "paid")}
+                    disabled={busy === `${gym.id}-paid`}
                     className="w-full text-sm py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    {busy === "portal" ? "Loading…" : "Switch plan ↗"}
+                    {busy === `${gym.id}-paid` ? "Loading…" : "Switch to Paid"}
                   </button>
                 ) : (
                   <div className="w-full text-sm py-2 text-center text-amber-700 bg-amber-50 rounded-lg font-medium">
@@ -598,11 +598,11 @@ function PTRow({
               ) : currentPlan === "featured" ? (
                 hasBillingAccount ? (
                   <button
-                    onClick={onManage}
-                    disabled={busy === "portal"}
+                    onClick={() => onUpgrade(pt, "paid")}
+                    disabled={busy === `${pt.id}-paid`}
                     className="w-full text-sm py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    {busy === "portal" ? "Loading…" : "Switch plan ↗"}
+                    {busy === `${pt.id}-paid` ? "Loading…" : "Switch to Paid"}
                   </button>
                 ) : (
                   <div className="w-full text-sm py-2 text-center text-amber-700 bg-amber-50 rounded-lg font-medium">
