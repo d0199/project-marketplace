@@ -60,11 +60,24 @@ export default function EditGymPage() {
   const [gym, setGym] = useState<Gym | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [impersonating, setImpersonating] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
       .then(async (user) => {
         const attributes = await fetchUserAttributes();
+        // Check for admin impersonation
+        const impOwnerId = sessionStorage.getItem("impersonateOwnerId");
+        const impEmail = sessionStorage.getItem("impersonateEmail");
+        if (attributes["custom:isAdmin"] === "true" && impOwnerId) {
+          setImpersonating(true);
+          setSession({
+            ownerId: impOwnerId,
+            email: impEmail ?? impOwnerId,
+            name: impEmail?.split("@")[0] ?? impOwnerId,
+          });
+          return;
+        }
         setSession({
           ownerId: attributes["custom:ownerId"] ?? "",
           email: user.signInDetails?.loginId ?? "",
@@ -155,6 +168,23 @@ export default function EditGymPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <Layout>
+        {impersonating && (
+          <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 mb-4">
+            <span className="text-sm font-medium text-purple-800">
+              Viewing as <strong>{session?.email}</strong> ({session?.ownerId})
+            </span>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("impersonateOwnerId");
+                sessionStorage.removeItem("impersonateEmail");
+                window.close();
+              }}
+              className="text-sm text-purple-700 hover:text-purple-900 font-semibold underline"
+            >
+              Exit impersonation
+            </button>
+          </div>
+        )}
         <nav className="text-sm text-gray-500 mb-6">
           <Link href="/owner" className="hover:text-brand-orange">
             Dashboard

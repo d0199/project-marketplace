@@ -7,6 +7,9 @@ import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
  * Returns { email, ownerId, isAdmin } on success, or sends 401 and returns null.
  *
  * The client must send `Authorization: Bearer <accessToken>`.
+ *
+ * Admin impersonation: if the caller is an admin and sends
+ * `X-Impersonate-OwnerId`, the returned ownerId is overridden to that value.
  */
 export async function requireUser(
   req: NextApiRequest,
@@ -37,10 +40,23 @@ export async function requireUser(
       UserAttributes.map((a) => [a.Name, a.Value])
     );
 
+    const isAdmin = attrs["custom:isAdmin"] === "true";
+    let ownerId = attrs["custom:ownerId"] ?? "";
+
+    // Admin impersonation — allow admin users to act as another ownerId
+    const impersonate = req.headers["x-impersonate-ownerid"] as string | undefined;
+    if (impersonate) {
+      if (!isAdmin) {
+        res.status(403).json({ error: "Only admins can impersonate" });
+        return null;
+      }
+      ownerId = impersonate;
+    }
+
     return {
       email: attrs.email ?? username,
-      ownerId: attrs["custom:ownerId"] ?? "",
-      isAdmin: attrs["custom:isAdmin"] === "true",
+      ownerId,
+      isAdmin,
     };
   } catch (err) {
     console.error("[userAuth] validation failed:", err);

@@ -2448,6 +2448,18 @@ function UsersTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
+                        {u.ownerId && (
+                          <button
+                            onClick={() => {
+                              sessionStorage.setItem("impersonateOwnerId", u.ownerId);
+                              sessionStorage.setItem("impersonateEmail", u.email);
+                              window.open("/billing", "_blank");
+                            }}
+                            className="text-purple-500 hover:underline text-xs font-medium"
+                          >
+                            Impersonate
+                          </button>
+                        )}
                         <button
                           onClick={() => { setEditOwnerFor(u.username); setEditOwnerVal(u.ownerId || ""); }}
                           className="text-blue-500 hover:underline text-xs font-medium"
