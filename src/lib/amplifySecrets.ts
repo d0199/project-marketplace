@@ -25,6 +25,9 @@ const STRIPE_KEYS = [
 
 const cache: Record<string, string> = {};
 let loadPromise: Promise<void> | null = null;
+// Debug: track SSM results for the debug endpoint
+let _debugInfo: { ssmFound: string[]; ssmMissing: string[]; host: string; branchPrefix: string | null } | null = null;
+export function getDebugInfo() { return _debugInfo; }
 
 /**
  * Load Stripe secrets from SSM. Pass the request Host header so we can
@@ -56,6 +59,8 @@ export async function loadStripeSecrets(host?: string): Promise<void> {
 
     // SSM GetParameters has a 10-param limit per call — batch accordingly
     const paths = ssmKeys.map(k => `/amplify/shared/${appId}/${k}`);
+    const ssmFound: string[] = [];
+    const ssmMissing: string[] = [];
     try {
       for (let i = 0; i < paths.length; i += 10) {
         const batch = paths.slice(i, i + 10);
@@ -66,11 +71,17 @@ export async function loadStripeSecrets(host?: string): Promise<void> {
           if (!param.Name || !param.Value) continue;
           const key = param.Name.split("/").pop()!;
           cache[key] = param.Value;
+          ssmFound.push(key);
+        }
+        // Track which params SSM couldn't find
+        for (const name of result.InvalidParameters ?? []) {
+          ssmMissing.push(name.split("/").pop()!);
         }
       }
     } catch (err) {
       console.error("[amplifySecrets] SSM fetch failed:", err);
     }
+    _debugInfo = { ssmFound, ssmMissing, host: h, branchPrefix };
 
     // Branch-specific SSM overrides: STAGING_STRIPE_X → STRIPE_X
     if (branchPrefix) {
