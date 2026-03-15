@@ -117,7 +117,7 @@ export default function TestHeroPage() {
       filtered = filtered.filter((g) => g.isPaid && selectedMemberOffers.every((o) => (g.memberOffers ?? []).includes(o)));
     }
     if (selectedSpecialties.length > 0) {
-      filtered = filtered.filter((g) => g.isPaid && selectedSpecialties.every((s) => (g.specialties ?? []).includes(s)));
+      filtered = filtered.filter((g) => selectedSpecialties.every((s) => (g.specialties ?? []).includes(s)));
     }
     if (!sortBy) return filtered;
     const sorted = [...filtered];

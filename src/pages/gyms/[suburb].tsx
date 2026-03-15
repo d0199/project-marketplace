@@ -87,7 +87,6 @@ export default function SuburbPage({ postcode, suburbName, slug, gymCount }: Pro
 
     if (selectedSpecialties.length > 0) {
       filtered = filtered.filter((g) =>
-        g.isPaid &&
         selectedSpecialties.every((s) => (g.specialties ?? []).includes(s))
       );
     }
