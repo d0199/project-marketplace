@@ -133,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ redirect: "portal" });
   }
 
-  const stripe = await getStripe();
+  const stripe = await getStripe(req.headers.host);
 
   const existing = await stripe.customers.list({ email, limit: 1 });
   const customer = existing.data.length > 0
