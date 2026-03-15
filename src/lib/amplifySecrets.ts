@@ -33,41 +33,56 @@ export async function loadStripeSecrets(): Promise<void> {
     const region = process.env.AWS_REGION ?? "ap-southeast-2";
 
     const client = new SSMClient({ region });
-    const paths  = STRIPE_KEYS.map(k => `/amplify/shared/${appId}/${k}`);
 
+    // Determine if we need branch-specific overrides (e.g. STAGING_STRIPE_*)
+    const branch = process.env.AWS_BRANCH;
+    const branchPrefix = branch && branch !== "master"
+      ? branch.toUpperCase().replace(/-/g, "_")
+      : null;
+
+    // Build SSM paths — base keys + branch-prefixed keys if on non-master branch
+    const ssmKeys = [...STRIPE_KEYS];
+    if (branchPrefix) {
+      for (const key of STRIPE_KEYS) {
+        ssmKeys.push(`${branchPrefix}_${key}` as typeof STRIPE_KEYS[number]);
+      }
+    }
+
+    // SSM GetParameters has a 10-param limit per call — batch accordingly
+    const paths = ssmKeys.map(k => `/amplify/shared/${appId}/${k}`);
     try {
-      const result = await client.send(
-        new GetParametersCommand({ Names: paths, WithDecryption: true })
-      );
-      for (const param of result.Parameters ?? []) {
-        if (!param.Name || !param.Value) continue;
-        const key = param.Name.split("/").pop()!;
-        cache[key] = param.Value;
+      for (let i = 0; i < paths.length; i += 10) {
+        const batch = paths.slice(i, i + 10);
+        const result = await client.send(
+          new GetParametersCommand({ Names: batch, WithDecryption: true })
+        );
+        for (const param of result.Parameters ?? []) {
+          if (!param.Name || !param.Value) continue;
+          const key = param.Name.split("/").pop()!;
+          cache[key] = param.Value;
+        }
       }
     } catch (err) {
       console.error("[amplifySecrets] SSM fetch failed:", err);
     }
 
-    // Fallback: process.env for any keys not found in SSM
+    // Branch-specific SSM overrides: STAGING_STRIPE_X → STRIPE_X
+    if (branchPrefix) {
+      for (const key of STRIPE_KEYS) {
+        const branchKey = `${branchPrefix}_${key}`;
+        if (cache[branchKey]) {
+          console.log(`[amplifySecrets] ${key}: overridden by SSM ${branchKey}`);
+          cache[key] = cache[branchKey];
+        }
+      }
+    }
+
+    // Fallback: process.env for any keys still not found
     for (const key of STRIPE_KEYS) {
       if (!cache[key]) {
         const envVal = process.env[key];
         console.log(`[amplifySecrets] ${key}: SSM miss, env=${envVal ? "found" : "missing"}`);
         cache[key] = envVal ?? "";
-      }
-    }
-
-    // Branch-specific overrides (e.g. STAGING_STRIPE_WEBHOOK_SECRET)
-    const branch = process.env.AWS_BRANCH;
-    if (branch && branch !== "master") {
-      const prefix = branch.toUpperCase().replace(/-/g, "_");
-      for (const key of STRIPE_KEYS) {
-        const branchKey = `${prefix}_${key}`;
-        const branchVal = process.env[branchKey];
-        if (branchVal) {
-          cache[key] = branchVal;
-          console.log(`[amplifySecrets] ${key}: overridden by ${branchKey}`);
-        }
       }
     }
   })();
