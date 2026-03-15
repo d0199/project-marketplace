@@ -7,8 +7,8 @@
 import { sendBrandedEmail } from "./emailNotify";
 import { buildEmailHtml } from "./emailTemplate";
 
-const PORTAL_URL = "https://mynextgym.com.au/owner";
-const BASE_URL = "https://mynextgym.com.au";
+const PORTAL_URL = "https://www.mynextgym.com.au/owner";
+const BASE_URL = "https://www.mynextgym.com.au";
 
 // ── Claims ───────────────────────────────────────────────────────────────────
 

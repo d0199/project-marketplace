@@ -12,7 +12,7 @@
  * Uses inline styles for maximum email client compatibility.
  */
 
-const BASE_URL = "https://mynextgym.com.au";
+const BASE_URL = "https://www.mynextgym.com.au";
 
 interface EmailTemplateOptions {
   /** Email subject (also used as preview text) */
