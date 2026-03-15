@@ -61,6 +61,28 @@ async function updateEntityBilling(
   }
 }
 
+/** Read gymId/entityType from subscription metadata, falling back to the
+ *  original checkout session for subscriptions created before we started
+ *  writing metadata to the subscription itself. */
+async function resolveSubscriptionMeta(
+  sub: Stripe.Subscription,
+  host: string | undefined
+): Promise<{ gymId?: string; entityType?: string } | null> {
+  // Prefer subscription-level metadata (new subscriptions)
+  if (sub.metadata?.gymId) {
+    return { gymId: sub.metadata.gymId, entityType: sub.metadata.entityType };
+  }
+  // Fallback: lookup the original checkout session (legacy subscriptions)
+  try {
+    const stripe = await getStripe(host);
+    const sessions = await stripe.checkout.sessions.list({ subscription: sub.id, limit: 1 });
+    const meta = sessions.data[0]?.metadata;
+    return meta ? { gymId: meta.gymId, entityType: meta.entityType } : null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
@@ -104,23 +126,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
-      const sessions = await (await getStripe(req.headers.host)).checkout.sessions.list({
-        subscription: sub.id,
-        limit: 1,
-      });
-      const meta = sessions.data[0]?.metadata;
-      const gymId = meta?.gymId;
-      if (!gymId) break;
+      const meta = await resolveSubscriptionMeta(sub, req.headers.host);
+      if (!meta?.gymId) break;
 
-      await updateEntityBilling(gymId, meta?.entityType, {
+      await updateEntityBilling(meta.gymId, meta.entityType, {
         isPaid: false,
         isFeatured: false,
         stripeSubscriptionId: null,
         stripePlan: null,
       });
       logSubscriptionEvent({
-        entityId: gymId,
-        entityType: (meta?.entityType as "gym" | "pt") ?? "gym",
+        entityId: meta.gymId,
+        entityType: (meta.entityType as "gym" | "pt") ?? "gym",
         eventType: "subscription_cancelled",
         source: "stripe",
         before: { isPaid: true, stripeSubscriptionId: sub.id },
@@ -133,23 +150,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const sub = event.data.object as Stripe.Subscription;
       if (sub.cancel_at_period_end) break;
 
-      const sessions = await (await getStripe(req.headers.host)).checkout.sessions.list({ subscription: sub.id, limit: 1 });
-      const meta = sessions.data[0]?.metadata;
-      const gymId = meta?.gymId;
-      if (!gymId) break;
+      const meta = await resolveSubscriptionMeta(sub, req.headers.host);
+      if (!meta?.gymId) break;
 
       const priceId = sub.items.data[0]?.price.id ?? "";
       const newPlan = getPriceToPlan()[priceId];
       if (!newPlan) break;
 
-      await updateEntityBilling(gymId, meta?.entityType, {
+      await updateEntityBilling(meta.gymId, meta.entityType, {
         isPaid: true,
         isFeatured: newPlan === "featured",
         stripePlan: newPlan,
       });
       logSubscriptionEvent({
-        entityId: gymId,
-        entityType: (meta?.entityType as "gym" | "pt") ?? "gym",
+        entityId: meta.gymId,
+        entityType: (meta.entityType as "gym" | "pt") ?? "gym",
         eventType: "plan_changed",
         source: "stripe",
         after: { isPaid: true, isFeatured: newPlan === "featured", stripePlan: newPlan },

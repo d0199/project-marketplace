@@ -123,6 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       customer: customer.id,
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { gymId, plan, entityType: "pt" },
+      subscription_data: { metadata: { gymId, plan, entityType: "pt" } },
       success_url: `${baseUrl}/billing?billing=success`,
       cancel_url: `${baseUrl}/billing`,
     });
@@ -169,6 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     customer: customer.id,
     line_items: [{ price: gymPriceId, quantity: 1 }],
     metadata: { gymId, plan },
+    subscription_data: { metadata: { gymId, plan, entityType: "gym" } },
     success_url: `${baseUrl}/owner/${gymId}?billing=success`,
     cancel_url: `${baseUrl}/owner/${gymId}`,
   });
