@@ -1128,6 +1128,7 @@ export default function BillingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           returnUrl: `${window.location.origin}/billing`,
+          flow: "payment_method_update",
         }),
       });
       const data = await res.json();
