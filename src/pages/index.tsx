@@ -26,18 +26,26 @@ type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
 interface Props {
   flags: FeatureFlags;
   ptSpecialties: string[];
+  suburbIndex: { name: string; postcode: string; state: string }[];
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
   const { datasetStore } = await import("@/lib/datasetStore");
-  const [flags, ptDs] = await Promise.all([
+  const { postcodeStore } = await import("@/lib/postcodeStore");
+  const { ownerStore } = await import("@/lib/ownerStore");
+  const { ptStore } = await import("@/lib/ptStore");
+  const [flags, ptDs, suburbIndex] = await Promise.all([
     featureFlagStore.get(),
     datasetStore.getByName("pt-specialties"),
+    postcodeStore.getSuburbIndex(),
+    // Prime gym + PT caches so first search is fast
+    ownerStore.getAll(),
+    ptStore.getAll(),
   ]);
-  return { props: { flags, ptSpecialties: ptDs?.entries ?? [] } };
+  return { props: { flags, ptSpecialties: ptDs?.entries ?? [], suburbIndex } };
 };
 
-export default function HomePage({ flags, ptSpecialties }: Props) {
+export default function HomePage({ flags, ptSpecialties, suburbIndex }: Props) {
   const router = useRouter();
   const [searchMode, setSearchMode] = useState<SearchMode>("gyms");
   const [postcode, setPostcode] = useState("");
@@ -83,9 +91,12 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
   }, []);
 
   // Fetch gyms
+  const gymLoading = useRef(false);
+  const ptLoading = useRef(false);
   const fetchGyms = useCallback(async (pc: string, includeTest: boolean) => {
     if (!pc) return;
     if (cachedGymPostcode.current === `${pc}:${includeTest}`) return;
+    gymLoading.current = true;
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -99,13 +110,15 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
         cachedGymPostcode.current = `${pc}:${includeTest}`;
       }
     } finally {
-      setLoading(false);
+      gymLoading.current = false;
+      if (!ptLoading.current) setLoading(false);
     }
   }, []);
 
   // Fetch PTs
   const fetchPTs = useCallback(async (pc: string) => {
     if (!pc || cachedPTPostcode.current === pc) return;
+    ptLoading.current = true;
     setLoading(true);
     try {
       const res = await fetch(`/api/pts/search?postcode=${pc}&radius=${MAX_RADIUS}`);
@@ -115,17 +128,19 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
         cachedPTPostcode.current = pc;
       }
     } catch {
-      // API not built yet
+      // ignore
     } finally {
-      setLoading(false);
+      ptLoading.current = false;
+      if (!gymLoading.current) setLoading(false);
     }
   }, []);
 
+  // Fetch both gyms and PTs in parallel on search
   useEffect(() => {
     if (!hasSearched || !postcode) return;
-    if (searchMode === "gyms") fetchGyms(postcode, canSeeTestGyms);
-    else fetchPTs(postcode);
-  }, [hasSearched, postcode, canSeeTestGyms, searchMode, fetchGyms, fetchPTs]);
+    fetchGyms(postcode, canSeeTestGyms);
+    fetchPTs(postcode);
+  }, [hasSearched, postcode, canSeeTestGyms, fetchGyms, fetchPTs]);
 
   // Gym results
   const gymResults = useMemo<GymWithDistance[]>(() => {
@@ -485,6 +500,7 @@ export default function HomePage({ flags, ptSpecialties }: Props) {
               <SearchBar
                 onSearch={handleSearch}
                 initialValue={postcode}
+                suburbIndex={suburbIndex}
               />
             </div>
 
