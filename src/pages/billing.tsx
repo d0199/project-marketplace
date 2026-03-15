@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
-import { getCurrentUser, fetchUserAttributes, signOut } from "aws-amplify/auth";
+import { getCurrentUser, fetchUserAttributes, fetchAuthSession, signOut } from "aws-amplify/auth";
 import Layout from "@/components/Layout";
 import LeadsTab from "@/components/LeadsTab";
 import AnalyticsTab from "@/components/AnalyticsTab";
@@ -12,7 +12,19 @@ import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
 import BulkEditModal from "@/components/BulkEditModal";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 import { gymUrl, ptUrl } from "@/lib/slugify";
-import { ownerFetch } from "@/lib/ownerFetch";
+/** Authenticated fetch for billing — sends Cognito token but never impersonation header.
+ *  Billing actions must always act as the real authenticated user. */
+async function billingFetch(url: string, init?: RequestInit): Promise<Response> {
+  const session = await fetchAuthSession();
+  const token = session.tokens?.accessToken?.toString();
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...init?.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -1020,7 +1032,7 @@ export default function BillingPage() {
     if (!session) return;
     setBusy(`${pt.id}-${plan}`);
     try {
-      const res = await ownerFetch("/api/billing/checkout", {
+      const res = await billingFetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1054,7 +1066,7 @@ export default function BillingPage() {
       return;
     setBusy(`${pt.id}-cancel`);
     try {
-      const res = await ownerFetch("/api/billing/cancel", {
+      const res = await billingFetch("/api/billing/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ gymId: pt.id, entityType: "pt" }),
@@ -1077,7 +1089,7 @@ export default function BillingPage() {
     if (!session) return;
     setBusy(`${gym.id}-${plan}`);
     try {
-      const res = await ownerFetch("/api/billing/checkout", {
+      const res = await billingFetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1104,7 +1116,7 @@ export default function BillingPage() {
     if (!session) return;
     setBusy("portal");
     try {
-      const res = await ownerFetch("/api/billing/portal", {
+      const res = await billingFetch("/api/billing/portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1129,7 +1141,7 @@ export default function BillingPage() {
       return;
     setBusy(`${gym.id}-cancel`);
     try {
-      const res = await ownerFetch("/api/billing/cancel", {
+      const res = await billingFetch("/api/billing/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ gymId: gym.id }),
