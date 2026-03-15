@@ -16,9 +16,9 @@ import { POSTCODE_META, type GymWithDistance } from "@/lib/utils";
 import { featureFlagStore, type FeatureFlags } from "@/lib/featureFlags";
 import { trackEvent } from "@/lib/gtag";
 
-const DEFAULT_RADIUS = 10;
+const DEFAULT_RADIUS = 5;
 const MIN_RADIUS = 1;
-const MAX_RADIUS = 50;
+const MAX_RADIUS = 25;
 
 type SearchMode = "gyms" | "trainers";
 type SortOption = "distance-asc" | "distance-desc" | "price-asc" | "price-desc";
