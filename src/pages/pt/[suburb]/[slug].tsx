@@ -610,6 +610,12 @@ export default function PTProfilePage({ pt, affiliatedGyms, dynamicIcons, servic
                 </ul>
                 {isUnclaimed && (
                   <div className={`${pt.phone || pt.instagram || pt.facebook || pt.tiktok ? "mt-3 pt-3 border-t border-gray-100" : ""}`}>
+                    <div className="group/unclaimed relative mb-2">
+                      <span className="text-sm text-brand-orange font-medium cursor-help">⚑ UNCLAIMED LISTING</span>
+                      <div className="invisible group-hover/unclaimed:visible absolute z-10 left-0 top-full mt-1 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg leading-relaxed">
+                        This listing has not been verified or managed by the business named. Information may be incomplete, outdated, or inaccurate. Verify all details directly with the business before making any decisions.
+                      </div>
+                    </div>
                     <button
                       onClick={() => setShowClaim(true)}
                       className="text-sm text-brand-orange hover:underline"
@@ -663,6 +669,11 @@ export default function PTProfilePage({ pt, affiliatedGyms, dynamicIcons, servic
                 See something wrong? Let us know
               </button>
             </div>
+            {isUnclaimed && (
+              <p className="text-xs text-gray-400 text-center mt-2 leading-relaxed">
+                This listing has not been verified or managed by the business named. Information may be incomplete, outdated, or inaccurate. Verify all details directly with the business before making any decisions.
+              </p>
+            )}
           </aside>
         </div>
         {showContactModal && (
