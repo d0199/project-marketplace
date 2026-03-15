@@ -31,6 +31,42 @@ function getPTPriceMap() {
   };
 }
 
+/** Open the Stripe billing portal directly on the "update subscription" screen */
+async function portalPlanChange(
+  stripe: import("stripe").default,
+  email: string,
+  subscriptionId: string,
+  priceId: string,
+  returnUrl: string,
+  res: NextApiResponse
+) {
+  const existing = await stripe.customers.list({ email, limit: 1 });
+  if (existing.data.length === 0) {
+    return res.status(404).json({ error: "No billing account found" });
+  }
+
+  // Get the current subscription item ID for the plan swap
+  const sub = await stripe.subscriptions.retrieve(subscriptionId);
+  const itemId = sub.items.data[0]?.id;
+  if (!itemId) {
+    return res.status(400).json({ error: "No subscription item found" });
+  }
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: existing.data[0].id,
+    return_url: returnUrl,
+    flow_data: {
+      type: "subscription_update_confirm",
+      subscription_update_confirm: {
+        subscription: subscriptionId,
+        items: [{ id: itemId, price: priceId, quantity: 1 }],
+      },
+    },
+  });
+
+  return res.status(200).json({ url: session.url });
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
@@ -55,22 +91,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const isPT = entityType === "pt";
 
+  const stripe = await getStripe(req.headers.host);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
+
   if (isPT) {
     // PT checkout flow
     const pt = await ptStore.getById(gymId);
     if (!pt || pt.ownerId !== ownerId) {
       return res.status(403).json({ error: "Forbidden" });
     }
-
-    if (pt.stripeSubscriptionId) {
-      return res.status(200).json({ redirect: "portal" });
-    }
-
-    const stripe = await getStripe(req.headers.host);
-    const existing = await stripe.customers.list({ email, limit: 1 });
-    const customer = existing.data.length > 0
-      ? existing.data[0]
-      : await stripe.customers.create({ email });
 
     const ptPrices = getPTPriceMap();
     const priceId = ptPrices[plan]?.[interval];
@@ -79,7 +108,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Invalid plan or interval" });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
+    // Existing subscription → open portal pre-set to plan change
+    if (pt.stripeSubscriptionId) {
+      return await portalPlanChange(stripe, email, pt.stripeSubscriptionId, priceId, `${baseUrl}/billing`, res);
+    }
+
+    const existing = await stripe.customers.list({ email, limit: 1 });
+    const customer = existing.data.length > 0
+      ? existing.data[0]
+      : await stripe.customers.create({ email });
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -112,28 +149,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  if (gym.stripeSubscriptionId) {
-    return res.status(200).json({ redirect: "portal" });
+  const gymPriceId = getGymPriceMap()[plan]?.[interval];
+  if (!gymPriceId) {
+    return res.status(400).json({ error: "Invalid plan or interval" });
   }
 
-  const stripe = await getStripe(req.headers.host);
+  // Existing subscription → open portal pre-set to plan change
+  if (gym.stripeSubscriptionId) {
+    return await portalPlanChange(stripe, email, gym.stripeSubscriptionId, gymPriceId, `${baseUrl}/billing`, res);
+  }
 
   const existing = await stripe.customers.list({ email, limit: 1 });
   const customer = existing.data.length > 0
     ? existing.data[0]
     : await stripe.customers.create({ email });
 
-  const priceId = getGymPriceMap()[plan]?.[interval];
-  if (!priceId) {
-    return res.status(400).json({ error: "Invalid plan or interval" });
-  }
-
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
-
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customer.id,
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: gymPriceId, quantity: 1 }],
     metadata: { gymId, plan },
     success_url: `${baseUrl}/owner/${gymId}?billing=success`,
     cancel_url: `${baseUrl}/owner/${gymId}`,

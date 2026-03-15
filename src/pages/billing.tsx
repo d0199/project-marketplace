@@ -1054,9 +1054,7 @@ export default function BillingPage() {
         }),
       });
       const data = await res.json();
-      if (data.redirect === "portal") {
-        await handleManage();
-      } else if (data.url) {
+      if (data.url) {
         window.location.href = data.url;
       } else {
         alert(data.error ?? "Something went wrong");
@@ -1110,9 +1108,7 @@ export default function BillingPage() {
         }),
       });
       const data = await res.json();
-      if (data.redirect === "portal") {
-        await handleManage();
-      } else if (data.url) {
+      if (data.url) {
         window.location.href = data.url;
       } else {
         alert(data.error ?? "Something went wrong");
