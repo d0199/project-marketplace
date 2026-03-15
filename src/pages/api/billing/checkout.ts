@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { serverConfig } from "@/lib/serverConfig";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
+import { requireUser } from "@/lib/userAuth";
 
 function getGymPriceMap() {
   return {
@@ -35,16 +36,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
 
-  const { gymId, ownerId, email, plan, interval, entityType } = req.body as {
+  const user = await requireUser(req, res);
+  if (!user) return; // 401 already sent
+
+  const { gymId, plan, interval, entityType } = req.body as {
     gymId: string;
-    ownerId: string;
-    email: string;
     plan: "paid" | "featured";
     interval: "month" | "year";
     entityType?: "gym" | "pt";
   };
 
-  if (!gymId || !ownerId || !email || !plan || !interval) {
+  const ownerId = user.ownerId;
+  const email = user.email;
+
+  if (!gymId || !plan || !interval) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -95,6 +100,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Featured slot check (max 3 per postcode)
+  // Note: small race window exists — two concurrent checkouts for the same postcode
+  // could both pass this check. Would need DynamoDB transactions to fully prevent.
   if (plan === "featured") {
     const all = await ownerStore.getAll();
     const featuredCount = all.filter(

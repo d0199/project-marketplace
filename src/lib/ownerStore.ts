@@ -275,13 +275,19 @@ export const ownerStore = {
     invalidateCache();
   },
 
-  // Targeted billing update — only touches fields that exist in the deployed schema.
-  // stripeSubscriptionId / stripePlan are not yet deployed so must be excluded until
-  // the Amplify backend is redeployed with the updated schema.
-  async updateBilling(id: string, patch: { isPaid: boolean; isFeatured: boolean }): Promise<void> {
+  async updateBilling(
+    id: string,
+    patch: {
+      isPaid: boolean;
+      isFeatured: boolean;
+      stripeSubscriptionId?: string | null;
+      stripePlan?: string | null;
+    }
+  ): Promise<void> {
     if (!isAmplifyConfigured()) return;
     const { errors } = await dataClient.models.Gym.update({ id, ...patch });
     if (errors?.length) console.error("[ownerStore.updateBilling] errors:", JSON.stringify(errors));
+    invalidateCache();
   },
 
   async create(gym: Omit<Gym, "id" | "slug" | "suburbSlug">): Promise<Gym> {

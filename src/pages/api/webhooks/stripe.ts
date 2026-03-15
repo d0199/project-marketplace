@@ -19,30 +19,43 @@ async function getRawBody(req: NextApiRequest): Promise<Buffer> {
 }
 
 function getPriceToPlan(): Record<string, "paid" | "featured"> {
-  return {
+  const entries: [string, "paid" | "featured"][] = [
     // Gym prices
-    [serverConfig.STRIPE_PRICE_PAID_MONTHLY]: "paid",
-    [serverConfig.STRIPE_PRICE_PAID_ANNUAL]: "paid",
-    [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY]: "featured",
-    [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL]: "featured",
+    [serverConfig.STRIPE_PRICE_PAID_MONTHLY, "paid"],
+    [serverConfig.STRIPE_PRICE_PAID_ANNUAL, "paid"],
+    [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY, "featured"],
+    [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL, "featured"],
     // PT prices
-    [serverConfig.STRIPE_PRICE_PAID_MONTHLY_PT]: "paid",
-    [serverConfig.STRIPE_PRICE_PAID_ANNUAL_PT]: "paid",
-    [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY_PT]: "featured",
-    [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL_PT]: "featured",
-  };
+    [serverConfig.STRIPE_PRICE_PAID_MONTHLY_PT, "paid"],
+    [serverConfig.STRIPE_PRICE_PAID_ANNUAL_PT, "paid"],
+    [serverConfig.STRIPE_PRICE_FEATURED_MONTHLY_PT, "featured"],
+    [serverConfig.STRIPE_PRICE_FEATURED_ANNUAL_PT, "featured"],
+  ];
+  // Filter out empty keys so a missing SSM value doesn't cause false matches
+  return Object.fromEntries(entries.filter(([key]) => key));
 }
 
 /** Update billing flags on the correct entity (gym or PT) */
 async function updateEntityBilling(
   entityId: string,
   entityType: string | undefined,
-  billing: { isPaid: boolean; isFeatured: boolean }
+  billing: {
+    isPaid: boolean;
+    isFeatured: boolean;
+    stripeSubscriptionId?: string | null;
+    stripePlan?: string | null;
+  }
 ) {
   if (entityType === "pt") {
     const pt = await ptStore.getById(entityId);
     if (!pt) return;
-    await ptStore.update({ ...pt, isPaid: billing.isPaid, isFeatured: billing.isFeatured });
+    await ptStore.update({
+      ...pt,
+      isPaid: billing.isPaid,
+      isFeatured: billing.isFeatured,
+      ...(billing.stripeSubscriptionId !== undefined && { stripeSubscriptionId: billing.stripeSubscriptionId ?? undefined }),
+      ...(billing.stripePlan !== undefined && { stripePlan: billing.stripePlan as "paid" | "featured" | undefined }),
+    });
   } else {
     await ownerStore.updateBilling(entityId, billing);
   }
@@ -76,6 +89,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await updateEntityBilling(gymId, entityType, {
         isPaid: true,
         isFeatured: plan === "featured",
+        stripeSubscriptionId: subscriptionId,
+        stripePlan: plan as "paid" | "featured",
       });
       logSubscriptionEvent({
         entityId: gymId,
@@ -97,7 +112,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const gymId = meta?.gymId;
       if (!gymId) break;
 
-      await updateEntityBilling(gymId, meta?.entityType, { isPaid: false, isFeatured: false });
+      await updateEntityBilling(gymId, meta?.entityType, {
+        isPaid: false,
+        isFeatured: false,
+        stripeSubscriptionId: null,
+        stripePlan: null,
+      });
       logSubscriptionEvent({
         entityId: gymId,
         entityType: (meta?.entityType as "gym" | "pt") ?? "gym",
@@ -125,6 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await updateEntityBilling(gymId, meta?.entityType, {
         isPaid: true,
         isFeatured: newPlan === "featured",
+        stripePlan: newPlan,
       });
       logSubscriptionEvent({
         entityId: gymId,

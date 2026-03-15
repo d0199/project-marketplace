@@ -12,6 +12,7 @@ import type { OwnerSession, Gym, PersonalTrainer } from "@/types";
 import BulkEditModal from "@/components/BulkEditModal";
 import QualificationVerifyModal from "@/components/QualificationVerifyModal";
 import { gymUrl, ptUrl } from "@/lib/slugify";
+import { ownerFetch } from "@/lib/ownerFetch";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -1019,13 +1020,11 @@ export default function BillingPage() {
     if (!session) return;
     setBusy(`${pt.id}-${plan}`);
     try {
-      const res = await fetch("/api/billing/checkout", {
+      const res = await ownerFetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gymId: pt.id,
-          ownerId: session.ownerId,
-          email: session.email,
           plan,
           interval,
           entityType: "pt",
@@ -1055,10 +1054,10 @@ export default function BillingPage() {
       return;
     setBusy(`${pt.id}-cancel`);
     try {
-      const res = await fetch("/api/billing/cancel", {
+      const res = await ownerFetch("/api/billing/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gymId: pt.id, email: session.email, entityType: "pt" }),
+        body: JSON.stringify({ gymId: pt.id, entityType: "pt" }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -1078,13 +1077,11 @@ export default function BillingPage() {
     if (!session) return;
     setBusy(`${gym.id}-${plan}`);
     try {
-      const res = await fetch("/api/billing/checkout", {
+      const res = await ownerFetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           gymId: gym.id,
-          ownerId: session.ownerId,
-          email: session.email,
           plan,
           interval,
         }),
@@ -1107,11 +1104,10 @@ export default function BillingPage() {
     if (!session) return;
     setBusy("portal");
     try {
-      const res = await fetch("/api/billing/portal", {
+      const res = await ownerFetch("/api/billing/portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: session.email,
           returnUrl: `${window.location.origin}/billing`,
         }),
       });
@@ -1133,10 +1129,10 @@ export default function BillingPage() {
       return;
     setBusy(`${gym.id}-cancel`);
     try {
-      const res = await fetch("/api/billing/cancel", {
+      const res = await ownerFetch("/api/billing/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gymId: gym.id, email: session.email }),
+        body: JSON.stringify({ gymId: gym.id }),
       });
       const data = await res.json();
       if (data.ok) {
