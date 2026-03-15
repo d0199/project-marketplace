@@ -568,12 +568,12 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
         </div>
       </section>
 
-      {/* Specialties — admin only, select from dataset */}
-      {isAdmin && <section>
+      {/* Specialties — select from dataset */}
+      <section>
         <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">
           Specialties
         </h3>
-        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines this gym is known for. Search and select from the approved list. Manage the list in Admin &rarr; Datasets.</p>
+        <p className="text-xs text-gray-400 mb-3">Tag programs or disciplines this gym is known for. Search and select from the approved list.{isAdmin && <> Manage the list in Admin &rarr; Datasets.</>}</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {(form.specialties ?? []).map((s) => (
             <span key={s} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
@@ -627,7 +627,7 @@ export default function OwnerGymForm({ gym, gymId, isAdmin, ownerEmail, original
           })()}
         </div>
         {suggestion("specialties")}
-      </section>}
+      </section>
 
       {/* Member Offers — paid listings only */}
       {(form.isPaid || isAdmin) && <section>
