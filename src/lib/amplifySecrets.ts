@@ -36,6 +36,7 @@ export async function loadStripeSecrets(): Promise<void> {
 
     // Determine if we need branch-specific overrides (e.g. STAGING_STRIPE_*)
     const branch = process.env.AWS_BRANCH;
+    console.log(`[amplifySecrets] AWS_BRANCH=${branch ?? "(not set)"}, appId=${appId}`);
     const branchPrefix = branch && branch !== "master"
       ? branch.toUpperCase().replace(/-/g, "_")
       : null;
@@ -76,6 +77,10 @@ export async function loadStripeSecrets(): Promise<void> {
         }
       }
     }
+
+    // Log which key is being used (first 8 chars only for security)
+    const sk = cache["STRIPE_SECRET_KEY"] ?? "";
+    console.log(`[amplifySecrets] STRIPE_SECRET_KEY prefix: ${sk.slice(0, 8)}..., branchPrefix=${branchPrefix ?? "none"}`);
 
     // Fallback: process.env for any keys still not found
     for (const key of STRIPE_KEYS) {
