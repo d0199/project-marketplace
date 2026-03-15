@@ -24,6 +24,12 @@ export default function Layout({ children, hero }: Props) {
           <span>&middot;</span>
           <Link href="/list" className="hover:text-gray-600 transition-colors">List your gym</Link>
         </div>
+        <div className="flex items-center justify-center gap-3 mb-1 mt-1">
+          <span className="text-gray-300">Legal:</span>
+          <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms &amp; Conditions</Link>
+          <span>&middot;</span>
+          <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy Policy</Link>
+        </div>
         &copy; 2026 Mynextgym
       </footer>
       <ChatWidget />
