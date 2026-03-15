@@ -13,7 +13,6 @@
  */
 
 const BASE_URL = "https://mynextgym.com.au";
-const LOGO_URL = `${BASE_URL}/icon-192.png`;
 
 interface EmailTemplateOptions {
   /** Email subject (also used as preview text) */
@@ -84,12 +83,8 @@ export function buildEmailHtml(options: EmailTemplateOptions): string {
           <!-- Header -->
           <tr>
             <td style="background-color:#111111;padding:24px 32px;border-radius:8px 8px 0 0;text-align:center;">
-              <a href="${BASE_URL}" target="_blank" style="text-decoration:none;">
-                <img src="${LOGO_URL}" alt="mynextgym" width="48" height="48"
-                     style="display:inline-block;vertical-align:middle;border:0;" />
-                <span style="display:inline-block;vertical-align:middle;margin-left:12px;font-size:22px;font-weight:bold;color:#F97316;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.5px;">
+              <a href="${BASE_URL}" target="_blank" style="text-decoration:none;font-size:22px;font-weight:bold;color:#F97316;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.5px;">
                   mynextgym
-                </span>
               </a>
             </td>
           </tr>
