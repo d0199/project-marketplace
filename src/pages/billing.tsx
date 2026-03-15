@@ -57,7 +57,6 @@ const PAID_FEATURES = [
   "Social media links",
   "Hours comment / notes",
   "Member offers",
-  "Specialties tags",
 ];
 
 const FEATURED_FEATURES = [
@@ -70,7 +69,6 @@ const PT_PAID_FEATURES = [
   "Social media links",
   "Booking link",
   "Qualifications display",
-  "Specialties tags",
 ];
 
 const PT_FEATURED_FEATURES = [
@@ -253,10 +251,10 @@ function GymRow({
             <ul className="space-y-1.5 text-xs text-gray-400 flex-1">
               <li>✓ Basic listing</li>
               <li>✓ Search visibility</li>
+              <li>✓ Specialties tags</li>
               <li className="text-gray-300">✗ Contact form</li>
               <li className="text-gray-300">✗ Social links</li>
               <li className="text-gray-300">✗ Member offers</li>
-              <li className="text-gray-300">✗ Specialties</li>
               <li className="text-gray-300">✗ Featured placement</li>
             </ul>
             {currentPlan && (
@@ -521,9 +519,9 @@ function PTRow({
             <ul className="space-y-1.5 text-xs text-gray-400 flex-1">
               <li>✓ Basic listing</li>
               <li>✓ Search visibility</li>
+              <li>✓ Specialties tags</li>
               <li className="text-gray-300">✗ Contact form</li>
               <li className="text-gray-300">✗ Social links</li>
-              <li className="text-gray-300">✗ Specialties</li>
               <li className="text-gray-300">✗ Featured placement</li>
             </ul>
             {currentPlan && (
