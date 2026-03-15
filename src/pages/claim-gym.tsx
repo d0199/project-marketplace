@@ -201,6 +201,11 @@ export default function ClaimGymPage({ gyms }: Props) {
                       className="w-full py-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold rounded-lg transition-colors disabled:opacity-50">
                       {submitting ? "Submitting…" : "Submit Claim"}
                     </button>
+                    <p className="text-xs text-gray-400 text-center mt-3">
+                      By submitting, you confirm you are authorised to represent this business, the information provided is accurate, and you agree to our{" "}
+                      <Link href="/terms" className="underline hover:text-gray-600">Terms &amp; Conditions</Link> and{" "}
+                      <Link href="/privacy" className="underline hover:text-gray-600">Privacy Policy</Link>.
+                    </p>
                   </form>
                 </div>
               )}

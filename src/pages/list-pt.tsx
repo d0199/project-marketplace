@@ -285,7 +285,9 @@ export default function ListPTPage() {
             </button>
 
             <p className="text-xs text-gray-400 text-center">
-              By submitting you confirm the information provided is accurate. Our team reviews all submissions before going live.
+              By submitting, you confirm you are authorised to represent this business, the information provided is accurate, and you agree to our{" "}
+              <Link href="/terms" className="underline hover:text-gray-600">Terms &amp; Conditions</Link> and{" "}
+              <Link href="/privacy" className="underline hover:text-gray-600">Privacy Policy</Link>.
             </p>
           </form>
         </div>
