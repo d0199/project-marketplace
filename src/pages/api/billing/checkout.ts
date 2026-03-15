@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const isPT = entityType === "pt";
 
   const stripe = await getStripe(req.headers.host);
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au";
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.mynextgym.com.au").replace(/\/+$/, "");
 
   if (isPT) {
     // PT checkout flow
