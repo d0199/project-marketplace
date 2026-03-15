@@ -3,7 +3,6 @@ import { ownerStore } from "@/lib/ownerStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
-import { sendEditSubmittedEmail } from "@/lib/customerEmail";
 import { BASE_URL } from "@/lib/siteUrl";
 import { requireUser } from "@/lib/userAuth";
 import type { Gym, OpeningHours } from "@/types";
@@ -94,7 +93,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const gymNames = affectedGyms.map((g) => g.name).join(", ");
 
   await Promise.allSettled([
-    sendEditSubmittedEmail(ownerEmail, `Bulk edit (${affectedGyms.length} gyms)`, "gym"),
     sendAdminAlert(
       `Bulk edit pending review (${affectedGyms.length} gyms)`,
       `A gym owner has submitted a bulk edit that requires moderation.\n\nField: ${field}\nGyms (${affectedGyms.length}): ${gymNames}\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`
