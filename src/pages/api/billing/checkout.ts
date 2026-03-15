@@ -34,6 +34,18 @@ function getPTPriceMap() {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
+  // TEMP DEBUG — remove after confirming staging uses test keys
+  if (req.query.debug === "stripe") {
+    const { loadStripeSecrets, getSecret } = await import("@/lib/amplifySecrets");
+    await loadStripeSecrets();
+    const sk = getSecret("STRIPE_SECRET_KEY");
+    return res.status(200).json({
+      branch: process.env.AWS_BRANCH ?? "(not set)",
+      keyPrefix: sk.slice(0, 8),
+      webhookPrefix: getSecret("STRIPE_WEBHOOK_SECRET").slice(0, 8),
+    });
+  }
+
   try {
 
   const user = await requireUser(req, res);
