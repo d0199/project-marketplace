@@ -434,8 +434,7 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
       </section>
 
       {/* Specialties */}
-      {isPaid && (
-        <section>
+      <section>
           <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3">Specialties</h3>
           {form.specialties.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
@@ -482,8 +481,7 @@ export default function OwnerPTForm({ pt, ownerEmail, isAdmin, onSave, onVerifyQ
               );
             })()}
           </div>
-        </section>
-      )}
+      </section>
 
       {/* Member Offers — paid only */}
       {isPaid && (

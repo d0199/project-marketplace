@@ -371,8 +371,8 @@ export default function GymProfilePage({ gym, personalTrainers, dynamicIcons }: 
               </section>
             )}
 
-            {/* Specialties — paid listings only */}
-            {effectivePaid && (gym.specialties?.length ?? 0) > 0 && (
+            {/* Specialties */}
+            {(gym.specialties?.length ?? 0) > 0 && (
               <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
                   Specialties
