@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(404).json({ error: "No active subscription found" });
   }
 
-  const stripe = await getStripe();
+  const stripe = await getStripe(req.headers.host);
 
   // Cancel at period end — features remain active until the billing period ends
   const updated = await stripe.subscriptions.update(subscriptionId, { cancel_at_period_end: true });

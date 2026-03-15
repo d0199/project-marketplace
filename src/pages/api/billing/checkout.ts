@@ -35,13 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // TEMP DEBUG — remove after confirming staging uses test keys
   if (req.query.debug === "stripe") {
     const { loadStripeSecrets, getSecret } = await import("@/lib/amplifySecrets");
-    await loadStripeSecrets();
+    await loadStripeSecrets(req.headers.host);
     const sk = getSecret("STRIPE_SECRET_KEY");
     return res.status(200).json({
-      deployEnv: process.env.DEPLOYMENT_ENV ?? "(not set)",
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "(not set)",
-      isProduction: process.env.DEPLOYMENT_ENV !== "staging" &&
-        (!(process.env.NEXT_PUBLIC_BASE_URL ?? "") || (process.env.NEXT_PUBLIC_BASE_URL ?? "").includes("www.mynextgym.com.au")),
+      host: req.headers.host ?? "(not set)",
+      isProduction: !req.headers.host || req.headers.host.includes("www.mynextgym.com.au"),
       keyPrefix: sk.slice(0, 8),
       webhookPrefix: getSecret("STRIPE_WEBHOOK_SECRET").slice(0, 8),
     });
@@ -81,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ redirect: "portal" });
     }
 
-    const stripe = await getStripe();
+    const stripe = await getStripe(req.headers.host);
     const existing = await stripe.customers.list({ email, limit: 1 });
     const customer = existing.data.length > 0
       ? existing.data[0]

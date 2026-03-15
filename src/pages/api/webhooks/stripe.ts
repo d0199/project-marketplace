@@ -64,14 +64,14 @@ async function updateEntityBilling(
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
-  await loadStripeSecrets();
+  await loadStripeSecrets(req.headers.host);
 
   const sig = req.headers["stripe-signature"] as string;
   const rawBody = await getRawBody(req);
 
   let event: Stripe.Event;
   try {
-    const stripe = await getStripe();
+    const stripe = await getStripe(req.headers.host);
     event = stripe.webhooks.constructEvent(rawBody, sig, serverConfig.STRIPE_WEBHOOK_SECRET);
   } catch {
     return res.status(400).json({ error: "Invalid signature" });
@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
-      const sessions = await (await getStripe()).checkout.sessions.list({
+      const sessions = await (await getStripe(req.headers.host)).checkout.sessions.list({
         subscription: sub.id,
         limit: 1,
       });
@@ -133,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const sub = event.data.object as Stripe.Subscription;
       if (sub.cancel_at_period_end) break;
 
-      const sessions = await (await getStripe()).checkout.sessions.list({ subscription: sub.id, limit: 1 });
+      const sessions = await (await getStripe(req.headers.host)).checkout.sessions.list({ subscription: sub.id, limit: 1 });
       const meta = sessions.data[0]?.metadata;
       const gymId = meta?.gymId;
       if (!gymId) break;

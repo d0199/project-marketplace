@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  const stripe = await getStripe();
+  const stripe = await getStripe(req.headers.host);
   const existing = await stripe.customers.list({ email: user.email, limit: 1 });
   if (existing.data.length === 0) {
     return res.status(404).json({ error: "No billing account found" });

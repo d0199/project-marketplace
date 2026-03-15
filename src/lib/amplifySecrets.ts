@@ -26,7 +26,12 @@ const STRIPE_KEYS = [
 const cache: Record<string, string> = {};
 let loadPromise: Promise<void> | null = null;
 
-export async function loadStripeSecrets(): Promise<void> {
+/**
+ * Load Stripe secrets from SSM. Pass the request Host header so we can
+ * detect staging vs production — Amplify Hosting doesn't reliably expose
+ * branch env vars at SSR Lambda runtime.
+ */
+export async function loadStripeSecrets(host?: string): Promise<void> {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
     const appId  = process.env.AMPLIFY_APP_ID ?? "d36uz2q25gygnh";
@@ -34,15 +39,11 @@ export async function loadStripeSecrets(): Promise<void> {
 
     const client = new SSMClient({ region });
 
-    // Detect non-production environment.
-    // NEXT_PUBLIC_ vars are inlined at build time and may not exist in the
-    // SSR Lambda's process.env at runtime, so we also check DEPLOYMENT_ENV
-    // (a plain env var set per-branch in Amplify Console).
-    const deployEnv = process.env.DEPLOYMENT_ENV ?? "";
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-    const isProduction =
-      deployEnv !== "staging" &&
-      (!baseUrl || baseUrl.includes("www.mynextgym.com.au"));
+    // Detect non-production from the request hostname.
+    // Production uses "www.mynextgym.com.au"; anything else (staging subdomain,
+    // amplifyapp.com, localhost) is treated as non-production.
+    const h = host ?? "";
+    const isProduction = !h || h.includes("www.mynextgym.com.au");
     const branchPrefix = isProduction ? null : "STAGING";
 
     // Build SSM paths — base keys + STAGING_ keys if non-production
@@ -84,7 +85,7 @@ export async function loadStripeSecrets(): Promise<void> {
 
     // Log which key is being used (first 8 chars only for security)
     const sk = cache["STRIPE_SECRET_KEY"] ?? "";
-    console.log(`[amplifySecrets] STRIPE_SECRET_KEY prefix: ${sk.slice(0, 8)}..., isProduction=${isProduction}, baseUrl=${baseUrl}`);
+    console.log(`[amplifySecrets] STRIPE_SECRET_KEY prefix: ${sk.slice(0, 8)}..., isProduction=${isProduction}, host=${h}`);
 
     // Fallback: process.env for any keys still not found
     for (const key of STRIPE_KEYS) {
