@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { affiliationStore } from "@/lib/affiliationStore";
 import { ptStore } from "@/lib/ptStore";
 import { ownerStore } from "@/lib/ownerStore";
+import { sendAffiliationRequestEmail, sendAffiliationApprovedEmail, sendAffiliationRejectedEmail } from "@/lib/customerEmail";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET — list affiliations for a PT or gym
@@ -45,6 +46,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status: "pending",
     });
 
+    // Notify the gym/profile owner about the affiliation request
+    if (gym?.email) {
+      sendAffiliationRequestEmail(gym.email, pt?.name ?? "A personal trainer", gym.name).catch(() => {});
+    }
+
     return res.status(201).json(aff);
   }
 
@@ -66,6 +72,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (pt && !pt.gymIds.includes(aff.gymId)) {
         await ptStore.update({ ...pt, gymIds: [...pt.gymIds, aff.gymId] });
       }
+      // Notify the PT that their affiliation was approved
+      const ptForEmail = pt ?? await ptStore.getById(aff.ptId);
+      if (ptForEmail?.email) {
+        sendAffiliationApprovedEmail(ptForEmail.email, ptForEmail.name, aff.gymName ?? "the profile").catch(() => {});
+      }
     }
 
     // If rejected/removed after being approved, remove gymId from PT's gymIds
@@ -73,6 +84,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pt = await ptStore.getById(aff.ptId);
       if (pt && pt.gymIds.includes(aff.gymId)) {
         await ptStore.update({ ...pt, gymIds: pt.gymIds.filter((g) => g !== aff.gymId) });
+      }
+      // Notify the PT that their affiliation was declined
+      if (status === "rejected") {
+        const ptForEmail = pt ?? await ptStore.getById(aff.ptId);
+        if (ptForEmail?.email) {
+          sendAffiliationRejectedEmail(ptForEmail.email, ptForEmail.name, aff.gymName ?? "the profile").catch(() => {});
+        }
       }
     }
 

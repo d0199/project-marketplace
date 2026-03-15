@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { ownerStore } from "@/lib/ownerStore";
 import { ptStore } from "@/lib/ptStore";
 import { requireUser } from "@/lib/userAuth";
+import { sendSubscriptionCancelledEmail } from "@/lib/customerEmail";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
@@ -17,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Look up entity and verify ownership
   let subscriptionId: string | undefined;
+  let entityName = "";
 
   if (isPT) {
     const pt = await ptStore.getById(gymId);
@@ -25,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: "Forbidden" });
     }
     subscriptionId = pt.stripeSubscriptionId;
+    entityName = pt.name;
   } else {
     const gym = await ownerStore.getById(gymId);
     if (!gym) return res.status(404).json({ error: "Entity not found" });
@@ -32,6 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: "Forbidden" });
     }
     subscriptionId = gym.stripeSubscriptionId;
+    entityName = gym.name;
   }
 
   if (!subscriptionId) {
@@ -49,6 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const periodEnd = periodEndTs
     ? new Date(periodEndTs * 1000).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })
     : "the end of your billing period";
+
+  sendSubscriptionCancelledEmail(user.email, entityName, periodEnd, isPT ? "pt" : "gym").catch(() => {});
 
   return res.status(200).json({ ok: true, periodEnd });
 }

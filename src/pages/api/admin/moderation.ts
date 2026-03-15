@@ -7,6 +7,7 @@ import { logAdminAction } from "@/lib/auditLog";
 import type { Gym, PersonalTrainer } from "@/types";
 import { gymUrl, ptUrl } from "@/lib/slugify";
 import { geocodeAddressServer } from "@/lib/geocodeServer";
+import { sendEditApprovedEmail, sendEditRejectedEmail, sendVerificationApprovedEmail, sendVerificationRejectedEmail } from "@/lib/customerEmail";
 
 async function listAllEdits() {
   const results: Record<string, unknown>[] = [];
@@ -59,6 +60,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           reviewedAt,
         });
         logAdminAction({ adminEmail, action: "moderation.reject", entityType: String(edit?.editType ?? "gym"), entityId: String(edit?.gymId ?? id), entityName: String(edit?.gymName ?? id), details: notes });
+        // Email the owner
+        if (edit?.ownerEmail) {
+          const editType = String(edit.editType ?? "gym");
+          const listingName = String(edit.gymName ?? edit.gymId);
+          if (editType === "pt-verification") {
+            sendVerificationRejectedEmail(edit.ownerEmail as string, listingName, notes ?? "").catch(() => {});
+          } else {
+            const eType = editType === "pt" ? "pt" : "gym";
+            sendEditRejectedEmail(edit.ownerEmail as string, listingName, eType, notes ?? "").catch(() => {});
+          }
+        }
         return res.status(200).json({ ok: true });
       } catch (err) {
         console.error("[admin/moderation reject]", err);
@@ -149,6 +161,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           reviewedBy: adminEmail,
           reviewedAt,
         });
+
+        // Email the owner
+        if (edit.ownerEmail) {
+          const listingName = String(edit.gymName ?? edit.gymId);
+          if (editType === "pt-verification") {
+            const proposed = JSON.parse(edit.proposedChanges as string) as { _verificationRequestQuals?: string[] };
+            sendVerificationApprovedEmail(edit.ownerEmail as string, listingName, proposed._verificationRequestQuals ?? []).catch(() => {});
+          } else {
+            const eType = editType === "pt" ? "pt" as const : "gym" as const;
+            sendEditApprovedEmail(edit.ownerEmail as string, listingName, eType).catch(() => {});
+          }
+        }
 
         logAdminAction({ adminEmail, action: "moderation.approve", entityType: editType === "pt" || editType === "pt-verification" ? "pt" : "gym", entityId: String(edit.gymId), entityName: String(edit.gymName ?? edit.gymId), details: editType === "bulk" ? `Bulk edit: ${editType}` : undefined });
         return res.status(200).json({ ok: true });

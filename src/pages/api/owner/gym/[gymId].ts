@@ -3,6 +3,7 @@ import { ownerStore } from "@/lib/ownerStore";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
+import { sendEditSubmittedEmail } from "@/lib/customerEmail";
 import { BASE_URL } from "@/lib/siteUrl";
 import { gymUrl } from "@/lib/slugify";
 import { requireUser } from "@/lib/userAuth";
@@ -67,6 +68,7 @@ export default async function handler(
     });
 
     await Promise.allSettled([
+      sendEditSubmittedEmail(ownerEmail, currentGym.name, "gym"),
       sendAdminAlert(
         `Gym edit: ${currentGym.name} — ${new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric", timeZone: "Australia/Perth" })}`,
         `A gym owner has submitted profile changes that require moderation.\n\nGym: ${currentGym.name} (${id})\nOwner: ${ownerEmail ?? "unknown"}\n\nReview at: ${BASE_URL}/admin`

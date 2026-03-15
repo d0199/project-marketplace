@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
+import { sendSupportConfirmationEmail } from "@/lib/customerEmail";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 
 const SUPPORT_RECIPIENT = "admin@mynextgym.com.au";
@@ -66,6 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   })();
 
   await Promise.allSettled([
+    sendSupportConfirmationEmail(email, name),
     sendAdminAlert(`Support: ${category || "General"} from ${name}`, emailBody, SUPPORT_RECIPIENT),
     sendSlackNotification("support", {
       customer_logged_in: customerLoggedIn,

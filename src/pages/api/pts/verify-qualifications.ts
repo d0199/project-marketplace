@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { ptStore } from "@/lib/ptStore";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
+import { sendVerificationSubmittedEmail } from "@/lib/customerEmail";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { BASE_URL } from "@/lib/siteUrl";
 
@@ -56,6 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     : "\nNo files uploaded";
 
   await Promise.allSettled([
+    sendVerificationSubmittedEmail(email, ptName, qualifications as string[]),
     sendAdminAlert(
       "PT qualification verification request",
       [

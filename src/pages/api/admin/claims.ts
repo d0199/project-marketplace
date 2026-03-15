@@ -11,6 +11,7 @@ import { getCognitoAdmin, USER_POOL_ID } from "@/lib/cognitoAdmin";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/auditLog";
 import { postcodeStore } from "@/lib/postcodeStore";
+import { sendClaimApprovedEmail, sendClaimRejectedEmail } from "@/lib/customerEmail";
 
 async function listAllClaims() {
   const results: Record<string, unknown>[] = [];
@@ -55,6 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const { data: claim } = await dataClient.models.Claim.get({ id });
         await dataClient.models.Claim.update({ id, status: "rejected", notes: notes ?? "" });
         logAdminAction({ adminEmail, action: "claim.reject", entityType: "claim", entityId: id, entityName: String(claim?.gymName ?? id), details: notes });
+        if (claim?.claimantEmail) {
+          sendClaimRejectedEmail(claim.claimantEmail as string, String(claim.gymName ?? "your listing"), notes ?? "").catch(() => {});
+        }
         return res.status(200).json({ ok: true });
       } catch (err) {
         console.error("[admin/claims reject]", err);
@@ -110,6 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
 
           logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New PT listing created: ${newPt.id} (unclaimed, gym-owner submission)` });
+          if (email) sendClaimApprovedEmail(email, String(claim.gymName ?? "your listing"), false).catch(() => {});
           return res.status(200).json({ ok: true, ownerId: "unclaimed", isNewUser: false, ptId: newPt.id });
         }
 
@@ -202,6 +207,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
 
           logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New PT listing created: ${newPt.id}` });
+          if (email) sendClaimApprovedEmail(email, String(claim.gymName ?? "your listing"), isNewUser).catch(() => {});
           return res.status(200).json({ ok: true, ownerId, isNewUser, ptId: newPt.id });
         } else if (claimType === "pt") {
           // Existing PT profile claim — assign ownership
@@ -218,6 +224,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
 
           logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? claim.gymId), details: `PT profile claimed, ownerId: ${ownerId}` });
+          if (email) sendClaimApprovedEmail(email, String(claim.gymName ?? "your profile"), isNewUser).catch(() => {});
           return res.status(200).json({ ok: true, ownerId, isNewUser });
         } else if (claim.isNewListing) {
           // New listing — create a gym record from submitted details
@@ -258,6 +265,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
 
           logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? id), details: `New gym listing created: ${newGym.id}` });
+          if (email) sendClaimApprovedEmail(email, String(claim.gymName ?? "your listing"), isNewUser).catch(() => {});
           return res.status(200).json({ ok: true, ownerId, isNewUser, gymId: newGym.id });
         } else {
           // Existing gym claim — assign ownership and clear AI-generated data
@@ -282,6 +290,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
 
           logAdminAction({ adminEmail, action: "claim.approve", entityType: "claim", entityId: id, entityName: String(claim.gymName ?? claim.gymId), details: `Gym claimed, ownerId: ${ownerId}` });
+          if (email) sendClaimApprovedEmail(email, String(claim.gymName ?? "your gym"), isNewUser).catch(() => {});
           return res.status(200).json({ ok: true, ownerId, isNewUser });
         }
       } catch (err) {

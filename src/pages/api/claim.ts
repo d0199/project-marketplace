@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { dataClient, isAmplifyConfigured } from "@/lib/amplifyServerConfig";
 import { sendAdminAlert } from "@/lib/emailNotify";
 import { sendSlackNotification, nowAWST } from "@/lib/slackNotify";
+import { sendClaimSubmittedEmail } from "@/lib/customerEmail";
 import { BASE_URL } from "@/lib/siteUrl";
 
 export default async function handler(
@@ -58,6 +59,7 @@ export default async function handler(
     : `A new ${entityLabel} claim has been submitted and is awaiting review.\n\n${isPT ? "PT" : "Gym"}: ${gymName || gymId}\nClaimant: ${name} <${email}>${phone ? `\nPhone: ${phone}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReview at: ${BASE_URL}/admin`;
 
   await Promise.allSettled([
+    sendClaimSubmittedEmail(email, name, gymName || gymId, isNewListing === true || (isNewListing as unknown) === "true"),
     sendAdminAlert(alertSubject, alertBody),
     sendSlackNotification("claim", {
       type: isNewListing ? "New Listing" : "Claim",
