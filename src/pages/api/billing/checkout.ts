@@ -32,23 +32,6 @@ function getPTPriceMap() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // TEMP DEBUG — remove after confirming staging uses test keys
-  if (req.query.debug === "stripe") {
-    const { loadStripeSecrets, getSecret, getDebugInfo } = await import("@/lib/amplifySecrets");
-    await loadStripeSecrets(req.headers.host);
-    const sk = getSecret("STRIPE_SECRET_KEY");
-    const debug = getDebugInfo();
-    return res.status(200).json({
-      host: req.headers.host ?? "(not set)",
-      isProduction: !req.headers.host || req.headers.host.includes("www.mynextgym.com.au"),
-      branchPrefix: debug?.branchPrefix ?? null,
-      keyPrefix: sk.slice(0, 8),
-      webhookPrefix: getSecret("STRIPE_WEBHOOK_SECRET").slice(0, 8),
-      ssmFound: debug?.ssmFound ?? [],
-      ssmMissing: debug?.ssmMissing ?? [],
-    });
-  }
-
   if (req.method !== "POST") return res.status(405).end();
 
   try {
