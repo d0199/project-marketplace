@@ -56,6 +56,20 @@ export async function loadStripeSecrets(): Promise<void> {
         cache[key] = envVal ?? "";
       }
     }
+
+    // Branch-specific overrides (e.g. STAGING_STRIPE_WEBHOOK_SECRET)
+    const branch = process.env.AWS_BRANCH;
+    if (branch && branch !== "master") {
+      const prefix = branch.toUpperCase().replace(/-/g, "_");
+      for (const key of STRIPE_KEYS) {
+        const branchKey = `${prefix}_${key}`;
+        const branchVal = process.env[branchKey];
+        if (branchVal) {
+          cache[key] = branchVal;
+          console.log(`[amplifySecrets] ${key}: overridden by ${branchKey}`);
+        }
+      }
+    }
   })();
   return loadPromise;
 }
