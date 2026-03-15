@@ -38,7 +38,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await loadStripeSecrets();
     const sk = getSecret("STRIPE_SECRET_KEY");
     return res.status(200).json({
+      deployEnv: process.env.DEPLOYMENT_ENV ?? "(not set)",
       baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "(not set)",
+      isProduction: process.env.DEPLOYMENT_ENV !== "staging" &&
+        (!(process.env.NEXT_PUBLIC_BASE_URL ?? "") || (process.env.NEXT_PUBLIC_BASE_URL ?? "").includes("www.mynextgym.com.au")),
       keyPrefix: sk.slice(0, 8),
       webhookPrefix: getSecret("STRIPE_WEBHOOK_SECRET").slice(0, 8),
     });

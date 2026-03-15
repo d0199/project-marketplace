@@ -35,10 +35,14 @@ export async function loadStripeSecrets(): Promise<void> {
     const client = new SSMClient({ region });
 
     // Detect non-production environment.
-    // AWS_BRANCH is not set by Amplify Hosting at SSR runtime, so we check
-    // NEXT_PUBLIC_BASE_URL (set per branch in Amplify Console).
+    // NEXT_PUBLIC_ vars are inlined at build time and may not exist in the
+    // SSR Lambda's process.env at runtime, so we also check DEPLOYMENT_ENV
+    // (a plain env var set per-branch in Amplify Console).
+    const deployEnv = process.env.DEPLOYMENT_ENV ?? "";
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-    const isProduction = !baseUrl || baseUrl.includes("www.mynextgym.com.au");
+    const isProduction =
+      deployEnv !== "staging" &&
+      (!baseUrl || baseUrl.includes("www.mynextgym.com.au"));
     const branchPrefix = isProduction ? null : "STAGING";
 
     // Build SSM paths — base keys + STAGING_ keys if non-production
