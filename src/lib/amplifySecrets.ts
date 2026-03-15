@@ -34,14 +34,14 @@ export async function loadStripeSecrets(): Promise<void> {
 
     const client = new SSMClient({ region });
 
-    // Determine if we need branch-specific overrides (e.g. STAGING_STRIPE_*)
-    const branch = process.env.AWS_BRANCH;
-    console.log(`[amplifySecrets] AWS_BRANCH=${branch ?? "(not set)"}, appId=${appId}`);
-    const branchPrefix = branch && branch !== "master"
-      ? branch.toUpperCase().replace(/-/g, "_")
-      : null;
+    // Detect non-production environment.
+    // AWS_BRANCH is not set by Amplify Hosting at SSR runtime, so we check
+    // NEXT_PUBLIC_BASE_URL (set per branch in Amplify Console).
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+    const isProduction = !baseUrl || baseUrl.includes("www.mynextgym.com.au");
+    const branchPrefix = isProduction ? null : "STAGING";
 
-    // Build SSM paths — base keys + branch-prefixed keys if on non-master branch
+    // Build SSM paths — base keys + STAGING_ keys if non-production
     const ssmKeys = [...STRIPE_KEYS];
     if (branchPrefix) {
       for (const key of STRIPE_KEYS) {
@@ -80,7 +80,7 @@ export async function loadStripeSecrets(): Promise<void> {
 
     // Log which key is being used (first 8 chars only for security)
     const sk = cache["STRIPE_SECRET_KEY"] ?? "";
-    console.log(`[amplifySecrets] STRIPE_SECRET_KEY prefix: ${sk.slice(0, 8)}..., branchPrefix=${branchPrefix ?? "none"}`);
+    console.log(`[amplifySecrets] STRIPE_SECRET_KEY prefix: ${sk.slice(0, 8)}..., isProduction=${isProduction}, baseUrl=${baseUrl}`);
 
     // Fallback: process.env for any keys still not found
     for (const key of STRIPE_KEYS) {

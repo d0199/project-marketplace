@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await loadStripeSecrets();
     const sk = getSecret("STRIPE_SECRET_KEY");
     return res.status(200).json({
-      branch: process.env.AWS_BRANCH ?? "(not set)",
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "(not set)",
       keyPrefix: sk.slice(0, 8),
       webhookPrefix: getSecret("STRIPE_WEBHOOK_SECRET").slice(0, 8),
     });
